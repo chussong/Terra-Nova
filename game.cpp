@@ -1,5 +1,9 @@
 #include "game.hpp"
 
+bool game::Tick(){
+	return true;
+}
+
 std::shared_ptr<person> game::CreatePerson(){
 	std::shared_ptr<person> newPerson(std::make_shared<person>());
 	people.push_back(newPerson);

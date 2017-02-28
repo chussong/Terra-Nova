@@ -4,6 +4,7 @@
 #include "colony.hpp"
 #include "map.hpp"
 #include "game.hpp"
+#include "rendering.hpp"
 
 int main(){
 	game game1;
@@ -41,5 +42,35 @@ int main(){
 		"Carbon: " << jaffa->Resource(CARBON) << std::endl <<
 		"Silicon: " << jaffa->Resource(SILICON) << std::endl <<
 		"Iron: " << jaffa->Resource(IRON) << std::endl;
+
+	RenderingInit();
+
+	SDL_Window* win = CreateWindow("Terra Nova", 100, 100, SCREEN_WIDTH,
+			SCREEN_HEIGHT);
+	SDL_Renderer* ren = CreateRenderer(win);
+	std::string spriteDir = GetSpritePath("sprites");
+	SDL_Texture* background = LoadTexture(spriteDir + "Space-Colony.png", ren);
+	SDL_Texture* resourceGFX = LoadTexture(spriteDir + "resources.png", ren);
+	SDL_Texture* colonistGFX = LoadTexture(spriteDir + "colonist.png", ren);
+	SDL_Texture* terrainGFX = LoadTexture(spriteDir + "terrain.png", ren);
+
+	SDL_Event e;
+	bool quit = false;
+	while(!quit){
+		while(SDL_PollEvent(&e)){
+			if(e.type == SDL_QUIT) quit = true;
+			if(e.type == SDL_KEYDOWN) quit = true;
+			if(e.type == SDL_MOUSEBUTTONDOWN) quit = true;
+		}
+		SDL_RenderClear(ren);
+		RenderTexture(background, ren, 0, 0);
+		RenderTexture(resourceGFX, ren, SCREEN_WIDTH - 400, SCREEN_HEIGHT - 100);
+		RenderTexture(terrainGFX, ren, 0, SCREEN_HEIGHT - 100);
+		RenderTexture(colonistGFX, ren, 110, SCREEN_HEIGHT - 60);
+		SDL_RenderPresent(ren);
+	}
+
+	SDL_Cleanup(ren, win);
+	RenderingQuit();
 	return EXIT_SUCCESS;
 }

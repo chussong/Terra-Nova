@@ -4,12 +4,12 @@
 #include "colony.hpp"
 #include "map.hpp"
 #include "game.hpp"
-#include "rendering.hpp"
+#include "gamewindow.hpp"
 
 int main(){
 	game game1;
 	std::shared_ptr<map> palaven = game1.CreateMap();
-	palaven->AddColony(game1.CreateColony());
+	palaven->AddColony(game1.CreateColony(palaven, 50, 50));
 	std::shared_ptr<colony> jaffa = palaven->Colony(0);
 	jaffa->AddResource(FOOD, 60);
 	jaffa->AddResource(CARBON, 120);
@@ -43,34 +43,33 @@ int main(){
 		"Silicon: " << jaffa->Resource(SILICON) << std::endl <<
 		"Iron: " << jaffa->Resource(IRON) << std::endl;
 
-	RenderingInit();
-
-	SDL_Window* win = CreateWindow("Terra Nova", 100, 100, SCREEN_WIDTH,
-			SCREEN_HEIGHT);
-	SDL_Renderer* ren = CreateRenderer(win);
 	std::string spriteDir = GetSpritePath("sprites");
-	SDL_Texture* background = LoadTexture(spriteDir + "Space-Colony.png", ren);
-	SDL_Texture* resourceGFX = LoadTexture(spriteDir + "resources.png", ren);
-	SDL_Texture* colonistGFX = LoadTexture(spriteDir + "colonist.png", ren);
-	SDL_Texture* terrainGFX = LoadTexture(spriteDir + "terrain.png", ren);
+//	gameWindow win("Terra Nova", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT);
+	colonyWindow win(jaffa, 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT);
+//	win.AddObject(spriteDir + "Space-Colony.png", 0, 0);
+	win.AddObject(spriteDir + "resources.png", SCREEN_WIDTH-400, SCREEN_HEIGHT-100);
+	win.AddObject(spriteDir + "terrain.png", 0, SCREEN_HEIGHT-100);
+	win.AddObject(spriteDir + "colonist.png", 110, SCREEN_HEIGHT-60);
 
 	SDL_Event e;
 	bool quit = false;
 	while(!quit){
 		while(SDL_PollEvent(&e)){
-			if(e.type == SDL_QUIT) quit = true;
-			if(e.type == SDL_KEYDOWN) quit = true;
-			if(e.type == SDL_MOUSEBUTTONDOWN) quit = true;
+			switch(e.type){
+				case SDL_QUIT:				quit = true;
+											break;
+				case SDL_KEYDOWN:			quit = true;
+											break;
+				case SDL_MOUSEBUTTONDOWN:	if(e.button.button == SDL_BUTTON_LEFT){
+												gfxObject* obj = 
+													win.ClickedObject(e.button.x,
+															e.button.y);
+												if(obj) obj->MoveTo(100, 200);
+											}
+											break;
+			}
 		}
-		SDL_RenderClear(ren);
-		RenderTexture(background, ren, 0, 0);
-		RenderTexture(resourceGFX, ren, SCREEN_WIDTH - 400, SCREEN_HEIGHT - 100);
-		RenderTexture(terrainGFX, ren, 0, SCREEN_HEIGHT - 100);
-		RenderTexture(colonistGFX, ren, 110, SCREEN_HEIGHT - 60);
-		SDL_RenderPresent(ren);
+		win.Render();
 	}
-
-	SDL_Cleanup(ren, win);
-	RenderingQuit();
 	return EXIT_SUCCESS;
 }

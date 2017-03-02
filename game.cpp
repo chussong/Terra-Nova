@@ -10,8 +10,9 @@ std::shared_ptr<person> game::CreatePerson(){
 	return newPerson;
 }
 
-std::shared_ptr<colony> game::CreateColony(){
-	std::shared_ptr<colony> newColony(std::make_shared<colony>());
+std::shared_ptr<colony> game::CreateColony(std::shared_ptr<map> parentMap,
+		const int row, const int colm){
+	std::shared_ptr<colony> newColony(std::make_shared<colony>(parentMap, row, colm));
 	colonies.push_back(newColony);
 	return newColony;
 }

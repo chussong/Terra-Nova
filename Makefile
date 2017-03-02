@@ -7,31 +7,31 @@ CXXFLAGS = -Wall -Wextra -pedantic -c -std=c++14 $(SDL_INCLUDE)
 LDFLAGS = $(SDL_LIB)
 EXECUTABLE = TerraNova
 
-SOURCES = main.cpp person.cpp colony.cpp map.cpp game.cpp rendering.cpp
-OBJECTS = main.o person.o colony.o map.o game.o rendering.o
+SOURCES = main.cpp person.cpp colony.cpp map.cpp game.cpp gamewindow.cpp
+OBJECTS = main.o person.o colony.o map.o game.o gamewindow.o
 
 all: $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
 	$(CXX) $+ $(LDFLAGS) -o $@
 
-main.o: main.cpp
+main.o: main.cpp person.hpp colony.hpp map.hpp game.hpp gamewindow.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 person.o: person.cpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-colony.o: colony.cpp
+colony.o: colony.cpp person.hpp templates.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-map.o: map.cpp
+map.o: map.cpp colony.hpp templates.hpp gamewindow.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-game.o: game.cpp
+game.o: game.cpp person.hpp colony.hpp map.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-rendering.o: rendering.cpp
+gamewindow.o: gamewindow.cpp map.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 clean:
-	rm *.o && rm $(EXECUTABLE)
+	rm -f *.o && rm -f $(EXECUTABLE)

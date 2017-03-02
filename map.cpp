@@ -36,3 +36,17 @@ const std::shared_ptr<colony> map::Colony(const int num) const{
 		return nullptr;
 	return colonies[num].lock();
 }
+
+terrain_t map::Terrain(const int row, const int column) const{
+	return terrain[row][column];
+}
+
+std::string map::TerrainName(const terrain_t type){
+	switch(type){
+		case OCEAN:			return "ocean";
+		case COAST:			return "coast";
+		case PLAINS:		return "plains";
+		case MOUNTAIN:		return "mountain";
+	}
+	return "";
+}

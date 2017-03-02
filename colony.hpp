@@ -8,6 +8,11 @@
 
 #include "person.hpp"
 #include "templates.hpp"
+#include "map.hpp"
+#include "gamewindow.hpp"
+
+class map;
+class gfxObject;
 
 constexpr int RESCAP = 100;
 enum resource_t { FOOD = 0, CARBON = 1, SILICON = 2, IRON = 3,
@@ -15,8 +20,12 @@ enum resource_t { FOOD = 0, CARBON = 1, SILICON = 2, IRON = 3,
 
 class colony {
 	std::string name;
-	int xpos;
-	int ypos;
+	std::shared_ptr<map> myMap;
+	int row;
+	int colm; // position on map
+
+	std::array<terrain_t, 6> innerRing;
+	std::array<terrain_t, 12> outerRing;
 
 	std::array<int, LAST_RESOURCE> resources;
 	std::array<int, LAST_RESOURCE> resourceCap;
@@ -30,7 +39,7 @@ class colony {
 	void Clean();
 
 	public:
-		colony();
+		colony(std::shared_ptr<map> myMap, const int row, const int colm);
 
 		void ChangeName(const std::string name);
 		void Move(const int xdist, const int ydist);
@@ -40,11 +49,16 @@ class colony {
 		void AddBuilding(const std::string building);
 
 		std::string Name() const;
-		int Xpos() const;
-		int Ypos() const;
+		int Column() const;
+		int Row() const;
 		int Resource(const resource_t resource) const;
 		std::shared_ptr<person> Inhabitant(const int number);
 		const std::shared_ptr<person> Inhabitant(const int number) const;
+
+		std::vector<gfxObject> InnerRing(const int colm, const int row,
+				SDL_Renderer* ren) const;
+		std::vector<gfxObject> OuterRing(const int colm, const int row,
+				SDL_Renderer* ren) const;
 };
 
 #endif

@@ -17,10 +17,23 @@ constexpr int MAPDISP_ORIGIN_X = 300;
 constexpr int MAPDISP_ORIGIN_Y = 300;
 constexpr int TILE_WIDTH = 87;
 constexpr int TILE_HEIGHT = 75;
+constexpr int RESOURCE_X = SCREEN_WIDTH-400;
+constexpr int RESOURCE_Y = SCREEN_HEIGHT-100;
+constexpr int RESOURCE_WIDTH = 90;
+const std::string COLONY_BACKGROUND = "Space-Colony.png";
+constexpr auto DEFAULT_FONT = "/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf";
+constexpr int DEFAULT_FONT_SIZE = 20;
+static TTF_Font* defaultFont;
+
+enum textcolor_t { BLACK = 0, RED = 1, BLUE = 2, GREEN = 3,
+	LAST_COLOR = 4 };
+enum clickable_t { NONCLICKABLE = 0, COLONIST = 1000, ENDTURN = 2000 };
 
 class gfxObject {
+
 	SDL_Rect layout;
 	SDL_Texture* image;
+	clickable_t clickType;
 //	SDL_Rect spritebox;
 //	std::string text; should we just make this an image so we don't render?
 //	int layer; should this be stored here or in gamewindow?
@@ -29,12 +42,16 @@ class gfxObject {
 		gfxObject() = delete;
 		explicit gfxObject(SDL_Renderer* ren, const std::string& filename,
 				const int x = 0, const int y = 0);
+		explicit gfxObject(SDL_Renderer* ren, const std::string& text,
+				const SDL_Color color, TTF_Font* font = defaultFont,
+				const int x = 0, const int y = 0);
 		~gfxObject();
 
 		gfxObject(const gfxObject& that) = delete;
 		gfxObject(gfxObject&& that) noexcept;
 		gfxObject& operator=(const gfxObject that) = delete;
 
+		void SetClickType(const clickable_t newType);
 		void MoveTo(int x, int y);
 		void Resize(int w, int h);
 		void RenderTo(SDL_Renderer* ren) const;
@@ -43,6 +60,7 @@ class gfxObject {
 		int RightEdge() const;
 		int TopEdge() const;
 		int BottomEdge() const;
+		inline bool IsButton() const { return (clickType/1000 == 2); }
 };
 
 class gameWindow {
@@ -50,8 +68,10 @@ class gameWindow {
 		SDL_Window* win;
 		SDL_Renderer* ren;
 
-		std::unique_ptr<gfxObject> background;
+		std::vector<gfxObject> background;
+		std::vector<gfxObject> clickable;
 		std::vector<gfxObject> objects;
+		std::vector<gfxObject> buttons;
 
 	public:
 		gameWindow() = delete;
@@ -70,21 +90,16 @@ class gameWindow {
 		std::array<int, 4> Layout() const;
 		bool Ready() const;
 
+		void MakeColonyScreen(const std::shared_ptr<colony> col);
+
+		void AddResourceElements(); // eventually these will be baked in
+		void AddInnerRing(const std::shared_ptr<colony> col);
+		void AddOuterRing(const std::shared_ptr<colony> col);
+		void AddColonists(const std::shared_ptr<colony> col);
+		void AddColonyMisc(const std::shared_ptr<colony> col);
+
 		static bool InitSDL();
 		static void QuitSDL();
-};
-
-class colony;
-class colonyWindow : public gameWindow {
-	std::shared_ptr<colony> col;
-
-	std::vector<gfxObject> innerRing; // 0 is right tile, proceed CCW
-	std::vector<gfxObject> outerRing; // 0 is right tile, proceed CCW
-
-	public:
-		explicit colonyWindow(std::shared_ptr<colony>, const int x, const int y,
-			const int w, const int h);
-		void Render();
 };
 
 void LogSDLError(std::ostream& os, const std::string &msg);

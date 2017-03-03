@@ -9,7 +9,6 @@
 #include "person.hpp"
 #include "templates.hpp"
 #include "map.hpp"
-#include "gamewindow.hpp"
 
 class map;
 class gfxObject;
@@ -24,11 +23,11 @@ class colony {
 	int row;
 	int colm; // position on map
 
-	std::array<terrain_t, 6> innerRing;
-	std::array<terrain_t, 12> outerRing;
+	std::array<terrain_t, 18> terrain;
 
 	std::array<int, LAST_RESOURCE> resources;
 	std::array<int, LAST_RESOURCE> resourceCap;
+	std::array<int, LAST_RESOURCE> resPerTurn;
 	int powerSupply;
 	int powerDemand;
 
@@ -45,20 +44,20 @@ class colony {
 		void Move(const int xdist, const int ydist);
 		int  AddResource(const resource_t resource, int amount);
 		int  TakeResource(const resource_t resource, int amount);
+		void SetResourceIncome(const resource_t resource, int amount);
 		void AddInhabitant(std::shared_ptr<person> inhabitant);
 		void AddBuilding(const std::string building);
 
 		std::string Name() const;
 		int Column() const;
 		int Row() const;
+		terrain_t Terrain(const unsigned int num) const;
 		int Resource(const resource_t resource) const;
+		std::string ResAsString(const int res) const;
 		std::shared_ptr<person> Inhabitant(const int number);
 		const std::shared_ptr<person> Inhabitant(const int number) const;
 
-		std::vector<gfxObject> InnerRing(const int colm, const int row,
-				SDL_Renderer* ren) const;
-		std::vector<gfxObject> OuterRing(const int colm, const int row,
-				SDL_Renderer* ren) const;
+		void ProcessTurn();
 };
 
 #endif

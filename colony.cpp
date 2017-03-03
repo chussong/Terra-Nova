@@ -4,8 +4,29 @@ colony::colony(std::shared_ptr<map> myMap, const int row, const int colm):
 	myMap(myMap), row(row), colm(colm){
 	name = "Moonbase JAFFA";
 
+	terrain[0] = myMap->Terrain(row, colm+2);
+	terrain[1] = myMap->Terrain(row+1, colm+1);
+	terrain[2] = myMap->Terrain(row+1, colm-1);
+	terrain[3] = myMap->Terrain(row, colm-2);
+	terrain[4] = myMap->Terrain(row-1, colm-1);
+	terrain[5] = myMap->Terrain(row-1, colm+1);
+
+	terrain[6] = myMap->Terrain(row, colm+4);
+	terrain[7] = myMap->Terrain(row+1, colm+3);
+	terrain[8] = myMap->Terrain(row+2, colm+2);
+	terrain[9] = myMap->Terrain(row+2, colm);
+	terrain[10] = myMap->Terrain(row+2, colm-2);
+	terrain[11] = myMap->Terrain(row+1, colm-3);
+	terrain[12] = myMap->Terrain(row, colm-4);
+	terrain[13] = myMap->Terrain(row-1, colm-3);
+	terrain[14] = myMap->Terrain(row-2, colm-2);
+	terrain[15] = myMap->Terrain(row-2, colm);
+	terrain[16] = myMap->Terrain(row-2, colm+2);
+	terrain[17] = myMap->Terrain(row-1, colm+3);
+
 	resources.fill(0);
 	resourceCap.fill(RESCAP);
+	resPerTurn.fill(0);
 	powerSupply = 0;
 	powerDemand = 0;
 }
@@ -51,6 +72,12 @@ int colony::TakeResource(const resource_t resource, int amount){
 	return amount;
 }
 
+void colony::SetResourceIncome(const resource_t resource, int amount){
+	if(amount < 0) return;
+	if(resource < 0 || resource >= LAST_RESOURCE) return;
+	resPerTurn[resource] = amount;
+}
+
 void colony::AddInhabitant(std::shared_ptr<person> inhabitant){
 	inhabitants.emplace_back(inhabitant);
 }
@@ -71,8 +98,17 @@ int colony::Row() const{
 	return row;
 }
 
+terrain_t colony::Terrain(const unsigned int num) const{
+	if(num < terrain.size()) return terrain[num];
+	return OCEAN;
+}
+
 int colony::Resource(const resource_t resource) const{
 	return resources[resource];
+}
+
+std::string colony::ResAsString(const int res) const{
+	return std::to_string(resources[res]);
 }
 
 std::shared_ptr<person> colony::Inhabitant(const int number) {
@@ -85,52 +121,8 @@ const std::shared_ptr<person> colony::Inhabitant(const int number) const {
 	return inhabitants[number].lock();
 }
 
-std::vector<gfxObject> colony::InnerRing(const int colm, const int row,
-		SDL_Renderer* ren) const{
-	std::vector<gfxObject> ring; // starting 1 hex right, proceed CCW
-	std::string spriteDir = GetSpritePath("sprites");
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row, colm+2))
-			+ ".png", MAPDISP_ORIGIN_X + TILE_WIDTH, MAPDISP_ORIGIN_Y);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row+1, colm+1))
-			+ ".png", MAPDISP_ORIGIN_X + TILE_WIDTH/2, MAPDISP_ORIGIN_Y + TILE_HEIGHT);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row+1, colm-1))
-			+ ".png", MAPDISP_ORIGIN_X - TILE_WIDTH/2, MAPDISP_ORIGIN_Y + TILE_HEIGHT);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row, colm-2))
-			+ ".png", MAPDISP_ORIGIN_X - TILE_WIDTH, MAPDISP_ORIGIN_Y);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row-1, colm-1))
-			+ ".png", MAPDISP_ORIGIN_X - TILE_WIDTH/2, MAPDISP_ORIGIN_Y - TILE_HEIGHT);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row-1, colm+1))
-			+ ".png", MAPDISP_ORIGIN_X + TILE_WIDTH/2, MAPDISP_ORIGIN_Y - TILE_HEIGHT);
-	return ring;
-}
-
-std::vector<gfxObject> colony::OuterRing(const int colm, const int row,
-		SDL_Renderer* ren) const{
-	std::vector<gfxObject> ring; // starting 2 hexes right, proceed CCW
-	std::string spriteDir = GetSpritePath("sprites");
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row, colm+2))
-			+ ".png", MAPDISP_ORIGIN_X + 2*TILE_WIDTH, MAPDISP_ORIGIN_Y);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row+1, colm+1))
-			+ ".png", MAPDISP_ORIGIN_X + 3*TILE_WIDTH/2, MAPDISP_ORIGIN_Y + TILE_HEIGHT);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row+1, colm-1))
-			+ ".png", MAPDISP_ORIGIN_X + TILE_WIDTH, MAPDISP_ORIGIN_Y + 2*TILE_HEIGHT);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row, colm-2))
-			+ ".png", MAPDISP_ORIGIN_X, MAPDISP_ORIGIN_Y + 2*TILE_HEIGHT);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row-1, colm-1))
-			+ ".png", MAPDISP_ORIGIN_X - TILE_WIDTH, MAPDISP_ORIGIN_Y + 2*TILE_HEIGHT);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row-1, colm+1))
-			+ ".png", MAPDISP_ORIGIN_X - 3*TILE_WIDTH/2, MAPDISP_ORIGIN_Y + TILE_HEIGHT);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row, colm+2))
-			+ ".png", MAPDISP_ORIGIN_X - 2*TILE_WIDTH, MAPDISP_ORIGIN_Y);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row+1, colm+1))
-			+ ".png", MAPDISP_ORIGIN_X - 3*TILE_WIDTH/2, MAPDISP_ORIGIN_Y - TILE_HEIGHT);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row+1, colm-1))
-			+ ".png", MAPDISP_ORIGIN_X - TILE_WIDTH, MAPDISP_ORIGIN_Y - 2*TILE_HEIGHT);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row, colm-2))
-			+ ".png", MAPDISP_ORIGIN_X, MAPDISP_ORIGIN_Y - 2*TILE_HEIGHT);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row-1, colm-1))
-			+ ".png", MAPDISP_ORIGIN_X + TILE_WIDTH, MAPDISP_ORIGIN_Y - 2*TILE_HEIGHT);
-	ring.emplace_back(ren, spriteDir + map::TerrainName(myMap->Terrain(row-1, colm+1))
-			+ ".png", MAPDISP_ORIGIN_X + 3*TILE_WIDTH/2, MAPDISP_ORIGIN_Y - TILE_HEIGHT);
-	return ring;
+void colony::ProcessTurn(){
+	for(int i = 0; i < static_cast<int>(LAST_RESOURCE); ++i){
+		AddResource(static_cast<resource_t>(i), resPerTurn[i]);
+	}
 }

@@ -33,7 +33,7 @@ int main(){
 	std::cout << "We've added an inhabitant called " << urist2->Name() << ". "
 		<< urist2->NomPronCap() << " is a " << urist2->Spec() << " with " <<
 		urist2->Health() << "/" << urist2->MaxHealth() << " health.\n";
-	std::cout << "I'm taking " << jaffa->TakeResource(FOOD, 20) << " food, " <<
+/*	std::cout << "I'm taking " << jaffa->TakeResource(FOOD, 20) << " food, " <<
 		jaffa->TakeResource(CARBON, 140) << " carbon, " <<
 		jaffa->TakeResource(SILICON, -40) << " silicon, and " <<
 		jaffa->TakeResource(IRON, 60) << " iron from " << jaffa->Name() << "." <<
@@ -41,15 +41,17 @@ int main(){
 	std::cout <<"Food: " << jaffa->Resource(FOOD) << std::endl <<
 		"Carbon: " << jaffa->Resource(CARBON) << std::endl <<
 		"Silicon: " << jaffa->Resource(SILICON) << std::endl <<
-		"Iron: " << jaffa->Resource(IRON) << std::endl;
+		"Iron: " << jaffa->Resource(IRON) << std::endl;*/
 
-	std::string spriteDir = GetSpritePath("sprites");
-//	gameWindow win("Terra Nova", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT);
-	colonyWindow win(jaffa, 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT);
+	jaffa->SetResourceIncome(SILICON, 20);
+
+	gameWindow win("Terra Nova", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT);
+	win.MakeColonyScreen(jaffa);
+//	colonyWindow win(jaffa, 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT);
 //	win.AddObject(spriteDir + "Space-Colony.png", 0, 0);
-	win.AddObject(spriteDir + "resources.png", SCREEN_WIDTH-400, SCREEN_HEIGHT-100);
-	win.AddObject(spriteDir + "terrain.png", 0, SCREEN_HEIGHT-100);
-	win.AddObject(spriteDir + "colonist.png", 110, SCREEN_HEIGHT-60);
+//	win.AddObject(spriteDir + "resources.png", SCREEN_WIDTH-400, SCREEN_HEIGHT-100);
+//	win.AddObject(spriteDir + "terrain.png", 0, SCREEN_HEIGHT-100);
+//	win.AddObject(spriteDir + "colonist.png", 110, SCREEN_HEIGHT-60);
 
 	SDL_Event e;
 	bool quit = false;
@@ -64,7 +66,8 @@ int main(){
 												gfxObject* obj = 
 													win.ClickedObject(e.button.x,
 															e.button.y);
-												if(obj) obj->MoveTo(100, 200);
+												if(obj && obj->IsButton())
+													game1.NextTurn(&win);
 											}
 											break;
 			}

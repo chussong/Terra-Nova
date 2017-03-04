@@ -23,7 +23,7 @@ std::shared_ptr<map> game::CreateMap(){
 	return newMap;
 }
 
-void game::NextTurn(gameWindow* win){
+void game::NextTurn(){
 	std::cout << "A new turn dawns..." << std::endl;
 	for(unsigned int i = 0; i < colonies.size(); ++i) colonies[i]->ProcessTurn();
 	if(colonies.size() > 0) win->MakeColonyScreen(colonies[0]); //obviously debug only

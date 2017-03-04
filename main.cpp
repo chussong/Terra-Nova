@@ -45,8 +45,7 @@ int main(){
 
 	jaffa->SetResourceIncome(SILICON, 20);
 
-	gameWindow win("Terra Nova", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT);
-	win.MakeColonyScreen(jaffa);
+	game1.Window()->MakeColonyScreen(jaffa);
 //	colonyWindow win(jaffa, 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT);
 //	win.AddObject(spriteDir + "Space-Colony.png", 0, 0);
 //	win.AddObject(spriteDir + "resources.png", SCREEN_WIDTH-400, SCREEN_HEIGHT-100);
@@ -63,16 +62,17 @@ int main(){
 				case SDL_KEYDOWN:			quit = true;
 											break;
 				case SDL_MOUSEBUTTONDOWN:	if(e.button.button == SDL_BUTTON_LEFT){
-												gfxObject* obj = 
-													win.ClickedObject(e.button.x,
+												entity* obj = 
+													game1.Window()->ClickedObject(
+															e.button.x,
 															e.button.y);
-												if(obj && obj->IsButton())
-													game1.NextTurn(&win);
+												if(obj && (obj->Select() == NEXT_TURN))
+													game1.NextTurn();
 											}
 											break;
 			}
 		}
-		win.Render();
+		game1.Window()->Render();
 	}
 	return EXIT_SUCCESS;
 }

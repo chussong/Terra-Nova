@@ -1,90 +1,5 @@
 #include "gamewindow.hpp"
 
-void LogSDLError(std::ostream& os, const std::string &msg){
-	os << msg << " error: " << SDL_GetError() << std::endl;
-}
-
-gfxObject::gfxObject(SDL_Renderer* ren, const std::string& filename,
-		const int x, const int y){
-	// if(IMG not initialized) print error
-	image = IMG_LoadTexture(ren, filename.c_str());
-	if(image == nullptr) LogSDLError(std::cout, "LoadTexture");
-
-	clickType = NONCLICKABLE;
-	layout.x = x;
-	layout.y = y;
-	SDL_QueryTexture(image, NULL, NULL, &layout.w, &layout.h);
-	if(layout.w >= SCREEN_WIDTH) layout.w = SCREEN_WIDTH - 1;
-	if(layout.h >= SCREEN_HEIGHT) layout.h = SCREEN_HEIGHT - 1;
-}
-
-gfxObject::gfxObject(SDL_Renderer* ren, const std::string& text, 
-		const SDL_Color color, TTF_Font* font,
-		const int x, const int y){
-	if(font == nullptr) font = defaultFont;
-	SDL_Surface* surf = TTF_RenderText_Blended(font, text.c_str(), color);
-	if(surf == nullptr){
-		LogSDLError(std::cout, "TTF_RenderText");
-	} else {
-		image = SDL_CreateTextureFromSurface(ren, surf);
-		SDL_FreeSurface(surf);
-		if(image == nullptr) LogSDLError(std::cout, "CreateTexture");
-	}
-	layout.x = x;
-	layout.y = y;
-	SDL_QueryTexture(image, NULL, NULL, &layout.w, &layout.h);
-	if(layout.w >= SCREEN_WIDTH) layout.w = SCREEN_WIDTH - 1;
-	if(layout.h >= SCREEN_HEIGHT) layout.h = SCREEN_HEIGHT - 1;
-}
-
-gfxObject::gfxObject(gfxObject&& other) noexcept: image(nullptr){
-	std::swap(image, other.image);
-	std::swap(layout, other.layout);
-}
-
-gfxObject::~gfxObject(){
-	SDL_Cleanup(image);
-}
-
-void gfxObject::SetClickType(const clickable_t newType){
-	clickType = newType;
-}
-
-void gfxObject::MoveTo(int x, int y){
-	if(x < 0) x = 0;
-	if(y < 0) y = 0;
-	layout.x = std::min(x, SCREEN_WIDTH - layout.w);
-	layout.y = std::min(y, SCREEN_HEIGHT - layout.h);
-}
-
-void gfxObject::Resize(int w, int h){
-	if(w < 0) w = 0;
-	if(h < 0) h = 0;
-	layout.w = w;
-	layout.h = h;
-}
-
-void gfxObject::RenderTo(SDL_Renderer* ren) const{
-	if(SDL_RenderCopy(ren, image, nullptr, &layout))
-		LogSDLError(std::cout, "RenderCopy");
-}
-
-int gfxObject::LeftEdge() const{
-	return layout.x;
-}
-
-int gfxObject::RightEdge() const{
-	return layout.x + layout.w - 1;
-}
-
-int gfxObject::TopEdge() const{
-	return layout.y;
-}
-
-int gfxObject::BottomEdge() const{
-	return layout.y + layout.h - 1;
-}
-
 gameWindow::gameWindow(const std::string& title, const int x, const int y,
 		const int w, const int h){
 	if((SDL_WasInit(SDL_INIT_EVERYTHING) & SDL_INIT_EVERYTHING) == 0){
@@ -102,16 +17,25 @@ gameWindow::gameWindow(const std::string& title, const int x, const int y,
 	}
 }
 
+/*gameWindow::gameWindow(gameWindow&& other): win(nullptr), ren(nullptr),
+		background(std::move(other.background)), 
+		clickable(std::move(other.clickable)), objects(std::move(other.objects)),
+		buttons(std::move(other.buttons)) {
+	std::swap(win, other.win);
+	std::swap(ren, other.ren);
+}*/
+
+
 gameWindow::~gameWindow(){
 	SDL_Cleanup(ren, win);
 }
 
 void gameWindow::Render(){
 	SDL_RenderClear(ren);
-	for(unsigned int i = 0; i < background.size(); ++i) background[i].RenderTo(ren);
-	for(unsigned int i = 0; i < clickable.size(); ++i) clickable[i].RenderTo(ren);
-	for(unsigned int i = 0; i < objects.size(); ++i) objects[i].RenderTo(ren);
-	for(unsigned int i = 0; i < buttons.size(); ++i) buttons[i].RenderTo(ren);
+	for(unsigned int i = 0; i < background.size(); ++i) background[i].Render();
+	for(unsigned int i = 0; i < clickable.size(); ++i) clickable[i].Render();
+	for(unsigned int i = 0; i < objects.size(); ++i) objects[i].Render();
+	for(unsigned int i = 0; i < buttons.size(); ++i) buttons[i].Render();
 	SDL_RenderPresent(ren);
 }
 
@@ -131,12 +55,12 @@ bool gameWindow::InitSDL(){
 		SDL_Quit();
 		return false;
 	}
-	defaultFont = TTF_OpenFont(DEFAULT_FONT, DEFAULT_FONT_SIZE);
+	gfxObject::defaultFont = TTF_OpenFont(DEFAULT_FONT, DEFAULT_FONT_SIZE);
 	return true;
 }
 
 void gameWindow::QuitSDL(){
-	TTF_CloseFont(defaultFont);
+	TTF_CloseFont(gfxObject::defaultFont);
 	TTF_Quit();
 	IMG_Quit();
 	SDL_Quit();
@@ -146,16 +70,16 @@ void gameWindow::AddObject(std::string filename, const int x, const int y){
 	objects.emplace_back(ren, filename, x, y);
 }
 
-gfxObject* gameWindow::Object(const int num){
+uiElement* gameWindow::Object(const int num){
 	if(num > static_cast<long>(objects.size()) || num < 0){
-		std::cout << "Error: tried to access gfxObject " << num <<
+		std::cout << "Error: tried to access uiElement " << num <<
 			", which does not exist." << std::endl;
 		return nullptr;
 	}
 	return &objects[num];
 }
 
-gfxObject* gameWindow::ClickedObject(const int x, const int y){
+entity* gameWindow::ClickedObject(const int x, const int y){
 	for(unsigned int i = buttons.size()-1; i < buttons.size(); --i){
 		if(buttons[i].LeftEdge() < x
 				&& x < buttons[i].RightEdge()
@@ -255,17 +179,21 @@ void gameWindow::AddColonists(const std::shared_ptr<colony> col){
 }
 
 void gameWindow::AddColonyMisc(const std::shared_ptr<colony> col){
+	std::string spriteDir = GetSpritePath("sprites");
 	SDL_Color color;
 	color.r = 0;
 	color.g = 0;
 	color.b = 0;
 	color.a = 255;
+	SDL_Rect layout;
+	layout.x = RESOURCE_X + RESOURCE_WIDTH/2;
+	layout.y = RESOURCE_Y + 60;
 	for(int i = 0; i < static_cast<int>(LAST_RESOURCE); ++i){
-		objects.emplace_back(ren, col->ResAsString(i), color, defaultFont,
-				RESOURCE_X + (2*i+1)*RESOURCE_WIDTH/2, RESOURCE_Y + 60);
-
+		layout.x += RESOURCE_WIDTH;
+		objects.emplace_back(ren, spriteDir + "resources.png", layout.x, layout.y);
+		objects[objects.size()-1].AddText(col->ResAsString(i), layout.x, layout.y,
+				gfxObject::defaultFont, BLACK);
 	}
-	std::string spriteDir = GetSpritePath("sprites");
 	buttons.emplace_back(ren, spriteDir + "endturn.png", SCREEN_WIDTH-200, 200);
-	buttons[buttons.size()-1].SetClickType(ENDTURN);
+	buttons[buttons.size()-1].EnableButton(END_TURN);
 }

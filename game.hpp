@@ -10,20 +10,26 @@
 #include "map.hpp"
 #include "gamewindow.hpp"
 
+class gameWindow;
 class game {
 	std::vector<std::shared_ptr<person>> people;
 	std::vector<std::shared_ptr<colony>> colonies;
 	std::vector<std::shared_ptr<map>> maps;
 
+	std::shared_ptr<gameWindow> win;
+
 	public:
-		bool Tick();	// false = quit
+		game(){ win = std::make_shared<gameWindow>("Terra Nova", 100, 100, 1024, 768); }
+		bool Tick();	// false means quit, true means continue ticking
 
 		std::shared_ptr<person> CreatePerson();
 		std::shared_ptr<colony> CreateColony(std::shared_ptr<map> parentMap,
 				const int row, const int colm);
 		std::shared_ptr<map> CreateMap();
 
-		void NextTurn(gameWindow* win);
+		std::shared_ptr<gameWindow> Window() { return win; }
+
+		void NextTurn();
 };
 
 #endif

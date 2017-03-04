@@ -18,10 +18,9 @@ class gameWindow {
 		SDL_Window* win;
 		SDL_Renderer* ren;
 
-		std::vector<uiElement> background;
-		std::vector<uiElement> clickable;
-		std::vector<uiElement> objects;
-		std::vector<uiElement> buttons;
+		std::vector<std::shared_ptr<uiElement>> background;
+		std::vector<std::shared_ptr<entity>> clickables;
+		std::vector<std::shared_ptr<entity>> objects;
 
 	public:
 		gameWindow() = delete;
@@ -36,18 +35,17 @@ class gameWindow {
 		void Render();
 		void AddObject(std::string filename, const int x = 0, const int y = 0);
 
-		uiElement* Object(const int num);
-		entity* ClickedObject(const int x, const int y);
+		SDL_Renderer* Renderer() const;
+		std::shared_ptr<entity> Object(const int num);
+		std::shared_ptr<entity> ClickedObject(const int x, const int y);
 		std::array<int, 4> Layout() const;
 		bool Ready() const;
 
-		void MakeColonyScreen(const std::shared_ptr<colony> col);
-
-		void AddResourceElements(); // eventually these will be baked in
-		void AddInnerRing(const std::shared_ptr<colony> col);
-		void AddOuterRing(const std::shared_ptr<colony> col);
-		void AddColonists(const std::shared_ptr<colony> col);
-		void AddColonyMisc(const std::shared_ptr<colony> col);
+		void ResetBackground(std::shared_ptr<uiElement> newThing);
+		void AddToBackground(std::shared_ptr<uiElement> newThing);
+		void ResetObjects();
+		void AddObject(std::shared_ptr<entity> newThing);
+		void AddClickable(std::shared_ptr<entity> newThing);
 
 		static bool InitSDL();
 		static void QuitSDL();

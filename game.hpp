@@ -10,7 +10,10 @@
 #include "map.hpp"
 #include "gamewindow.hpp"
 
+class person;
+class colony;
 class gameWindow;
+class map;
 class game {
 	std::vector<std::shared_ptr<person>> people;
 	std::vector<std::shared_ptr<colony>> colonies;

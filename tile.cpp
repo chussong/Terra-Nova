@@ -1,5 +1,13 @@
 #include "tile.hpp"
 
+tile::tile(terrain_t tileType, SDL_Renderer* ren, const std::string spriteFile,
+		const int x, const int y): entity(ren, spriteFile, x, y), tileType(tileType)
+{
+/*	std::cout << "Using the renderer at " << ren <<
+		", I have rendered the sprite at " << spriteFile <<
+		", resulting in a sprite at " << sprite.get() << std::endl;*/
+}
+
 bool tile::InsideQ(const int x, const int y) const {
 	int relX = x - layout.x;
 	int relY = y - layout.y;
@@ -12,4 +20,8 @@ bool tile::InsideQ(const int x, const int y) const {
 			 (4*relX > 4*layout.w - 1.732*(4*relY - 3*layout.h)))))
 		return false;
 	return true;
+}
+
+terrain_t tile::TileType() const{
+	return tileType;
 }

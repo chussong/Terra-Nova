@@ -41,6 +41,12 @@ terrain_t map::Terrain(const int row, const int column) const{
 	return terrain[row][column];
 }
 
+std::string map::TerrainName(const unsigned int row, const unsigned int col){
+	if(row < terrain.size() && col < terrain[row].size())
+		return TerrainName(terrain[row][col]);
+	return "TERRAIN_NAME_ERROR";
+}
+
 std::string map::TerrainName(const terrain_t type){
 	switch(type){
 		case OCEAN:			return "ocean";

@@ -31,6 +31,7 @@ class map {
 		const std::shared_ptr<colony> Colony(const int num) const;
 		terrain_t Terrain(const int row, const int column) const;
 
+		std::string TerrainName(const unsigned int x, const unsigned int y);
 		static std::string TerrainName(const terrain_t type);
 };
 #endif

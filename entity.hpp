@@ -24,7 +24,7 @@ class entity {
 		entity(entity&& other) noexcept = default;
 		entity& operator=(const entity& other) = delete;
 
-		void Render() const;
+		virtual void Render() const;
 		virtual signal_t Select();
 		virtual void Deselect();
 

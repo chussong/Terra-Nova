@@ -31,6 +31,10 @@ class entity {
 		void MoveTo(int x, int y);
 		void Resize(int w, int h);
 
+		int X() const;
+		int Y() const;
+		int W() const;
+		int H() const;
 		int LeftEdge() const;
 		int RightEdge() const;
 		int TopEdge() const;

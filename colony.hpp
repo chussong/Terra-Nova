@@ -13,19 +13,16 @@
 #include "tile.hpp"
 #include "gfxobject.hpp"
 #include "ui.hpp"
+#include "gamewindow.hpp"
 
 class map;
 class tile;
 //class gfxObject;
 
 constexpr int RESCAP = 100;
-enum resource_t { FOOD = 0, CARBON = 1, SILICON = 2, IRON = 3,
-	LAST_RESOURCE = 4 };
 
 constexpr int MAPDISP_ORIGIN_X = 300;
 constexpr int MAPDISP_ORIGIN_Y = 300;
-constexpr int TILE_WIDTH = 87;
-constexpr int TILE_HEIGHT = 75;
 constexpr int TILE_X[18] = {
 	MAPDISP_ORIGIN_X + TILE_WIDTH,		// inner ring
 	MAPDISP_ORIGIN_X + TILE_WIDTH/2,
@@ -108,6 +105,7 @@ class colony {
 		int  AddResource(const resource_t resource, int amount);
 		int  TakeResource(const resource_t resource, int amount);
 		void SetResourceIncome(const resource_t resource, int amount);
+		void AddResourceIncome(const resource_t resource, int amount);
 		void AddInhabitant(std::shared_ptr<person> inhabitant);
 		void AddBuilding(const std::string building);
 
@@ -117,8 +115,11 @@ class colony {
 		terrain_t Terrain(const unsigned int num) const;
 		int Resource(const resource_t resource) const;
 		std::string ResAsString(const int res) const;
+
 		std::shared_ptr<person> Inhabitant(const int number);
 		const std::shared_ptr<person> Inhabitant(const int number) const;
+		void AssignWorker(std::shared_ptr<person> worker,
+				const std::shared_ptr<tile> location);
 
 		void ProcessTurn();
 

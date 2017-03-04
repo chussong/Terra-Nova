@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 #include "entity.hpp"
-#include "game.hpp"
 
 enum button_t { END_TURN = 0 };
 

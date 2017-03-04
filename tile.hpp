@@ -2,8 +2,14 @@
 #define TILE_HPP
 
 #include "entity.hpp"
-#include "gamewindow.hpp"
-#include "map.hpp" // should actually just have terrain_t enum in this file
+
+constexpr int TILE_WIDTH = 87;
+constexpr int TILE_HEIGHT = 75;
+
+enum terrain_t { OCEAN = 0, COAST = 1, PLAINS = 10, MOUNTAIN = 100 };
+
+enum resource_t { FOOD = 0, CARBON = 1, SILICON = 2, IRON = 3,
+	LAST_RESOURCE = 4 };
 
 class tile : public entity {
 	terrain_t tileType;
@@ -19,6 +25,7 @@ class tile : public entity {
 
 		bool InsideQ(const int x, const int y) const;
 		terrain_t TileType() const;
+		std::array<int, LAST_RESOURCE> Income() const;
 };
 
 #endif

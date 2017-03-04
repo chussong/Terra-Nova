@@ -9,7 +9,6 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
-#include "colony.hpp"
 #include "ui.hpp"
 
 class uiElement;
@@ -37,6 +36,7 @@ class gameWindow {
 
 		SDL_Renderer* Renderer() const;
 		std::shared_ptr<entity> Object(const int num);
+		std::shared_ptr<entity> SelectedObject(const int x, const int y);
 		std::shared_ptr<entity> ClickedObject(const int x, const int y);
 		std::array<int, 4> Layout() const;
 		bool Ready() const;

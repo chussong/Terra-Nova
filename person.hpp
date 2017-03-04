@@ -5,8 +5,14 @@
 #include <vector>
 #include <cstdlib>
 #include <ctime>
+#include <memory>
+#include "entity.hpp"
+#include "tile.hpp"
 
-class person {
+constexpr int PERSON_WIDTH = 42;
+constexpr int PERSON_HEIGHT = 42;
+
+class person : public entity {
 	std::string givenName;
 	std::string surname;
 	bool female;
@@ -16,11 +22,17 @@ class person {
 	int health;
 	std::vector<std::string> inventory;
 
+	std::shared_ptr<tile> location;
+
 	static std::string GenerateGivenName();
 	static std::string GenerateSurname();
 
 	public:
-		person();
+		person() = delete;
+		person(SDL_Renderer* ren, const std::string& spriteFile, const int x,
+				const int y);
+		person(const person& other) = delete;
+		person& operator=(const person other) = delete;
 
 		void ChangeName(const std::string givenName, const std::string surname);
 		void ChangeGender(const std::string gender);
@@ -43,6 +55,9 @@ class person {
 		int							MaxHealth() const;
 		int							Health()	const;
 		std::vector<std::string> 	Inventory() const;
+
+		void SetLocation(std::shared_ptr<tile> newLoc);
+		std::shared_ptr<tile> Location() const;
 };
 
 #endif

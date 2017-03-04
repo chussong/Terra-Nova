@@ -133,6 +133,11 @@ void colony::SetResourceIncome(const resource_t resource, int amount){
 	resPerTurn[resource] = amount;
 }
 
+void colony::AddResourceIncome(const resource_t resource, int amount){
+	if(resource < 0 || resource >= LAST_RESOURCE) return;
+	resPerTurn[resource] += amount;
+}
+
 void colony::AddInhabitant(std::shared_ptr<person> inhabitant){
 	inhabitants.emplace_back(inhabitant);
 }
@@ -172,6 +177,17 @@ const std::shared_ptr<person> colony::Inhabitant(const int number) const {
 	return inhabitants[number].lock();
 }
 
+void colony::AssignWorker(std::shared_ptr<person> worker, 
+		const std::shared_ptr<tile> location){
+	if(worker->Location()){
+		std::array<int, LAST_RESOURCE> oldIncome(worker->Location()->Income());
+		for(unsigned int i = 0; i < oldIncome.size(); ++i) resPerTurn[i] -= oldIncome[i];
+	}
+	worker->SetLocation(location);
+	std::array<int, LAST_RESOURCE> newIncome(location->Income());
+	for(unsigned int i = 0; i < newIncome.size(); ++i) resPerTurn[i] += newIncome[i];
+}
+
 void colony::ProcessTurn(){
 	for(int i = 0; i < static_cast<int>(LAST_RESOURCE); ++i){
 		AddResource(static_cast<resource_t>(i), resPerTurn[i]);
@@ -199,10 +215,12 @@ void colony::DrawResources(std::shared_ptr<gameWindow> win){
 }
 
 void colony::DrawColonists(std::shared_ptr<gameWindow> win){
-	std::string spriteDir = GetSpritePath("sprites");
+/*	std::string spriteDir = GetSpritePath("sprites");
 	std::shared_ptr<entity> placeholderColonist = std::make_shared<entity>(ren,
-			spriteDir + "colonist.png", 110, SCREEN_HEIGHT-60);
-	win->AddClickable(placeholderColonist);
+			spriteDir + "colonist.png", 110, SCREEN_HEIGHT-60);*/
+	for(unsigned int i = 0; i < inhabitants.size(); ++i){
+		win->AddClickable(inhabitants[i].lock());
+	}
 }
 
 void colony::DrawColonyMisc(std::shared_ptr<gameWindow> win){

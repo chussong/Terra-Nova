@@ -5,6 +5,7 @@
 #include <memory>
 #include <iostream>
 
+#include "templates.hpp"
 #include "person.hpp"
 #include "colony.hpp"
 #include "map.hpp"
@@ -25,7 +26,7 @@ class game {
 		game(){ win = std::make_shared<gameWindow>("Terra Nova", 100, 100, 1024, 768); }
 		bool Tick();	// false means quit, true means continue ticking
 
-		std::shared_ptr<person> CreatePerson();
+		std::shared_ptr<person> CreatePerson(const int x, const int y);
 		std::shared_ptr<colony> CreateColony(std::shared_ptr<map> parentMap,
 				const int row, const int colm);
 		std::shared_ptr<map> CreateMap();

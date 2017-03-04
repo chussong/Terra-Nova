@@ -25,3 +25,13 @@ bool tile::InsideQ(const int x, const int y) const {
 terrain_t tile::TileType() const{
 	return tileType;
 }
+
+std::array<int, LAST_RESOURCE> tile::Income() const{
+	std::array<int, LAST_RESOURCE> inc = {{0}};
+	switch(tileType){
+		case PLAINS:	inc[FOOD] = 4;
+						return inc;
+		case MOUNTAIN:	inc[IRON] = 4;
+		default:		return inc;
+	}
+}

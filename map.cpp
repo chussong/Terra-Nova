@@ -16,7 +16,8 @@ void map::Clean(){
 void map::InitTerrain(std::vector<std::vector<terrain_t>>& terrain){
 	for(unsigned int row = 0; row < terrain.size(); ++row){
 		for(unsigned int col = 0; col < terrain[row].size(); ++col){
-			terrain[row][col] = PLAINS;
+			if(col % 2 == 0) terrain[row][col] = PLAINS;
+			if(col % 2 == 1) terrain[row][col] = MOUNTAIN;
 		}
 	}
 }
@@ -44,7 +45,7 @@ terrain_t map::Terrain(const int row, const int column) const{
 std::string map::TerrainName(const unsigned int row, const unsigned int col){
 	if(row < terrain.size() && col < terrain[row].size())
 		return TerrainName(terrain[row][col]);
-	return "TERRAIN_NAME_ERROR";
+	return "OUTSIDE_OF_MAP";
 }
 
 std::string map::TerrainName(const terrain_t type){

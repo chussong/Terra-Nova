@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 #include "person.hpp"
 #include "colony.hpp"
@@ -14,8 +15,8 @@ int main(){
 	jaffa->AddResource(FOOD, 60);
 	jaffa->AddResource(CARBON, 120);
 	jaffa->AddResource(IRON, -20);
-	jaffa->AddInhabitant(game1.CreatePerson());
-	jaffa->AddInhabitant(game1.CreatePerson());
+	jaffa->AddInhabitant(game1.CreatePerson(110, SCREEN_HEIGHT - 60));
+	jaffa->AddInhabitant(game1.CreatePerson(200, SCREEN_HEIGHT - 60));
 	std::shared_ptr<person> urist = jaffa->Inhabitant(0);
 	urist->TakeDamage(20);
 	std::shared_ptr<person> urist2 = jaffa->Inhabitant(1);
@@ -28,22 +29,32 @@ int main(){
 
 	SDL_Event e;
 	bool quit = false;
+	std::shared_ptr<entity> selected;
 	while(!quit){
 		while(SDL_PollEvent(&e)){
 			switch(e.type){
-				case SDL_QUIT:				quit = true;
-											break;
-				case SDL_KEYDOWN:			quit = true;
-											break;
-				case SDL_MOUSEBUTTONDOWN:	if(e.button.button == SDL_BUTTON_LEFT){
-												std::shared_ptr<entity> obj = 
-													game1.Window()->ClickedObject(
-															e.button.x,
-															e.button.y);
-												if(obj && (obj->Select() == NEXT_TURN))
-													game1.NextTurn();
-											}
-											break;
+				case SDL_QUIT:				
+					quit = true;
+					break;
+				case SDL_KEYDOWN:			
+					quit = true;
+					break;
+				case SDL_MOUSEBUTTONDOWN:	
+					if(e.button.button == SDL_BUTTON_LEFT){
+						selected = game1.Window()->SelectedObject(e.button.x, e.button.y);
+						if(selected && (selected->Select() == NEXT_TURN))game1.NextTurn();
+					}
+					if(e.button.button == SDL_BUTTON_RIGHT && selected){
+						std::shared_ptr<entity> obj =
+							game1.Window()->ClickedObject(e.button.x, e.button.y);
+						if(obj && std::dynamic_pointer_cast<person>(selected) &&
+								std::dynamic_pointer_cast<tile>(obj)){
+							jaffa->AssignWorker(
+									std::dynamic_pointer_cast<person>(selected),
+									std::dynamic_pointer_cast<tile>(obj));
+						}
+					}
+					break;
 			}
 		}
 		game1.Window()->Render();

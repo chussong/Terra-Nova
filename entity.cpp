@@ -35,6 +35,22 @@ void entity::Resize(int w, int h){
 	layout.h = h;
 }
 
+int entity::X() const{
+	return layout.x;
+}
+
+int entity::Y() const{
+	return layout.y;
+}
+
+int entity::W() const{
+	return layout.w;
+}
+
+int entity::H() const{
+	return layout.h;
+}
+
 int entity::LeftEdge() const{
 	return layout.x;
 }

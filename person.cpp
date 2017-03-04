@@ -8,7 +8,8 @@ std::string person::GenerateSurname(){
 	return std::string("McColonist");
 }
 
-person::person(){
+person::person(SDL_Renderer* ren, const std::string& spriteFile, const int x,
+		const int y): entity(ren, spriteFile, x, y){
 	givenName = GenerateGivenName();
 	surname = GenerateSurname();
 	srand(time(NULL));
@@ -115,4 +116,14 @@ int person::Health() const{
 
 std::vector<std::string> person::Inventory() const{
 	return inventory;
+}
+
+void person::SetLocation(std::shared_ptr<tile> newLoc){
+	layout.x = newLoc->X() + (newLoc->W() - layout.w)/2;
+	layout.y = newLoc->Y() + (newLoc->H() - layout.w)/2;
+	location = newLoc;
+}
+
+std::shared_ptr<tile> person::Location() const{
+	return location;
 }

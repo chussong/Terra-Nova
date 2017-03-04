@@ -84,12 +84,17 @@ std::shared_ptr<entity> gameWindow::Object(const int num){
 
 std::shared_ptr<entity> gameWindow::ClickedObject(const int x, const int y){
 	for(unsigned int i = clickables.size()-1; i < clickables.size(); --i){
-		if(clickables[i]->LeftEdge() < x
-				&& x < clickables[i]->RightEdge()
-				&& clickables[i]->TopEdge() < y
-				&& y < clickables[i]->BottomEdge()){
-			return clickables[i];
-		}
+		if(clickables[i]->InsideQ(x, y)) return clickables[i];
+	}
+	for(unsigned int i = objects.size()-1; i < objects.size(); --i){
+		if(objects[i]->InsideQ(x, y)) return objects[i];
+	}
+	return nullptr;
+}
+
+std::shared_ptr<entity> gameWindow::SelectedObject(const int x, const int y){
+	for(unsigned int i = clickables.size()-1; i < clickables.size(); --i){
+		if(clickables[i]->InsideQ(x, y)) return clickables[i];
 	}
 	return nullptr;
 }

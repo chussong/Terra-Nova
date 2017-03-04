@@ -4,8 +4,9 @@ bool game::Tick(){
 	return true;
 }
 
-std::shared_ptr<person> game::CreatePerson(){
-	std::shared_ptr<person> newPerson(std::make_shared<person>());
+std::shared_ptr<person> game::CreatePerson(const int x, const int y){
+	std::shared_ptr<person> newPerson(std::make_shared<person>(Window()->Renderer(),
+				GetSpritePath("sprites") + "colonist.png", x, y));
 	people.push_back(newPerson);
 	return newPerson;
 }

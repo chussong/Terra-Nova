@@ -1,15 +1,14 @@
 #ifndef MAP_HPP
 #define MAP_HPP
 
-enum terrain_t { OCEAN = 0, COAST = 1, PLAINS = 10, MOUNTAIN = 100 };
-
 #include <vector>
 #include <memory>
 #include <string>
-#include "colony.hpp"
 #include "templates.hpp"
+#include "tile.hpp"
 
 class colony;
+class person;
 
 constexpr int DEFAULT_WIDTH = 100;
 constexpr int DEFAULT_HEIGHT = 100;

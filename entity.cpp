@@ -12,9 +12,9 @@ void entity::Render() const{
 	sprite->RenderTo(ren, layout);
 }
 
-signal_t entity::Select(){
+int entity::Select(){
 	selected = true;
-	return SELECTED;
+	return static_cast<int>(SELECTED);
 }
 
 void entity::Deselect(){
@@ -28,11 +28,27 @@ void entity::MoveTo(int x, int y){
 	layout.y = std::min(y, SCREEN_HEIGHT - layout.h);
 }
 
+// this takes an entire SDL_Rect but only uses the positions, not the sizes
+void entity::MoveTo(SDL_Rect newLayout){
+	if(newLayout.x < 0) newLayout.x = 0;
+	if(newLayout.y < 0) newLayout.y = 0;
+	layout.x = std::min(newLayout.x, SCREEN_WIDTH - layout.w);
+	layout.y = std::min(newLayout.y, SCREEN_HEIGHT - layout.h);
+}
+
 void entity::Resize(int w, int h){
 	if(w < 0) w = 0;
 	if(h < 0) h = 0;
 	layout.w = w;
 	layout.h = h;
+}
+
+// this takes an entire SDL_Rect but only uses the sizes, not the positions
+void entity::Resize(SDL_Rect newLayout){
+	if(newLayout.w < 0) newLayout.w = 0;
+	if(newLayout.h < 0) newLayout.h = 0;
+	layout.w = newLayout.w;
+	layout.h = newLayout.h;
 }
 
 int entity::X() const{

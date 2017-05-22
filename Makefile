@@ -17,34 +17,35 @@ all: $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
 	$(CXX) $+ $(LDFLAGS) -o $@
 
-main.o: main.cpp person.hpp colony.hpp map.hpp game.hpp gamewindow.hpp
+main.o: main.cpp person.hpp colony.hpp map.hpp game.hpp gamewindow.hpp \
+		building.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-person.o: person.cpp
+person.o: person.cpp entity.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-colony.o: colony.cpp person.hpp templates.hpp
+colony.o: colony.cpp person.hpp templates.hpp building.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-map.o: map.cpp colony.hpp templates.hpp gamewindow.hpp
+map.o: map.cpp colony.hpp templates.hpp gamewindow.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-game.o: game.cpp person.hpp colony.hpp map.hpp
+game.o: game.cpp person.hpp colony.hpp map.hpp building.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-gamewindow.o: gamewindow.cpp map.hpp
+gamewindow.o: gamewindow.cpp map.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-gfxobject.o: gfxobject.cpp gfxobject.hpp
+gfxobject.o: gfxobject.cpp gfxobject.hpp entity.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-entity.o: entity.cpp entity.hpp gamewindow.hpp
+entity.o: entity.cpp entity.hpp gamewindow.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-ui.o: ui.cpp ui.hpp entity.hpp
+ui.o: ui.cpp ui.hpp entity.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-tile.o: tile.cpp tile.hpp entity.hpp
+tile.o: tile.cpp tile.hpp entity.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 clean:

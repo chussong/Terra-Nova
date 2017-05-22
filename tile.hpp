@@ -2,17 +2,11 @@
 #define TILE_HPP
 
 #include "entity.hpp"
-
-constexpr int TILE_WIDTH = 87;
-constexpr int TILE_HEIGHT = 75;
-
-enum terrain_t { OCEAN = 0, COAST = 1, PLAINS = 10, MOUNTAIN = 100 };
-
-enum resource_t { FOOD = 0, CARBON = 1, SILICON = 2, IRON = 3,
-	LAST_RESOURCE = 4 };
+#include "building.hpp"
 
 class tile : public entity {
 	terrain_t tileType;
+	std::shared_ptr<building> bldg;
 
 	public:
 		tile() = delete;
@@ -20,12 +14,17 @@ class tile : public entity {
 				const int x, const int y);
 		tile(const entity& other) = delete;
 		tile(tile&& other) noexcept : 
-			entity(std::move(other)), tileType(other.tileType) {}
+			entity(std::move(other)), tileType(other.tileType), bldg(other.bldg) {}
 		tile& operator=(const entity& other) = delete;
+
+		void Render() const;
 
 		bool InsideQ(const int x, const int y) const;
 		terrain_t TileType() const;
 		std::array<int, LAST_RESOURCE> Income() const;
+
+		void AddBuilding(std::shared_ptr<building> newBldg);
+		void RemoveBuilding();
 };
 
 #endif

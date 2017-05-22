@@ -3,13 +3,8 @@
 
 #include <memory>
 #include <vector>
+#include "gamevars.hpp"
 #include "entity.hpp"
-
-enum button_t { END_TURN = 0 };
-
-extern TTF_Font* defaultFont;
-enum textcolor_t { BLACK = 0, RED = 1, BLUE = 2, GREEN = 3,
-	LAST_COLOR = 4 };
 
 class uiElement : public entity {
 	std::unique_ptr<gfxObject> textSprite;
@@ -44,7 +39,7 @@ class uiElement : public entity {
 
 		void EnableButton(const button_t type);
 		void DisableButton();
-		signal_t Select();
+		int Select();
 
 		void Render() const;
 };

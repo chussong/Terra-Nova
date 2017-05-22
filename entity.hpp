@@ -4,8 +4,6 @@
 #include <memory>
 #include "gfxobject.hpp"
 
-enum signal_t { ERROR = 0, SELECTED = 100, NEXT_TURN = 200 };
-
 class gfxObject;
 class entity {
 	protected:
@@ -25,11 +23,13 @@ class entity {
 		entity& operator=(const entity& other) = delete;
 
 		virtual void Render() const;
-		virtual signal_t Select();
+		virtual int Select();
 		virtual void Deselect();
 
 		void MoveTo(int x, int y);
+		void MoveTo(SDL_Rect newLayout);
 		void Resize(int w, int h);
+		void Resize(SDL_Rect newLayout);
 
 		int X() const;
 		int Y() const;

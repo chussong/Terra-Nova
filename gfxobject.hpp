@@ -11,20 +11,7 @@
 #include <SDL_ttf.h>
 
 #include "templates.hpp"
-
-constexpr int SCREEN_WIDTH = 1024;
-constexpr int SCREEN_HEIGHT = 768;
-/*constexpr int MAPDISP_ORIGIN_X = 300;
-constexpr int MAPDISP_ORIGIN_Y = 300;
-constexpr int TILE_WIDTH = 87;
-constexpr int TILE_HEIGHT = 75;
-constexpr int RESOURCE_X = SCREEN_WIDTH-400;
-constexpr int RESOURCE_Y = SCREEN_HEIGHT-100;
-constexpr int RESOURCE_WIDTH = 90;
-
-const std::string COLONY_BACKGROUND = "Space-Colony.png";*/
-constexpr auto DEFAULT_FONT = "/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf";
-constexpr int DEFAULT_FONT_SIZE = 20;
+#include "gamevars.hpp"
 
 class gfxObject {
 	SDL_Texture* image;

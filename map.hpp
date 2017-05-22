@@ -5,13 +5,11 @@
 #include <memory>
 #include <string>
 #include "templates.hpp"
+#include "gamevars.hpp"
 #include "tile.hpp"
 
 class colony;
 class person;
-
-constexpr int DEFAULT_WIDTH = 100;
-constexpr int DEFAULT_HEIGHT = 100;
 
 class map {
 	std::vector<std::vector<terrain_t>> terrain;

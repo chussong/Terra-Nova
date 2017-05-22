@@ -8,6 +8,11 @@ tile::tile(terrain_t tileType, SDL_Renderer* ren, const std::string spriteFile,
 		", resulting in a sprite at " << sprite.get() << std::endl;*/
 }
 
+void tile::Render() const{
+	sprite->RenderTo(ren, layout);
+	if(bldg) bldg->Render();
+}
+
 bool tile::InsideQ(const int x, const int y) const {
 	int relX = x - layout.x;
 	int relY = y - layout.y;
@@ -34,4 +39,16 @@ std::array<int, LAST_RESOURCE> tile::Income() const{
 		case MOUNTAIN:	inc[IRON] = 4;
 		default:		return inc;
 	}
+}
+
+void tile::AddBuilding(std::shared_ptr<building> newBldg){
+	bldg = newBldg;
+	SDL_Rect bldgLayout = layout;
+	bldgLayout.x += (TILE_WIDTH - BUILDING_WIDTH)/2;
+	bldgLayout.y += (4*TILE_HEIGHT/3 - BUILDING_HEIGHT)/2;
+	bldg->MoveTo(bldgLayout);
+}
+
+void tile::RemoveBuilding(){
+	bldg.reset();
 }

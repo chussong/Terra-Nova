@@ -7,7 +7,9 @@
 
 #include "templates.hpp"
 #include "person.hpp"
+#include "building.hpp"
 #include "colony.hpp"
+#include "building.hpp"
 #include "map.hpp"
 #include "gamewindow.hpp"
 
@@ -16,6 +18,8 @@ class colony;
 class gameWindow;
 class map;
 class game {
+	std::vector<std::shared_ptr<buildingType>> buildingTypes;
+
 	std::vector<std::shared_ptr<person>> people;
 	std::vector<std::shared_ptr<colony>> colonies;
 	std::vector<std::shared_ptr<map>> maps;
@@ -23,8 +27,11 @@ class game {
 	std::shared_ptr<gameWindow> win;
 
 	public:
-		game(){ win = std::make_shared<gameWindow>("Terra Nova", 100, 100, 1024, 768); }
+		game();
 		bool Tick();	// false means quit, true means continue ticking
+
+		void ReadBuildingTypes(); // read exported file listing building types
+		std::vector<std::shared_ptr<buildingType>> BuildingTypes();
 
 		std::shared_ptr<person> CreatePerson(const int x, const int y);
 		std::shared_ptr<colony> CreateColony(std::shared_ptr<map> parentMap,

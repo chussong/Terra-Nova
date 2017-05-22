@@ -67,7 +67,7 @@ colony::colony(SDL_Renderer* ren, std::shared_ptr<map> myMap,
 			spriteDir + myMap->TerrainName(row-1, colm+3) + ".png",
 			TILE_X[17], TILE_Y[17]);
 
-	name = "Moonbase JAFFA";
+	name = "Aurora";
 
 	resources.fill(0);
 	resourceCap.fill(RESCAP);
@@ -82,7 +82,45 @@ colony::colony(SDL_Renderer* ren, std::shared_ptr<map> myMap,
 		resourcePanels[i]->AddText(std::to_string(resources[i]),
 				RES_PANEL_WIDTH/2, 2*RES_PANEL_HEIGHT/3);
 	}
+
+	int gridLeftEdge = SCREEN_WIDTH - 50 - 
+		BUILDING_GRID_COLUMNS*(BUILDING_WIDTH + 2*BUILDING_GRID_PADDING);
+	int gridTopEdge = 350;
+	buildingGrid = std::make_shared<uiElement>(ren,
+			spriteDir + "buildingGrid.png", gridLeftEdge, gridTopEdge);
+
+	SDL_Color color;
+	color.r = 0;
+	color.g = 0;
+	color.b = 0;
+	color.a = 255;
+	endTurnButton = std::make_shared<uiElement>(ren, 
+			spriteDir + "endturn.png", SCREEN_WIDTH-200, 200);
+	endTurnButton->EnableButton(END_TURN);
 }
+
+void colony::SetBuildingTypes(
+		const std::vector<std::shared_ptr<buildingType>> buildingTypes){
+	std::string spriteDir = GetSpritePath("sprites");
+	int gridLeftEdge = SCREEN_WIDTH - 50 - 
+		BUILDING_GRID_COLUMNS*(BUILDING_WIDTH + 2*BUILDING_GRID_PADDING);
+	int gridTopEdge = 350;
+
+	this->buildingTypes = buildingTypes;
+
+	for(unsigned int i = 0; i < buildingButtons.size(); ++i){
+		if(i >= buildingTypes.size()) break;
+		buildingButtons[i] = std::make_shared<buildingPrototype>(ren, 
+				spriteDir + "building.png",
+				gridLeftEdge + (2*(i%3) + 1)*BUILDING_GRID_PADDING
+					+ (i%3)*BUILDING_WIDTH,
+				gridTopEdge + (2*(i/3) + 1)*BUILDING_GRID_PADDING
+					+ (i/3)*BUILDING_HEIGHT,
+				buildingTypes[i]);
+	}
+
+}
+
 
 void colony::Clean(){
 	CleanExpired(inhabitants);
@@ -142,10 +180,6 @@ void colony::AddInhabitant(std::shared_ptr<person> inhabitant){
 	inhabitants.emplace_back(inhabitant);
 }
 
-void colony::AddBuilding(const std::string building){
-	buildings.push_back(building);
-}
-
 std::string colony::Name() const{
 	return name;
 }
@@ -188,10 +222,76 @@ void colony::AssignWorker(std::shared_ptr<person> worker,
 	for(unsigned int i = 0; i < newIncome.size(); ++i) resPerTurn[i] += newIncome[i];
 }
 
+void colony::EnqueueBuilding(const std::shared_ptr<buildingType> type,
+		const std::shared_ptr<tile> clickedTile){
+	if(!type){
+		std::cerr << "Error: attempted to add a nullptr to building queue." << std::endl;
+		return;
+	}
+	if(!clickedTile){
+		std::cerr << "Error: attempted to add a building to a nullptr tile." << std::endl;
+		return;
+	}
+	std::array<bool, LAST_RESOURCE> haveEnough;
+	std::array<int, LAST_RESOURCE> cost = type->Cost();
+	bool canAfford = true;
+	for(unsigned int i = 0; i < LAST_RESOURCE; ++i){
+		if(resources[i] >= cost[i]){
+			haveEnough[i] = true;
+		} else {
+			haveEnough[i] = false;
+			canAfford = false;
+		}
+	}
+	if(canAfford){
+		for(unsigned int i = 0; i < LAST_RESOURCE; ++i){
+			TakeResource(static_cast<resource_t>(i), cost[i]);
+		}
+		std::shared_ptr<building> newBuilding = std::make_shared<building>
+			(ren, GetSpritePath("sprites") + "building.png", 0, 0, type);
+		newBuilding->StartConstruction();
+		buildQueue.push_back(newBuilding);
+		clickedTile->AddBuilding(newBuilding);
+	} else {
+		std::cout << "Unable to build a(n) " << type->Name() << " because you lack"
+			<< " the following resources: ";
+		for(unsigned int i = 0; i < LAST_RESOURCE; ++i){
+			if(haveEnough[i] == false){
+				std::cout << ResourceName(static_cast<resource_t>(i)) << ": " 
+					<< resources[i] << "/" << cost[i] << ", ";
+			}
+		}
+		std::cout << "\b." << std::endl;
+	}
+}
+
+void colony::EnqueueBuilding(const unsigned int id, std::shared_ptr<tile> dTile){
+	if(id >= buildingTypes.size()){
+		std::cerr << "Error: asked to enqueue a building type with an id higher \
+			than what we know (" << id << ">" << buildingTypes.size()-1 << ")."
+			<< std::endl;
+		return;
+	}
+	EnqueueBuilding(buildingTypes[id], dTile);
+}
+
+void colony::AdvanceQueue(){
+	if(buildQueue.size() == 0){
+		return;
+	}
+	buildQueue[0]->NextTurn();
+	if(buildQueue[0]->TurnsLeft() < 1){
+		std::cout << "Construction of " << buildQueue[0]->Name() << " complete!"
+			<< std::endl;
+		buildQueue.erase(buildQueue.begin());
+	}
+}
+
 void colony::ProcessTurn(){
 	for(int i = 0; i < static_cast<int>(LAST_RESOURCE); ++i){
 		AddResource(static_cast<resource_t>(i), resPerTurn[i]);
 	}
+	AdvanceQueue();
 }
 
 void colony::MakeColonyScreen(std::shared_ptr<gameWindow> win) {
@@ -224,16 +324,12 @@ void colony::DrawColonists(std::shared_ptr<gameWindow> win){
 }
 
 void colony::DrawColonyMisc(std::shared_ptr<gameWindow> win){
-	std::string spriteDir = GetSpritePath("sprites");
-	SDL_Color color;
-	color.r = 0;
-	color.g = 0;
-	color.b = 0;
-	color.a = 255;
-	std::shared_ptr<uiElement> button = std::make_shared<uiElement>(ren, 
-			spriteDir + "endturn.png", SCREEN_WIDTH-200, 200);
-	button->EnableButton(END_TURN);
-	win->AddClickable(button);
+	win->AddObject(buildingGrid);
+	win->AddClickable(endTurnButton);
+	for(unsigned int i = 0; i < buildingButtons.size(); ++i){
+		if(buildingButtons[i] == nullptr) break;
+		win->AddClickable(buildingButtons[i]);
+	}
 }
 
 std::string colony::ResourceName(const resource_t resource){

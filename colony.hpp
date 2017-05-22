@@ -8,70 +8,22 @@
 #include <SDL.h>
 
 #include "person.hpp"
+#include "building.hpp"
 #include "templates.hpp"
 #include "map.hpp"
 #include "tile.hpp"
 #include "gfxobject.hpp"
 #include "ui.hpp"
 #include "gamewindow.hpp"
+#include "gamevars.hpp"
 
 class map;
 class tile;
 //class gfxObject;
 
-constexpr int RESCAP = 100;
-
-constexpr int MAPDISP_ORIGIN_X = 300;
-constexpr int MAPDISP_ORIGIN_Y = 300;
-constexpr int TILE_X[18] = {
-	MAPDISP_ORIGIN_X + TILE_WIDTH,		// inner ring
-	MAPDISP_ORIGIN_X + TILE_WIDTH/2,
-	MAPDISP_ORIGIN_X - TILE_WIDTH/2,
-	MAPDISP_ORIGIN_X - TILE_WIDTH,
-	MAPDISP_ORIGIN_X - TILE_WIDTH/2,
-	MAPDISP_ORIGIN_X + TILE_WIDTH/2,
-	MAPDISP_ORIGIN_X + 2*TILE_WIDTH,	// outer ring
-	MAPDISP_ORIGIN_X + 3*TILE_WIDTH/2,
-	MAPDISP_ORIGIN_X + TILE_WIDTH,
-	MAPDISP_ORIGIN_X,
-	MAPDISP_ORIGIN_X - TILE_WIDTH,
-	MAPDISP_ORIGIN_X - 3*TILE_WIDTH/2,
-	MAPDISP_ORIGIN_X - 2*TILE_WIDTH,
-	MAPDISP_ORIGIN_X - 3*TILE_WIDTH/2,
-	MAPDISP_ORIGIN_X - TILE_WIDTH,
-	MAPDISP_ORIGIN_X,
-	MAPDISP_ORIGIN_X + TILE_WIDTH,
-	MAPDISP_ORIGIN_X + 3*TILE_WIDTH/2,
-};
-constexpr int TILE_Y[18] = {
-	MAPDISP_ORIGIN_Y,					// inner ring
-	MAPDISP_ORIGIN_Y + TILE_HEIGHT,
-	MAPDISP_ORIGIN_Y + TILE_HEIGHT,
-	MAPDISP_ORIGIN_Y,
-	MAPDISP_ORIGIN_Y - TILE_HEIGHT,
-	MAPDISP_ORIGIN_Y - TILE_HEIGHT,
-	MAPDISP_ORIGIN_Y,					// outer ring
-	MAPDISP_ORIGIN_Y + TILE_HEIGHT,
-	MAPDISP_ORIGIN_Y + 2*TILE_HEIGHT,
-	MAPDISP_ORIGIN_Y + 2*TILE_HEIGHT,
-	MAPDISP_ORIGIN_Y + 2*TILE_HEIGHT,
-	MAPDISP_ORIGIN_Y + TILE_HEIGHT,
-	MAPDISP_ORIGIN_Y,
-	MAPDISP_ORIGIN_Y - TILE_HEIGHT,
-	MAPDISP_ORIGIN_Y - 2*TILE_HEIGHT,
-	MAPDISP_ORIGIN_Y - 2*TILE_HEIGHT,
-	MAPDISP_ORIGIN_Y - 2*TILE_HEIGHT,
-	MAPDISP_ORIGIN_Y - TILE_HEIGHT,
-};
-
-constexpr int RES_PANEL_WIDTH = 90;
-constexpr int RES_PANEL_HEIGHT = 90;
-constexpr int RES_PANEL_X = SCREEN_WIDTH - LAST_RESOURCE*RES_PANEL_WIDTH;
-constexpr int RES_PANEL_Y = SCREEN_HEIGHT - RES_PANEL_HEIGHT;
-const std::string COLONY_BACKGROUND = "Space-Colony.png";
-
 class colony {
 	std::shared_ptr<uiElement> colonyBackground;
+	std::vector<std::shared_ptr<buildingType>> buildingTypes;
 
 	SDL_Renderer* ren;
 
@@ -92,13 +44,22 @@ class colony {
 	std::vector<std::string> buildings;
 	std::vector<std::weak_ptr<person>> stagingArea;
 
+	std::vector<std::shared_ptr<building>> buildQueue;
+
 	std::array<std::shared_ptr<uiElement>, LAST_RESOURCE> resourcePanels;
+	std::shared_ptr<uiElement> buildingGrid;
+	std::array<std::shared_ptr<buildingPrototype>, 
+		BUILDING_GRID_ROWS*BUILDING_GRID_COLUMNS> buildingButtons;
+	std::shared_ptr<uiElement> endTurnButton;
 
 	void Clean();
 
 	public:
 		colony(SDL_Renderer* ren, std::shared_ptr<map> myMap,
 				const int row, const int colm);
+
+		void SetBuildingTypes(
+				const std::vector<std::shared_ptr<buildingType>> buildingTypes);
 
 		void ChangeName(const std::string name);
 		void Move(const int xdist, const int ydist);
@@ -120,6 +81,12 @@ class colony {
 		const std::shared_ptr<person> Inhabitant(const int number) const;
 		void AssignWorker(std::shared_ptr<person> worker,
 				const std::shared_ptr<tile> location);
+
+		void EnqueueBuilding(const std::shared_ptr<buildingType> type,
+				std::shared_ptr<tile> destinationTile);
+		void EnqueueBuilding(const unsigned int id,
+				std::shared_ptr<tile> destinationTile);
+		void AdvanceQueue();
 
 		void ProcessTurn();
 

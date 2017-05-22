@@ -6,11 +6,9 @@
 #include <cstdlib>
 #include <ctime>
 #include <memory>
+#include "gamevars.hpp"
 #include "entity.hpp"
 #include "tile.hpp"
-
-constexpr int PERSON_WIDTH = 42;
-constexpr int PERSON_HEIGHT = 42;
 
 class person : public entity {
 	std::string givenName;

@@ -1,7 +1,37 @@
 #include "game.hpp"
 
+game::game(){
+	win = std::make_shared<gameWindow>("Terra Nova", 100, 100, 1024, 768);
+	ReadBuildingTypes();
+}
+
 bool game::Tick(){
 	return true;
+}
+
+// read exported file listing building types; this is a placeholder
+void game::ReadBuildingTypes(){
+	int idsUsed = 0;
+	buildingTypes.clear();
+	std::shared_ptr<buildingType> newType;
+	std::array<int, 4> costs;
+
+	costs = {{0,60,40,40}};
+	newType = std::make_shared<buildingType>(idsUsed++, "Factory Farm", costs,3);
+	buildingTypes.push_back(newType);
+
+	costs = {{0,20,60,80}};
+	newType = std::make_shared<buildingType>(idsUsed++, "Automated Mine", costs,
+			4);
+	buildingTypes.push_back(newType);
+
+	if(buildingTypes.size() > 100){
+		std::cerr << "Error: only up to 100 building types are supported." << std::endl;
+	}
+}
+
+std::vector<std::shared_ptr<buildingType>> game::BuildingTypes(){
+	return buildingTypes;
 }
 
 std::shared_ptr<person> game::CreatePerson(const int x, const int y){
@@ -15,6 +45,7 @@ std::shared_ptr<colony> game::CreateColony(std::shared_ptr<map> parentMap,
 		const int row, const int colm){
 	std::shared_ptr<colony> newColony(std::make_shared<colony>(Window()->Renderer(),
 				parentMap, row, colm));
+	newColony->SetBuildingTypes(buildingTypes);
 	colonies.push_back(newColony);
 	return newColony;
 }

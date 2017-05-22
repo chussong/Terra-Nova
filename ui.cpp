@@ -68,13 +68,19 @@ void uiElement::DisableButton(){
 	button = false;
 }
 
-signal_t uiElement::Select(){
+int uiElement::Select(){
 	if(button){
 		switch(type){
-			case END_TURN:		return NEXT_TURN;
+			case END_TURN:		return static_cast<int>(NEXT_TURN);
+			case BUILDING:		if(values.size() < 1){
+									std::cerr << "Error: building button not \
+										given an ID." << std::endl;
+									return static_cast<int>(ERROR);
+								}
+								return static_cast<int>(TRY_BUILD) + values[0];
 		}
 	}
-	return ERROR;
+	return static_cast<int>(ERROR);
 }
 
 void uiElement::Render() const {

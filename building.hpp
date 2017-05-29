@@ -11,6 +11,11 @@ class buildingType{
 	const std::string name;
 	const std::array<int, LAST_RESOURCE> cost;
 	const int buildTime;
+
+	std::vector<terrain_t> allowedTerrain; // empty means all terrain allowed
+	bool automatic = false;	// i.e. automatically harvests resources on its tile
+	unsigned int maxOccupants = 1;
+	std::array<int, LAST_RESOURCE> bonusResources = {{0}};
 	
 	public:
 		buildingType() = delete;
@@ -24,6 +29,18 @@ class buildingType{
 		std::string						Name()		const	{return name; }
 		std::array<int, LAST_RESOURCE>	Cost()		const	{return cost; }
 		int								BuildTime() const	{return buildTime; }
+
+		void SetAutomatic(const bool val)	{automatic = val;}
+		bool Automatic() const				{return automatic;}
+		void SetMaxOccupants(const int val)	{maxOccupants = val;}
+		unsigned int MaxOccupants() const	{return maxOccupants;}
+		void SetBonusResources(const std::array<int, LAST_RESOURCE>& val)
+			{bonusResources = val;}
+		std::array<int, LAST_RESOURCE> BonusResources() const
+			{return bonusResources;}
+		void SetAllowedTerrain(const std::vector<terrain_t>& val) 
+			{allowedTerrain = val;}
+		std::vector<terrain_t> AllowedTerrain() const {return allowedTerrain;}
 
 };
 
@@ -73,6 +90,12 @@ class building : public entity {
 		void StartConstruction()					{turnsLeft = BuildTime();}
 		int TurnsLeft() const 						{return turnsLeft;}
 		void NextTurn()								{turnsLeft--;}
+		bool Finished() const						{return turnsLeft == 0;}
+
+		bool Automatic() const				{return type->Automatic();}
+		unsigned int MaxOccupants() const	{return type->MaxOccupants();}
+		std::array<int, LAST_RESOURCE> BonusResources() const
+			{return type->BonusResources();}
 };
 
 #endif

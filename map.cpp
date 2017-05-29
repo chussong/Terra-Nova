@@ -54,6 +54,7 @@ std::string map::TerrainName(const terrain_t type){
 		case COAST:			return "coast";
 		case PLAINS:		return "plains";
 		case MOUNTAIN:		return "mountain";
+		default:			return "TERRAIN TYPE NOT FOUND";
 	}
 	return "";
 }

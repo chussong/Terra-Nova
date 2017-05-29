@@ -30,7 +30,8 @@ constexpr int DEFAULT_FONT_SIZE = 20;
 constexpr int TILE_WIDTH = 87;
 constexpr int TILE_HEIGHT = 75;
 
-enum terrain_t { OCEAN = 0, COAST = 1, PLAINS = 10, MOUNTAIN = 100 };
+enum terrain_t { OCEAN = 0, COAST = 1, PLAINS = 2, MOUNTAIN = 3,
+	LAST_TERRAIN = 4 };
 
 // from the map
 

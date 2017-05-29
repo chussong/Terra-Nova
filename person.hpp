@@ -10,6 +10,7 @@
 #include "entity.hpp"
 #include "tile.hpp"
 
+class tile;
 class person : public entity {
 	std::string givenName;
 	std::string surname;

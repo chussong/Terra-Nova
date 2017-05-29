@@ -3,10 +3,13 @@
 
 #include "entity.hpp"
 #include "building.hpp"
+#include "person.hpp"
 
+class person;
 class tile : public entity {
 	terrain_t tileType;
 	std::shared_ptr<building> bldg;
+	std::vector<std::shared_ptr<person>> occupants;
 
 	public:
 		tile() = delete;
@@ -25,6 +28,9 @@ class tile : public entity {
 
 		void AddBuilding(std::shared_ptr<building> newBldg);
 		void RemoveBuilding();
+
+		bool AddOccupant(std::shared_ptr<person> newOccupant);
+		bool RemoveOccupant(std::shared_ptr<person> removeThis);
 };
 
 #endif

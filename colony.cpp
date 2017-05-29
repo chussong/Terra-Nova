@@ -152,6 +152,26 @@ int colony::AddResource(const resource_t resource, int amount){
 	return amount;
 }
 
+std::array<int, LAST_RESOURCE> colony::AddResources(
+		const std::array<int, LAST_RESOURCE>& income){
+	std::array<int, LAST_RESOURCE> leftovers;
+	for(unsigned int i = 0; i < income.size(); ++i){
+		if(income[i] <= 0){
+			leftovers[i] = income[i];
+			continue;
+		}
+		if(resources[i] + income[i] > resourceCap[i]){
+			leftovers[i] = income[i] - resourceCap[i] + resources[i];
+			resources[i] = resourceCap[i];
+		} else {
+			resources[i] += income[i];
+			leftovers[i] = 0;
+		}
+		resourcePanels[i]->SetText(std::to_string(resources[i]));
+	}
+	return leftovers;
+}
+
 int colony::TakeResource(const resource_t resource, int amount){
 	if(resource < 0 || resource >= LAST_RESOURCE) return -1;
 	if(amount < 0) return 0;
@@ -214,12 +234,10 @@ const std::shared_ptr<person> colony::Inhabitant(const int number) const {
 void colony::AssignWorker(std::shared_ptr<person> worker, 
 		const std::shared_ptr<tile> location){
 	if(worker->Location()){
-		std::array<int, LAST_RESOURCE> oldIncome(worker->Location()->Income());
-		for(unsigned int i = 0; i < oldIncome.size(); ++i) resPerTurn[i] -= oldIncome[i];
+		worker->Location()->RemoveOccupant(worker);
 	}
-	worker->SetLocation(location);
-	std::array<int, LAST_RESOURCE> newIncome(location->Income());
-	for(unsigned int i = 0; i < newIncome.size(); ++i) resPerTurn[i] += newIncome[i];
+
+	if(location->AddOccupant(worker)) worker->SetLocation(location);
 }
 
 void colony::EnqueueBuilding(const std::shared_ptr<buildingType> type,
@@ -232,6 +250,21 @@ void colony::EnqueueBuilding(const std::shared_ptr<buildingType> type,
 		std::cerr << "Error: attempted to add a building to a nullptr tile." << std::endl;
 		return;
 	}
+
+	std::vector<terrain_t> allowedTerrain = type->AllowedTerrain();
+	bool allowedToBuild = allowedTerrain.empty();
+	for(auto& terrainType : allowedTerrain){
+		if(terrainType == clickedTile->TileType()){
+			allowedToBuild = true;
+			break;
+		}
+	}
+	if(!allowedToBuild){
+		std::cout << "Unable to build a(n) " << type->Name() << " on the "
+			<< "selected terrain's tile type." << std::endl;
+		return;
+	}
+
 	std::array<bool, LAST_RESOURCE> haveEnough;
 	std::array<int, LAST_RESOURCE> cost = type->Cost();
 	bool canAfford = true;
@@ -254,14 +287,14 @@ void colony::EnqueueBuilding(const std::shared_ptr<buildingType> type,
 		clickedTile->AddBuilding(newBuilding);
 	} else {
 		std::cout << "Unable to build a(n) " << type->Name() << " because you lack"
-			<< " the following resources: ";
+			<< " the following resource(s): ";
 		for(unsigned int i = 0; i < LAST_RESOURCE; ++i){
 			if(haveEnough[i] == false){
 				std::cout << ResourceName(static_cast<resource_t>(i)) << ": " 
 					<< resources[i] << "/" << cost[i] << ", ";
 			}
 		}
-		std::cout << "\b." << std::endl;
+		std::cout << "\b\b." << std::endl;
 	}
 }
 
@@ -288,8 +321,8 @@ void colony::AdvanceQueue(){
 }
 
 void colony::ProcessTurn(){
-	for(int i = 0; i < static_cast<int>(LAST_RESOURCE); ++i){
-		AddResource(static_cast<resource_t>(i), resPerTurn[i]);
+	for(auto& space : terrain){
+		AddResources(space->Income());
 	}
 	AdvanceQueue();
 }

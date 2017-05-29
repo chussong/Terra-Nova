@@ -64,6 +64,8 @@ class colony {
 		void ChangeName(const std::string name);
 		void Move(const int xdist, const int ydist);
 		int  AddResource(const resource_t resource, int amount);
+		std::array<int, LAST_RESOURCE> AddResources(
+				const std::array<int, LAST_RESOURCE>& income);
 		int  TakeResource(const resource_t resource, int amount);
 		void SetResourceIncome(const resource_t resource, int amount);
 		void AddResourceIncome(const resource_t resource, int amount);

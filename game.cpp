@@ -15,14 +15,24 @@ void game::ReadBuildingTypes(){
 	buildingTypes.clear();
 	std::shared_ptr<buildingType> newType;
 	std::array<int, 4> costs;
+	std::vector<terrain_t> allowedTerrain;
 
 	costs = {{0,60,40,40}};
+	allowedTerrain.clear();
+	allowedTerrain.push_back(PLAINS);
 	newType = std::make_shared<buildingType>(idsUsed++, "Factory Farm", costs,3);
+	newType->SetAllowedTerrain(allowedTerrain);
+	newType->SetBonusResources({{4,0,0,0}});
 	buildingTypes.push_back(newType);
 
 	costs = {{0,20,60,80}};
+	allowedTerrain.clear();
+	allowedTerrain.push_back(MOUNTAIN);
 	newType = std::make_shared<buildingType>(idsUsed++, "Automated Mine", costs,
 			4);
+	newType->SetAllowedTerrain(allowedTerrain);
+	newType->SetMaxOccupants(0);
+	newType->SetAutomatic(true);
 	buildingTypes.push_back(newType);
 
 	if(buildingTypes.size() > 100){

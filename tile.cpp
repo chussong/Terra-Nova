@@ -11,6 +11,14 @@ tile::tile(terrain_t tileType, SDL_Renderer* ren, const std::string spriteFile,
 void tile::Render() const{
 	sprite->RenderTo(ren, layout);
 	if(bldg) bldg->Render();
+	for(auto& occ : occupants){
+		if(!occ){
+			std::cerr << "Error: attempted to render a non-existent occupant."
+				<< std::endl;
+			continue;
+		}
+		occ->Render();
+	}
 }
 
 bool tile::InsideQ(const int x, const int y) const {
@@ -33,12 +41,22 @@ terrain_t tile::TileType() const{
 
 std::array<int, LAST_RESOURCE> tile::Income() const{
 	std::array<int, LAST_RESOURCE> inc = {{0}};
-	switch(tileType){
-		case PLAINS:	inc[FOOD] = 4;
-						return inc;
-		case MOUNTAIN:	inc[IRON] = 4;
-		default:		return inc;
+	if(occupants.size() > 0 || (bldg && bldg->Finished() && bldg->Automatic())){
+		switch(tileType){
+			case PLAINS:	inc[FOOD] = 4;
+							inc[SILICON] = 4;	// for testing only
+							break;
+			case MOUNTAIN:	inc[IRON] = 4;
+							inc[SILICON] = 4;	// for testing only
+							break;
+			default:		break;
+		}
+		if(bldg && bldg->Finished()){
+			for(unsigned int i = 0; i < inc.size(); ++i) 
+				inc[i] += bldg->BonusResources()[i];
+		}
 	}
+	return inc;
 }
 
 void tile::AddBuilding(std::shared_ptr<building> newBldg){
@@ -51,4 +69,43 @@ void tile::AddBuilding(std::shared_ptr<building> newBldg){
 
 void tile::RemoveBuilding(){
 	bldg.reset();
+}
+
+bool tile::AddOccupant(std::shared_ptr<person> newOccupant){
+	if(!newOccupant){
+		std::cerr << "Error: attempted to add a blank occupant to a tile."
+			<< std::endl;
+		return false;
+	}
+	if((bldg && bldg->MaxOccupants() <= occupants.size()) ||
+			(!bldg && occupants.size() > 0)) return false;
+
+	for(auto& oldOccupant : occupants){
+		if(oldOccupant == newOccupant){
+			std::cerr << "Error: attempted to add an occupant to a tile who was"
+				<< " already occupying it." << std::endl;
+			return false;
+		}
+	}
+	occupants.push_back(newOccupant);
+	newOccupant->MoveTo(layout.x + (TILE_WIDTH - PERSON_WIDTH)/2,
+			layout.y + (4*TILE_HEIGHT/3 - PERSON_HEIGHT)/2);
+	return true;
+}
+
+bool tile::RemoveOccupant(std::shared_ptr<person> removeThis){
+	if(!removeThis){
+		std::cerr << "Error: attempted to remove a blank occupant from a tile."
+			<< std::endl;
+		return false;
+	}
+	for(unsigned int i = occupants.size(); i <= occupants.size(); --i){
+		if(occupants[i] == removeThis){
+			occupants.erase(occupants.begin()+i);
+			return true;
+		}
+	}
+	std::cerr << "Error: attempted to remove an occupant from a tile but the "
+		<< "occupant was not found." << std::endl;
+	return false;
 }

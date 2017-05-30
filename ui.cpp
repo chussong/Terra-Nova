@@ -93,3 +93,16 @@ void uiElement::Render() const {
 //		std::cout << "Rendering an object without text." << std::endl;
 	}
 }
+
+void uiElement::MoveTo(int x, int y){
+	if(textSprite){
+		textLayout.x += x - layout.x;
+		textLayout.y += y - layout.y;
+	}
+	layout.x = x;
+	layout.y = y;
+}
+
+void uiElement::MoveTo(SDL_Rect newLayout){
+	MoveTo(newLayout.x, newLayout.y);
+}

@@ -7,8 +7,11 @@ game::game(){
 }
 
 void game::Begin(){
+	int temp_colony_row = 28;
+	int temp_colony_colm = 76;
+
 	std::shared_ptr<map> palaven = CreateMap();
-	palaven->AddColony(CreateColony(palaven, 50, 50));
+	palaven->AddColony(CreateColony(palaven, temp_colony_row, temp_colony_colm));
 	std::shared_ptr<colony> aurora = palaven->Colony(0);
 	aurora->AddResource(FOOD, 60);
 	aurora->AddResource(CARBON, 120);
@@ -27,7 +30,8 @@ void game::Begin(){
 		switch(nextScreen){
 			case COLONY_SCREEN: nextScreen = ThrowToColonyScreen(aurora);
 								break;
-			case MAP_SCREEN:	nextScreen = ThrowToMapScreen(palaven, 50, 50);
+			case MAP_SCREEN:	nextScreen = ThrowToMapScreen(palaven, 
+										temp_colony_row, temp_colony_colm);
 								break;
 			case QUIT_SCREEN:	quit = true;
 								break;

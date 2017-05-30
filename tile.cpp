@@ -21,6 +21,37 @@ void tile::Render() const{
 	}
 }
 
+void tile::MoveTo(int x, int y){
+	//std::cout << "A tile has been moved to (" << x << "," << y << ")." << std::endl;
+	layout.x = x;
+	layout.y = y;
+	if(bldg) bldg->MoveTo(x + (TILE_WIDTH - BUILDING_WIDTH)/2,
+			y + (4*TILE_HEIGHT/3 - BUILDING_HEIGHT)/2);
+	for(std::shared_ptr<person> occ : occupants){
+		occ->MoveTo(x + (TILE_WIDTH - PERSON_WIDTH)/2,
+				y + (4*TILE_HEIGHT/3 - PERSON_HEIGHT)/2);
+	}
+}
+
+// this takes an entire SDL_Rect but only uses the positions, not the sizes
+void tile::MoveTo(SDL_Rect newLayout){
+	MoveTo(newLayout.x, newLayout.y);
+}
+
+void tile::Resize(int w, int h){
+	if(w < 0) w = 0;
+	if(h < 0) h = 0;
+	layout.w = w;
+	layout.h = h;
+	if(bldg) bldg->Resize(w, h);
+	for(std::shared_ptr<person> occ : occupants) occ->Resize(w, h);
+}
+
+// this takes an entire SDL_Rect but only uses the sizes, not the positions
+void tile::Resize(SDL_Rect newLayout){
+	Resize(newLayout.w, newLayout.h);
+}
+
 bool tile::InsideQ(const int x, const int y) const {
 	int relX = x - layout.x;
 	int relY = y - layout.y;
@@ -109,7 +140,7 @@ bool tile::RemoveOccupant(std::shared_ptr<person> removeThis){
 			<< std::endl;
 		return false;
 	}
-	for(unsigned int i = occupants.size(); i <= occupants.size(); --i){
+	for(unsigned int i = occupants.size()-1; i <= occupants.size(); --i){
 		if(occupants[i] == removeThis){
 			occupants.erase(occupants.begin()+i);
 			if(bldg && occupants.empty()) bldg->FinishTraining();

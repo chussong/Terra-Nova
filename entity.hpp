@@ -27,10 +27,10 @@ class entity {
 		virtual int Select();
 		virtual void Deselect();
 
-		void MoveTo(int x, int y);
-		void MoveTo(SDL_Rect newLayout);
-		void Resize(int w, int h);
-		void Resize(SDL_Rect newLayout);
+		virtual void MoveTo(int x, int y);
+		virtual void MoveTo(SDL_Rect newLayout);
+		virtual void Resize(int w, int h);
+		virtual void Resize(SDL_Rect newLayout);
 
 		int X() const;
 		int Y() const;

@@ -42,6 +42,8 @@ class uiElement : public entity {
 		int Select();
 
 		void Render() const;
+		void MoveTo(int x, int y);
+		void MoveTo(SDL_Rect newLayout);
 };
 
 #endif

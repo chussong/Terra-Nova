@@ -33,18 +33,21 @@ void entity::Deselect(){
 }
 
 void entity::MoveTo(int x, int y){
-	if(x < 0) x = 0;
+	/*if(x < 0) x = 0;
 	if(y < 0) y = 0;
 	layout.x = std::min(x, SCREEN_WIDTH - layout.w);
-	layout.y = std::min(y, SCREEN_HEIGHT - layout.h);
+	layout.y = std::min(y, SCREEN_HEIGHT - layout.h);*/
+	layout.x = x;
+	layout.y = y;
 }
 
 // this takes an entire SDL_Rect but only uses the positions, not the sizes
 void entity::MoveTo(SDL_Rect newLayout){
-	if(newLayout.x < 0) newLayout.x = 0;
+	/*if(newLayout.x < 0) newLayout.x = 0;
 	if(newLayout.y < 0) newLayout.y = 0;
 	layout.x = std::min(newLayout.x, SCREEN_WIDTH - layout.w);
-	layout.y = std::min(newLayout.y, SCREEN_HEIGHT - layout.h);
+	layout.y = std::min(newLayout.y, SCREEN_HEIGHT - layout.h);*/
+	MoveTo(newLayout.x, newLayout.y);
 }
 
 void entity::Resize(int w, int h){
@@ -56,10 +59,11 @@ void entity::Resize(int w, int h){
 
 // this takes an entire SDL_Rect but only uses the sizes, not the positions
 void entity::Resize(SDL_Rect newLayout){
-	if(newLayout.w < 0) newLayout.w = 0;
+	/*if(newLayout.w < 0) newLayout.w = 0;
 	if(newLayout.h < 0) newLayout.h = 0;
 	layout.w = newLayout.w;
-	layout.h = newLayout.h;
+	layout.h = newLayout.h;*/
+	Resize(newLayout.w, newLayout.h);
 }
 
 int entity::X() const{

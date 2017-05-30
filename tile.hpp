@@ -22,6 +22,10 @@ class tile : public entity {
 		tile& operator=(const entity& other) = delete;
 
 		void Render() const;
+		void MoveTo(int x, int y);
+		void MoveTo(SDL_Rect newLayout);
+		void Resize(int w, int h);
+		void Resize(SDL_Rect newLayout);
 
 		bool InsideQ(const int x, const int y) const;
 		terrain_t TileType() const;

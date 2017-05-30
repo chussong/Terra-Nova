@@ -4,22 +4,33 @@ colony::colony(SDL_Renderer* ren, std::shared_ptr<map> myMap,
 		const int row, const int colm): ren(ren), myMap(myMap), row(row), 
 		colm(colm)
 {
-	if(!colonyBackground) colonyBackground = 
-		std::make_shared<uiElement>(ren, COLONY_BACKGROUND, 0, 0);
-
+	// for some reason, terrain[1] isn't appearing; it looks like it's getting
+	// moved to terrain[7]'s location, but I can't figure out how that could
+	// possibly be happening.
+	
 	// inner ring, starting from right and going CCW
 	terrain[0] = myMap->Terrain(row, colm+2);
+	//std::cout << "Terrain 0 is at [" << row << "," << colm+2 << "]." << std::endl;
 	terrain[1] = myMap->Terrain(row+1, colm+1);
+	//std::cout << "Terrain 1 is at [" << row+1 << "," << colm+1 << "]." << std::endl;
 	terrain[2] = myMap->Terrain(row+1, colm-1);
+	//std::cout << "Terrain 2 is at [" << row+1 << "," << colm-1 << "]." << std::endl;
 	terrain[3] = myMap->Terrain(row, colm-2);
+	//std::cout << "Terrain 3 is at [" << row << "," << colm-2 << "]." << std::endl;
 	terrain[4] = myMap->Terrain(row-1, colm-1);
+	//std::cout << "Terrain 4 is at [" << row-1 << "," << colm-1 << "]." << std::endl;
 	terrain[5] = myMap->Terrain(row-1, colm+1);
+	//std::cout << "Terrain 5 is at [" << row-1 << "," << colm+1 << "]." << std::endl;
 
 	// outer ring, starting from right and going CCW
 	terrain[6] = myMap->Terrain(row, colm+4);
+	//std::cout << "Terrain 6 is at [" << row << "," << colm+4 << "]." << std::endl;
 	terrain[7] = myMap->Terrain(row+1, colm+3);
+	//std::cout << "Terrain 7 is at [" << row+1 << "," << colm+3 << "]." << std::endl;
 	terrain[8] = myMap->Terrain(row+2, colm+2);
+	//std::cout << "Terrain 8 is at [" << row+2 << "," << colm+2 << "]." << std::endl;
 	terrain[9] = myMap->Terrain(row+2, colm);
+	//std::cout << "Terrain 9 is at [" << row+2 << "," << colm << "]." << std::endl;
 	terrain[10] = myMap->Terrain(row+2, colm-2);
 	terrain[11] = myMap->Terrain(row+1, colm-3);
 	terrain[12] = myMap->Terrain(row, colm-4);
@@ -29,10 +40,6 @@ colony::colony(SDL_Renderer* ren, std::shared_ptr<map> myMap,
 	terrain[16] = myMap->Terrain(row-2, colm+2);
 	terrain[17] = myMap->Terrain(row-1, colm+1);
 
-	for(unsigned int i = 0; i < terrain.size(); ++i){
-		terrain[i]->MoveTo(TILE_X[i], TILE_Y[i]);
-	}
-
 	name = "Aurora";
 
 	resources.fill(0);
@@ -40,52 +47,11 @@ colony::colony(SDL_Renderer* ren, std::shared_ptr<map> myMap,
 	resPerTurn.fill(0);
 	powerSupply = 0;
 	powerDemand = 0;
-
-	for(unsigned int i = 0; i < resourcePanels.size(); ++i){
-		resourcePanels[i] = std::make_shared<uiElement>(ren,
-				ResourceName(static_cast<resource_t>(i)) + "_panel", 
-				RES_PANEL_X + i*RES_PANEL_WIDTH, RES_PANEL_Y);
-		resourcePanels[i]->AddText(std::to_string(resources[i]),
-				RES_PANEL_WIDTH/2, 2*RES_PANEL_HEIGHT/3);
-	}
-
-	int gridLeftEdge = SCREEN_WIDTH - 50 - 
-		BUILDING_GRID_COLUMNS*(BUILDING_WIDTH + 2*BUILDING_GRID_PADDING);
-	int gridTopEdge = 350;
-	buildingGrid = std::make_shared<uiElement>(ren, "buildingGrid", 
-			gridLeftEdge, gridTopEdge);
-
-	SDL_Color color;
-	color.r = 0;
-	color.g = 0;
-	color.b = 0;
-	color.a = 255;
-	leaveColonyButton = std::make_shared<uiElement>(ren, "leavecolony",
-			SCREEN_WIDTH-200, 100);
-	leaveColonyButton->EnableButton(LEAVE_COLONY);
-	endTurnButton = std::make_shared<uiElement>(ren, "endturn", 
-			SCREEN_WIDTH-200, 200);
-	endTurnButton->EnableButton(END_TURN);
 }
 
 void colony::SetBuildingTypes(
 		const std::vector<std::shared_ptr<buildingType>> buildingTypes){
-	int gridLeftEdge = SCREEN_WIDTH - 50 - 
-		BUILDING_GRID_COLUMNS*(BUILDING_WIDTH + 2*BUILDING_GRID_PADDING);
-	int gridTopEdge = 350;
-
 	this->buildingTypes = buildingTypes;
-
-	for(unsigned int i = 0; i < buildingButtons.size(); ++i){
-		if(i >= buildingTypes.size()) break;
-		buildingButtons[i] = std::make_shared<buildingPrototype>(ren, "building",
-				gridLeftEdge + (2*(i%3) + 1)*BUILDING_GRID_PADDING
-					+ (i%3)*BUILDING_WIDTH,
-				gridTopEdge + (2*(i/3) + 1)*BUILDING_GRID_PADDING
-					+ (i/3)*BUILDING_HEIGHT,
-				buildingTypes[i]);
-	}
-
 }
 
 
@@ -115,7 +81,8 @@ int colony::AddResource(const resource_t resource, int amount){
 		resources[resource] += amount;
 		amount = 0;
 	}
-	resourcePanels[resource]->SetText(std::to_string(resources[resource]));
+	if(resourcePanels[resource])
+		resourcePanels[resource]->SetText(std::to_string(resources[resource]));
 	return amount;
 }
 
@@ -200,11 +167,13 @@ const std::shared_ptr<person> colony::Inhabitant(const int number) const {
 
 void colony::AssignWorker(std::shared_ptr<person> worker, 
 		const std::shared_ptr<tile> location){
-	if(worker->Location()){
-		worker->Location()->RemoveOccupant(worker);
-	}
+	std::shared_ptr<tile> oldLoc = nullptr;
+	if(worker->Location()) oldLoc = worker->Location();
 
-	if(location->AddOccupant(worker)) worker->SetLocation(location);
+	if(location->AddOccupant(worker)){
+		worker->SetLocation(location);
+		if(oldLoc) oldLoc->RemoveOccupant(worker);
+	}
 }
 
 void colony::EnqueueBuilding(const std::shared_ptr<buildingType> type,
@@ -301,6 +270,9 @@ void colony::MakeColonyScreen(std::shared_ptr<gameWindow> win) {
 			<< std::endl;
 		return;
 	}
+	if(!colonyBackground) colonyBackground = 
+		std::make_shared<uiElement>(ren, COLONY_BACKGROUND, 0, 0);
+
 	win->ResetBackground(colonyBackground);
 	win->ResetObjects();
 	DrawTiles(win);
@@ -310,12 +282,22 @@ void colony::MakeColonyScreen(std::shared_ptr<gameWindow> win) {
 }
 
 void colony::DrawTiles(std::shared_ptr<gameWindow> win){
-	for(unsigned int i = 0; i < terrain.size(); ++i) win->AddObject(terrain[i]);
+	for(unsigned int i = 0; i < terrain.size(); ++i){
+		terrain[i]->MoveTo(TILE_X[i], TILE_Y[i]);
+		win->AddObject(terrain[i]);
+		/*std::cout << "Tile " << i << ", a " << terrain[i]->TileType() << ", "
+			<< "moved to (" << terrain[i]->X() << "," << terrain[i]->Y() << ")."
+			<< std::endl;*/
+	}
 }
 
 void colony::DrawResources(std::shared_ptr<gameWindow> win){
 	for(unsigned int i = 0; i < resourcePanels.size(); ++i){
-//		resourcePanels[i]->SetText(std::to_string(resources[i]));
+		resourcePanels[i] = std::make_shared<uiElement>(ren,
+				ResourceName(static_cast<resource_t>(i)) + "_panel", 
+				RES_PANEL_X + i*RES_PANEL_WIDTH, RES_PANEL_Y);
+		resourcePanels[i]->AddText(std::to_string(resources[i]),
+				RES_PANEL_WIDTH/2, 2*RES_PANEL_HEIGHT/3);
 		win->AddObject(resourcePanels[i]);
 	}
 }
@@ -330,13 +312,38 @@ void colony::DrawColonists(std::shared_ptr<gameWindow> win){
 }
 
 void colony::DrawColonyMisc(std::shared_ptr<gameWindow> win){
+	int gridLeftEdge = SCREEN_WIDTH - 50 - 
+		BUILDING_GRID_COLUMNS*(BUILDING_WIDTH + 2*BUILDING_GRID_PADDING);
+	int gridTopEdge = 350;
+	buildingGrid = std::make_shared<uiElement>(ren, "buildingGrid", 
+			gridLeftEdge, gridTopEdge);
 	win->AddObject(buildingGrid);
-	win->AddClickable(leaveColonyButton);
-	win->AddClickable(endTurnButton);
+
 	for(unsigned int i = 0; i < buildingButtons.size(); ++i){
-		if(buildingButtons[i] == nullptr) break;
+		if(i >= buildingTypes.size()) break;
+		buildingButtons[i] = std::make_shared<buildingPrototype>(ren, "building",
+				gridLeftEdge + (2*(i%3) + 1)*BUILDING_GRID_PADDING
+					+ (i%3)*BUILDING_WIDTH,
+				gridTopEdge + (2*(i/3) + 1)*BUILDING_GRID_PADDING
+					+ (i/3)*BUILDING_HEIGHT,
+				buildingTypes[i]);
 		win->AddClickable(buildingButtons[i]);
 	}
+
+	SDL_Color color;
+	color.r = 0;
+	color.g = 0;
+	color.b = 0;
+	color.a = 255;
+	leaveColonyButton = std::make_shared<uiElement>(ren, "leavecolony",
+			SCREEN_WIDTH-200, 100);
+	leaveColonyButton->EnableButton(LEAVE_COLONY);
+	win->AddClickable(leaveColonyButton);
+
+	endTurnButton = std::make_shared<uiElement>(ren, "endturn", 
+			SCREEN_WIDTH-200, 200);
+	endTurnButton->EnableButton(END_TURN);
+	win->AddClickable(endTurnButton);
 }
 
 std::string colony::ResourceName(const resource_t resource){

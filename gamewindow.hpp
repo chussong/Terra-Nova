@@ -60,6 +60,11 @@ class gameWindow : public std::enable_shared_from_this<gameWindow> {
 		signal_t ColonyScreen(std::shared_ptr<colony> col);
 		signal_t MapScreen(std::shared_ptr<map> theMap, int centerColm,
 				int centerRow);
+
+		void MapScreenCenteredOn(std::shared_ptr<map> theMap, 
+				const int centerRow, const int centerColm);
+		void AddMapTiles(std::shared_ptr<map> theMap,
+				const int centerRow, const int centerColm);
 };
 
 #endif

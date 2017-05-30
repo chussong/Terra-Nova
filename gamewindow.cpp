@@ -135,9 +135,6 @@ void gameWindow::AddClickable(std::shared_ptr<entity> newThing){
 }
 
 signal_t gameWindow::ColonyScreen(std::shared_ptr<colony> col){
-	//	there's a segfault in here somewhere having to do with assigning a
-	//	colonist to work an illegal space, possibly by doing so twice in a row
-	//	under certain circumstances
 	col->MakeColonyScreen(shared_from_this());
 
 	SDL_Event e;
@@ -148,9 +145,13 @@ signal_t gameWindow::ColonyScreen(std::shared_ptr<colony> col){
 				case SDL_QUIT:				
 					quit = true;
 					break;
-				case SDL_KEYDOWN:			
-					quit = true;
-					break;
+				case SDL_KEYUP:			
+					if(e.key.keysym.sym == SDLK_c){
+						return SCREEN_CHANGE;
+					} else {
+						quit = true;
+						break;
+					}
 				case SDL_MOUSEBUTTONDOWN:	
 					if(e.button.button == SDL_BUTTON_LEFT){
 						if(selected) selected->Deselect();
@@ -189,13 +190,85 @@ signal_t gameWindow::ColonyScreen(std::shared_ptr<colony> col){
 
 signal_t gameWindow::MapScreen(std::shared_ptr<map> theMap, int centerColm,
 		int centerRow){
-	int widthToDisplay = SCREEN_WIDTH/TILE_HEIGHT+2;
-	int heightToDisplay = SCREEN_WIDTH/TILE_WIDTH+2;
-	std::vector<std::vector<std::shared_ptr<tile>>> displayTerrain = 
-		theMap->SurroundingTerrain(centerColm, centerRow, 
-				widthToDisplay, heightToDisplay);
-	std::cout << "This is where we'd display a map screen if one existed, but "
-		<< "it's not done yet so instead we'll just show you its first colony."
-		<< std::endl;
-	return ColonyScreen(theMap->Colony(0));
+	MapScreenCenteredOn(theMap, centerColm, centerRow);
+
+	SDL_Event e;
+	bool quit = false;
+	while(!quit){
+		while(SDL_PollEvent(&e)){
+			switch(e.type){
+				case SDL_QUIT:
+					quit = true;
+					break;
+				case SDL_KEYUP:
+					if(e.key.keysym.sym == SDLK_c){
+						return SCREEN_CHANGE;
+					} else {
+						quit = true;
+						break;
+					}
+				case SDL_MOUSEBUTTONDOWN:
+					if(e.button.button == SDL_BUTTON_LEFT){
+						if(selected) selected->Deselect();
+						selected = SelectedObject(e.button.x, e.button.y);
+						if(selected){
+							switch(selected->Select()/100){
+								case NEXT_TURN/100:
+									return NEXT_TURN;
+								case SCREEN_CHANGE/100:
+									return SCREEN_CHANGE;
+								default:
+									break;
+							}
+						}
+					}
+					if(e.button.button == SDL_BUTTON_RIGHT && selected){
+						std::shared_ptr<entity> obj =
+							ClickedObject(e.button.x, e.button.y);
+						if(obj && std::dynamic_pointer_cast<person>(selected) &&
+								std::dynamic_pointer_cast<tile>(obj)){
+							std::cout << "This character would now move if it "
+								"knew how to do so." << std::endl;
+						}
+					}
+					break;
+			}
+		}
+		Render();
+	}
+	return QUIT;
 }
+
+void gameWindow::MapScreenCenteredOn(std::shared_ptr<map> theMap, const int centerRow,
+		const int centerColm){
+	if(!theMap){
+		std::cerr << "Error: attempted to draw from a non-existent map."
+			<< std::endl;
+		return;
+	}
+	ResetObjects();
+	AddMapTiles(theMap, centerRow, centerColm);
+}
+
+void gameWindow::AddMapTiles(std::shared_ptr<map> theMap, const int centerRow, 
+		const int centerColm){
+	/*std::cout << "Constructing a map centered on [" << centerRow << "," 
+		<< centerColm << "]." << std::endl;*/
+	for(unsigned int i = 0; i < theMap->NumberOfRows(); ++i){
+		for(unsigned int j = i%2; j < theMap->NumberOfColumns(); j+=2){
+			theMap->Terrain(i,j)->MoveTo(
+					MAPDISP_ORIGIN_X + (static_cast<int>(j)-centerColm)*TILE_WIDTH/2,
+					MAPDISP_ORIGIN_Y + (static_cast<int>(i)-centerRow)*TILE_HEIGHT);
+			if(theMap->Terrain(i,j)->X() > 0
+					&& theMap->Terrain(i,j)->X() < SCREEN_WIDTH
+					&& theMap->Terrain(i,j)->Y() > 0
+					&& theMap->Terrain(i,j)->Y() < SCREEN_HEIGHT){
+				/*std::cout << "The tile at [" << i << "," << j << "] should "
+					<< "appear on the screen at (" << theMap->Terrain(i,j)->X()
+					<< "," << theMap->Terrain(i,j)->Y() << ")." << std::endl;*/
+			}
+			AddObject(theMap->Terrain(i,j));
+		}
+	}
+}
+

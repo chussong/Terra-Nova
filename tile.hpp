@@ -6,6 +6,7 @@
 #include "person.hpp"
 
 class person;
+class building;
 class tile : public entity {
 	terrain_t tileType;
 	std::shared_ptr<building> bldg;
@@ -31,6 +32,8 @@ class tile : public entity {
 
 		bool AddOccupant(std::shared_ptr<person> newOccupant);
 		bool RemoveOccupant(std::shared_ptr<person> removeThis);
+
+		void Training();
 };
 
 #endif

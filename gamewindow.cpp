@@ -132,3 +132,55 @@ void gameWindow::AddObject(std::shared_ptr<entity> newThing){
 void gameWindow::AddClickable(std::shared_ptr<entity> newThing){
 	clickables.push_back(newThing);
 }
+
+signal_t gameWindow::ColonyScreen(std::shared_ptr<colony> col){
+	//	there's a segfault in here somewhere having to do with assigning a
+	//	colonist to work an illegal space, possibly by doing so twice in a row
+	//	under certain circumstances
+	col->MakeColonyScreen(shared_from_this());
+
+	SDL_Event e;
+	bool quit = false;
+	while(!quit){
+		while(SDL_PollEvent(&e)){
+			switch(e.type){
+				case SDL_QUIT:				
+					quit = true;
+					break;
+				case SDL_KEYDOWN:			
+					quit = true;
+					break;
+				case SDL_MOUSEBUTTONDOWN:	
+					if(e.button.button == SDL_BUTTON_LEFT){
+						if(selected) selected->Deselect();
+						selected = SelectedObject(e.button.x, e.button.y);
+						if(selected){
+							switch(selected->Select()/100){
+								case NEXT_TURN/100:	return NEXT_TURN;
+								default:			break;
+							}
+						}
+					}
+					if(e.button.button == SDL_BUTTON_RIGHT && selected){
+						std::shared_ptr<entity> obj =
+							ClickedObject(e.button.x, e.button.y);
+						if(obj && std::dynamic_pointer_cast<person>(selected) &&
+								std::dynamic_pointer_cast<tile>(obj)){
+							col->AssignWorker(
+									std::dynamic_pointer_cast<person>(selected),
+									std::dynamic_pointer_cast<tile>(obj));
+						}
+						if(obj && std::dynamic_pointer_cast<buildingPrototype>(selected)
+								&& std::dynamic_pointer_cast<tile>(obj)){
+							col->EnqueueBuilding(
+									std::dynamic_pointer_cast<buildingPrototype>(selected)->Type(),
+									std::dynamic_pointer_cast<tile>(obj));
+						}
+					}
+					break;
+			}
+		}
+		Render();
+	}
+	return QUIT;
+}

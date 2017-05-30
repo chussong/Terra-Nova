@@ -10,9 +10,13 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include "ui.hpp"
+#include "person.hpp"
+#include "building.hpp"
+#include "tile.hpp"
+#include "colony.hpp"
 
 class uiElement;
-class gameWindow {
+class gameWindow : public std::enable_shared_from_this<gameWindow> {
 	protected:
 		SDL_Window* win;
 		SDL_Renderer* ren;
@@ -20,6 +24,8 @@ class gameWindow {
 		std::vector<std::shared_ptr<uiElement>> background;
 		std::vector<std::shared_ptr<entity>> clickables;
 		std::vector<std::shared_ptr<entity>> objects;
+
+		std::shared_ptr<entity> selected;
 
 	public:
 		gameWindow() = delete;
@@ -49,6 +55,8 @@ class gameWindow {
 
 		static bool InitSDL();
 		static void QuitSDL();
+
+		signal_t ColonyScreen(std::shared_ptr<colony>);
 };
 
 #endif

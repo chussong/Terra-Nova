@@ -8,13 +8,14 @@ std::string person::GenerateSurname(){
 	return std::string("McColonist");
 }
 
-person::person(SDL_Renderer* ren, const std::string& spriteFile, const int x,
-		const int y): entity(ren, spriteFile, x, y){
+person::person(SDL_Renderer* ren, const std::shared_ptr<unitSpec> spec, 
+		const int x, const int y): 
+		entity(ren, GetSpritePath("sprites") + spec->Name() + ".png", x, y, true),
+		spec(spec){
 	givenName = GenerateGivenName();
 	surname = GenerateSurname();
 	srand(time(NULL));
 	female = std::rand() % 2;
-	spec = "Colonist";
 	maxHealth = 100;
 	health = 100;
 }
@@ -29,8 +30,12 @@ void person::ChangeGender(const std::string gender){
 	if(gender == "male") female = false;
 }
 
-void person::ChangeSpec(const std::string spec){
+void person::ChangeSpec(const std::shared_ptr<unitSpec> spec){
 	this->spec = spec;
+	sprite = std::make_unique<gfxObject>(ren, 
+			GetSpritePath("sprites") + spec->Name() + ".png", layout);
+	selectedSprite = std::make_unique<gfxObject>(ren, 
+			GetSpritePath("sprites") + spec->Name() + "_selected.png", layout);
 }
 
 void person::ChangeMaxHealth(const int maxHealth){
@@ -102,7 +107,7 @@ std::string person::PosPronCap() const{
 	return std::string("His");
 }
 
-std::string person::Spec() const{
+std::shared_ptr<unitSpec> person::Spec() const{
 	return spec;
 }
 

@@ -312,7 +312,7 @@ void colony::AdvanceQueue(){
 	if(buildQueue.size() == 0){
 		return;
 	}
-	buildQueue[0]->NextTurn();
+	buildQueue[0]->BuildTurn();
 	if(buildQueue[0]->TurnsLeft() < 1){
 		std::cout << "Construction of " << buildQueue[0]->Name() << " complete!"
 			<< std::endl;
@@ -323,11 +323,17 @@ void colony::AdvanceQueue(){
 void colony::ProcessTurn(){
 	for(auto& space : terrain){
 		AddResources(space->Income());
+		space->Training();
 	}
 	AdvanceQueue();
 }
 
 void colony::MakeColonyScreen(std::shared_ptr<gameWindow> win) {
+	if(!win){
+		std::cerr << "Error: attempted to draw a colony to a nonexistent window."
+			<< std::endl;
+		return;
+	}
 	win->ResetBackground(colonyBackground);
 	win->ResetObjects();
 	DrawTiles(win);

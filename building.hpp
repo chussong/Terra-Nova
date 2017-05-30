@@ -3,9 +3,11 @@
 
 #include <memory>
 #include "gamevars.hpp"
+#include "person.hpp"
 
 constexpr std::array<int, LAST_RESOURCE> defaultCost{};
 
+class unitSpec;
 class buildingType{
 	const int id;
 	const std::string name;
@@ -13,9 +15,11 @@ class buildingType{
 	const int buildTime;
 
 	std::vector<terrain_t> allowedTerrain; // empty means all terrain allowed
+	bool canHarvest = true;
 	bool automatic = false;	// i.e. automatically harvests resources on its tile
 	unsigned int maxOccupants = 1;
 	std::array<int, LAST_RESOURCE> bonusResources = {{0}};
+	std::vector<std::shared_ptr<unitSpec>> canTrain;
 	
 	public:
 		buildingType() = delete;
@@ -25,22 +29,24 @@ class buildingType{
 				const int buildTime)
 					:id(id), name(name), cost(cost), buildTime(buildTime) {}
 
-		int								ID()		const	{return id; }
-		std::string						Name()		const	{return name; }
-		std::array<int, LAST_RESOURCE>	Cost()		const	{return cost; }
-		int								BuildTime() const	{return buildTime; }
+		int								ID()		const;
+		std::string						Name()		const;
+		std::array<int, LAST_RESOURCE>	Cost()		const;
+		int								BuildTime() const;
 
-		void SetAutomatic(const bool val)	{automatic = val;}
-		bool Automatic() const				{return automatic;}
-		void SetMaxOccupants(const int val)	{maxOccupants = val;}
-		unsigned int MaxOccupants() const	{return maxOccupants;}
-		void SetBonusResources(const std::array<int, LAST_RESOURCE>& val)
-			{bonusResources = val;}
-		std::array<int, LAST_RESOURCE> BonusResources() const
-			{return bonusResources;}
-		void SetAllowedTerrain(const std::vector<terrain_t>& val) 
-			{allowedTerrain = val;}
-		std::vector<terrain_t> AllowedTerrain() const {return allowedTerrain;}
+		void SetAllowedTerrain(const std::vector<terrain_t>& val);
+		std::vector<terrain_t> AllowedTerrain() const;
+		void SetCanHarvest(const bool val);
+		bool CanHarvest() const;
+		void SetAutomatic(const bool val);
+		bool Automatic() const;
+		void SetMaxOccupants(const int val);
+		unsigned int MaxOccupants() const;
+		void SetBonusResources(const std::array<int, LAST_RESOURCE>& val);
+		std::array<int, LAST_RESOURCE> BonusResources() const;
+		void SetCanTrain(const std::vector<std::shared_ptr<unitSpec>>& val);
+		void SetCanTrain(const std::shared_ptr<unitSpec> val);
+		std::vector<std::shared_ptr<unitSpec>> CanTrain() const;
 
 };
 
@@ -58,10 +64,10 @@ class buildingPrototype : public entity {
 			entity(std::move(other)), type(std::move(other.type)) {}
 		buildingPrototype& operator=(const buildingPrototype& other) = delete;
 
-		std::string Name() const						{return type->Name();}
-		std::array<int, LAST_RESOURCE>	Cost() const	{return type->Cost();}
-		int BuildTime() const						{return type->BuildTime();}
-		std::shared_ptr<buildingType> Type() const		{return type;}
+		std::string Name() const;
+		std::array<int, LAST_RESOURCE>	Cost() const;
+		int BuildTime() const;
+		std::shared_ptr<buildingType> Type() const;
 };
 
 class building : public entity {
@@ -69,7 +75,10 @@ class building : public entity {
 	int turnsLeft;
 	//int health = 100;
 	//int upgradeLevel = 1;
-	//std::vector<person> occupants;
+	//std::vector<std::shared_ptr<person>> occupants;
+	
+	std::shared_ptr<unitSpec> nowTraining;
+	int turnsToTrain;
 
 	public:
 		building() = delete;
@@ -83,19 +92,26 @@ class building : public entity {
 			turnsLeft(std::move(other.turnsLeft)) {}
 		building& operator=(const building& other) = delete;
 
-		std::string Name() const						{return type->Name();}
-		std::array<int, LAST_RESOURCE>	Cost() const	{return type->Cost();}
-		int BuildTime() const						{return type->BuildTime();}
+		std::string Name() const;
+		std::array<int, LAST_RESOURCE>	Cost() const;
+		int BuildTime() const;
 
-		void StartConstruction()					{turnsLeft = BuildTime();}
-		int TurnsLeft() const 						{return turnsLeft;}
-		void NextTurn()								{turnsLeft--;}
-		bool Finished() const						{return turnsLeft == 0;}
+		void StartConstruction();
+		int TurnsLeft() const;
+		void BuildTurn();
+		bool Finished() const;
+		bool CanHarvest() const;
 
-		bool Automatic() const				{return type->Automatic();}
-		unsigned int MaxOccupants() const	{return type->MaxOccupants();}
-		std::array<int, LAST_RESOURCE> BonusResources() const
-			{return type->BonusResources();}
+		bool Automatic() const;
+		unsigned int MaxOccupants() const;
+		std::array<int, LAST_RESOURCE> BonusResources() const;
+
+		std::vector<std::shared_ptr<unitSpec>> CanTrain() const;
+		void StartTraining(std::shared_ptr<unitSpec> newSpec);
+		int TurnsToTrain() const;
+		std::shared_ptr<unitSpec> NowTraining() const;
+		void TrainingTurn();
+		void FinishTraining();
 };
 
 #endif

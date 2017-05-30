@@ -2,18 +2,30 @@
 
 
 entity::entity(SDL_Renderer* ren, const std::string& spriteFile,
-		const int x, const int y): ren(ren) {
+		const int x, const int y, const bool selectable): ren(ren),
+		selectable(selectable) {
 	layout.x = x;
 	layout.y = y;
 	sprite = std::make_unique<gfxObject>(ren, spriteFile, layout);
+	if(selectable){
+		std::string selectedFile(spriteFile);
+		selectedFile.insert(selectedFile.size()-4, "_selected");
+		selectedSprite = std::make_unique<gfxObject>(ren, selectedFile, layout);
+	}
 }
 
 void entity::Render() const{
-	sprite->RenderTo(ren, layout);
+	if(selected){
+		selectedSprite->RenderTo(ren, layout);
+	} else {
+		sprite->RenderTo(ren, layout);
+	}
 }
 
 int entity::Select(){
-	selected = true;
+	if(selectable){
+		selected = true;
+	}
 	return static_cast<int>(SELECTED);
 }
 

@@ -42,6 +42,7 @@ terrain_t tile::TileType() const{
 std::array<int, LAST_RESOURCE> tile::Income() const{
 	std::array<int, LAST_RESOURCE> inc = {{0}};
 	if(occupants.size() > 0 || (bldg && bldg->Finished() && bldg->Automatic())){
+		if(bldg && !bldg->CanHarvest()) return inc;
 		switch(tileType){
 			case PLAINS:	inc[FOOD] = 4;
 							inc[SILICON] = 4;	// for testing only
@@ -51,7 +52,7 @@ std::array<int, LAST_RESOURCE> tile::Income() const{
 							break;
 			default:		break;
 		}
-		if(bldg && bldg->Finished()){
+		if(bldg && bldg->CanHarvest()){
 			for(unsigned int i = 0; i < inc.size(); ++i) 
 				inc[i] += bldg->BonusResources()[i];
 		}
@@ -90,6 +91,9 @@ bool tile::AddOccupant(std::shared_ptr<person> newOccupant){
 	occupants.push_back(newOccupant);
 	newOccupant->MoveTo(layout.x + (TILE_WIDTH - PERSON_WIDTH)/2,
 			layout.y + (4*TILE_HEIGHT/3 - PERSON_HEIGHT)/2);
+	if(bldg && !bldg->CanTrain().empty()){
+		bldg->StartTraining(bldg->CanTrain()[0]);
+	}
 	return true;
 }
 
@@ -102,10 +106,33 @@ bool tile::RemoveOccupant(std::shared_ptr<person> removeThis){
 	for(unsigned int i = occupants.size(); i <= occupants.size(); --i){
 		if(occupants[i] == removeThis){
 			occupants.erase(occupants.begin()+i);
+			if(bldg && occupants.empty()) bldg->FinishTraining();
 			return true;
 		}
 	}
 	std::cerr << "Error: attempted to remove an occupant from a tile but the "
 		<< "occupant was not found." << std::endl;
 	return false;
+}
+
+void tile::Training(){
+	if(bldg && bldg->NowTraining()){
+		bldg->TrainingTurn();
+		if(bldg->TurnsToTrain() == 0){
+			if(occupants.empty()){
+				std::cerr << "Error: training was completed at a building but "
+					<< "there were no occupants to receive it." << std::endl;
+				return;
+			} else {
+				if(!occupants[0]->CanRespec()){
+					std::cout << "This character is unique and can not be "
+						<< "retrained. We probably should have told you that "
+						<< "earlier." << std::endl;
+				} else {
+					occupants[0]->ChangeSpec(bldg->NowTraining());
+				}
+				bldg->FinishTraining();
+			}
+		}
+	}
 }

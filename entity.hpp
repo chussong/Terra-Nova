@@ -8,6 +8,7 @@ class gfxObject;
 class entity {
 	protected:
 		std::unique_ptr<gfxObject> sprite;
+		std::unique_ptr<gfxObject> selectedSprite;
 		SDL_Renderer* ren;
 
 		SDL_Rect layout;
@@ -17,7 +18,7 @@ class entity {
 	public:
 		entity() = delete;
 		entity(SDL_Renderer* ren, const std::string& spriteFile, const int x,
-				const int y);
+				const int y, const bool selectable = false);
 		entity(const entity& other) = delete;
 		entity(entity&& other) noexcept = default;
 		entity& operator=(const entity& other) = delete;

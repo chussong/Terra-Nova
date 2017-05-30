@@ -8,9 +8,9 @@ LDFLAGS = $(SDL_LIB)
 EXECUTABLE = TerraNova
 
 SOURCES = main.cpp person.cpp colony.cpp map.cpp game.cpp gamewindow.cpp \
-		  gfxobject.cpp entity.cpp ui.cpp tile.cpp
+		  gfxobject.cpp entity.cpp ui.cpp tile.cpp building.cpp
 OBJECTS = main.o person.o colony.o map.o game.o gamewindow.o gfxobject.o \
-		  entity.o ui.o tile.o
+		  entity.o ui.o tile.o building.o
 
 all: $(EXECUTABLE)
 
@@ -46,6 +46,9 @@ ui.o: ui.cpp ui.hpp entity.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 tile.o: tile.cpp tile.hpp entity.hpp gamevars.hpp
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+building.o: building.cpp person.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 clean:

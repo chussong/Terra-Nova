@@ -19,6 +19,7 @@
 
 class map;
 class tile;
+class gameWindow;
 //class gfxObject;
 
 class colony {

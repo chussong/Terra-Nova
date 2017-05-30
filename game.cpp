@@ -2,11 +2,58 @@
 
 game::game(){
 	win = std::make_shared<gameWindow>("Terra Nova", 100, 100, 1024, 768);
+	ReadUnitTypes();
 	ReadBuildingTypes();
+}
+
+void game::Begin(){
+	std::shared_ptr<map> palaven = CreateMap();
+	palaven->AddColony(CreateColony(palaven, 50, 50));
+	std::shared_ptr<colony> aurora = palaven->Colony(0);
+	aurora->AddResource(FOOD, 60);
+	aurora->AddResource(CARBON, 120);
+	aurora->AddResource(IRON, -20);
+	aurora->AddInhabitant(CreatePerson(110, SCREEN_HEIGHT - 60));
+	aurora->AddInhabitant(CreatePerson(200, SCREEN_HEIGHT - 60));
+	std::shared_ptr<person> urist = aurora->Inhabitant(0);
+	urist->TakeDamage(20);
+	std::shared_ptr<person> urist2 = aurora->Inhabitant(1);
+	urist2->ChangeName("Commander","Lin");
+	urist2->ChangeSpec(unitTypes[2]);
+
+	while(true){
+		switch(win->ColonyScreen(aurora)){
+			case NEXT_TURN:		NextTurn();
+								break;
+			case QUIT:			return;
+			default:			return;
+		}
+	}
 }
 
 bool game::Tick(){
 	return true;
+}
+
+// read exported file listing unit specs; this is a placeholder
+void game::ReadUnitTypes(){
+	int idsUsed = 0;
+	unitTypes.clear();
+	std::shared_ptr<unitSpec> newSpec;
+
+	newSpec = std::make_shared<unitSpec>(idsUsed++, "Colonist", 100 , 2);
+	unitTypes.push_back(newSpec);
+
+	newSpec = std::make_shared<unitSpec>(idsUsed++, "Marine", 200, 4);
+	unitTypes.push_back(newSpec);
+
+	newSpec = std::make_shared<unitSpec>(idsUsed++, "Commander", 300, 0);
+	newSpec->SetCanRespec(false);
+	unitTypes.push_back(newSpec);
+
+	if(unitTypes.size() > 100){
+		std::cerr << "Error: only up to 100 unit types are supported." << std::endl;
+	}
 }
 
 // read exported file listing building types; this is a placeholder
@@ -35,6 +82,12 @@ void game::ReadBuildingTypes(){
 	newType->SetAutomatic(true);
 	buildingTypes.push_back(newType);
 
+	costs = {{0,20,20,40}};
+	newType = std::make_shared<buildingType>(idsUsed++, "Academy", costs, 4);
+	newType->SetCanHarvest(false);
+	newType->SetCanTrain(unitTypes[1]);
+	buildingTypes.push_back(newType);
+
 	if(buildingTypes.size() > 100){
 		std::cerr << "Error: only up to 100 building types are supported." << std::endl;
 	}
@@ -45,8 +98,13 @@ std::vector<std::shared_ptr<buildingType>> game::BuildingTypes(){
 }
 
 std::shared_ptr<person> game::CreatePerson(const int x, const int y){
+	if(unitTypes.size() < 1){
+		std::cerr << "Error: attempted to create a person but no unit types "
+			<< "have been loaded." << std::endl;
+		return nullptr;
+	}
 	std::shared_ptr<person> newPerson(std::make_shared<person>(Window()->Renderer(),
-				GetSpritePath("sprites") + "colonist.png", x, y));
+				unitTypes[0], x, y));
 	people.push_back(newPerson);
 	return newPerson;
 }
@@ -69,5 +127,4 @@ std::shared_ptr<map> game::CreateMap(){
 void game::NextTurn(){
 	std::cout << "A new turn dawns..." << std::endl;
 	for(unsigned int i = 0; i < colonies.size(); ++i) colonies[i]->ProcessTurn();
-	if(colonies.size() > 0) colonies[0]->MakeColonyScreen(win); //obviously debug only
 }

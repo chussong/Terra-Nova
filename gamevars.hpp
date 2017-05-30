@@ -7,7 +7,8 @@
 
 // game state and communication
 
-enum signal_t { ERROR = 0, SELECTED = 100, NEXT_TURN = 200, TRY_BUILD = 300 };
+enum signal_t { ERROR = 0, SELECTED = 100, NEXT_TURN = 200, TRY_BUILD = 300,
+	QUIT = 400};
 
 // graphics
 

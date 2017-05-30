@@ -1,6 +1,9 @@
 #include "gfxobject.hpp"
 
 TTF_Font* gfxObject::defaultFont;
+SDL_Renderer* gfxManager::ren;
+std::vector<std::string> gfxManager::loadedSpriteNames;
+std::vector<std::shared_ptr<gfxObject>> gfxManager::loadedSprites;
 
 gfxObject::gfxObject(SDL_Renderer* ren, const std::string& filename,
 		SDL_Rect& layout){
@@ -53,4 +56,63 @@ void gfxObject::RenderTo(SDL_Renderer* ren, const SDL_Rect& layout) const{
 		" to the renderer at " << ren << " in position (" <<
 		layout.x << "," << layout.y << "), (" << layout.w << "," << layout.h
 		<< ")." << std::endl;*/
+}
+
+void gfxObject::DefaultLayout(SDL_Rect& layout) const{
+	SDL_QueryTexture(image, NULL, NULL, &layout.w, &layout.h);
+}
+
+void gfxManager::Initialize(SDL_Renderer* newRen){
+	gfxManager::ren = newRen;
+}
+
+std::string gfxManager::GetSpritePath(const std::string& subDir){
+#ifdef _WIN32
+	const char PATH_SEP = '\\';
+#else
+	const char PATH_SEP = '/';
+#endif
+
+	static std::string baseDir;
+	if(baseDir.empty()){
+		char* basePath = SDL_GetBasePath();
+		if(basePath){
+			baseDir = basePath;
+			baseDir += std::string("sprites") + PATH_SEP;
+			SDL_free(basePath);
+		} else {
+			std::cerr << "Error getting resource path: " << SDL_GetError()
+				<< std::endl;
+			return "";
+		}
+		size_t pos = baseDir.rfind("bin");
+		baseDir = baseDir.substr(0, pos);
+	}
+
+	return subDir.empty() ? baseDir : baseDir + subDir + PATH_SEP;
+}
+
+std::shared_ptr<gfxObject> gfxManager::LoadSprite(const std::string& name){
+	SDL_Rect layout;
+	std::shared_ptr<gfxObject> sprite = std::make_shared<gfxObject>(ren, 
+			GetSpritePath() + name + ".png", layout);
+	loadedSprites.push_back(sprite);
+	loadedSpriteNames.push_back(name);
+	/*std::cout << "Loaded the sprite \"" << name << "\" at position "
+		<< loadedSprites.size()-1 << "=" << loadedSpriteNames.size()-1 << "."
+		<< std::endl;*/
+	return sprite;
+}
+
+/* If this ever gets slow, try swapping each sprite forward by 1 every time
+ * it's found, causing more frequently requested sprites to be easier to get.*/
+std::shared_ptr<gfxObject> gfxManager::RequestSprite(const std::string& name){
+	for(unsigned int i = 0; i < loadedSpriteNames.size(); ++i){
+		if(loadedSpriteNames[i] == name){
+			/*std::cout << "Found the requested sprite, \"" << name << "\", at "
+				<< "position " << i << "." << std::endl;*/
+			return loadedSprites[i];
+		}
+	}
+	return LoadSprite(name);
 }

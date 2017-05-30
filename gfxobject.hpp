@@ -35,6 +35,21 @@ class gfxObject {
 		gfxObject& operator=(const gfxObject that) = delete;
 
 		void RenderTo(SDL_Renderer* ren, const SDL_Rect& layout) const;
+		void DefaultLayout(SDL_Rect& layout) const;
+};
+
+class gfxManager {
+	static SDL_Renderer* ren;
+	static std::vector<std::string> loadedSpriteNames;
+	static std::vector<std::shared_ptr<gfxObject>> loadedSprites;
+
+	static std::string GetSpritePath(const std::string& subDir = "");
+	static std::shared_ptr<gfxObject> LoadSprite(const std::string& name);
+
+	public:
+		gfxManager() = delete;
+		static void Initialize(SDL_Renderer* newRen);
+		static std::shared_ptr<gfxObject> RequestSprite(const std::string& name);
 };
 
 #endif

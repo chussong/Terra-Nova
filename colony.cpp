@@ -4,68 +4,34 @@ colony::colony(SDL_Renderer* ren, std::shared_ptr<map> myMap,
 		const int row, const int colm): ren(ren), myMap(myMap), row(row), 
 		colm(colm)
 {
-	std::string spriteDir = GetSpritePath("sprites");
-
 	if(!colonyBackground) colonyBackground = 
-		std::make_shared<uiElement>(ren, spriteDir + COLONY_BACKGROUND, 0, 0);
+		std::make_shared<uiElement>(ren, COLONY_BACKGROUND, 0, 0);
 
 	// inner ring, starting from right and going CCW
-	terrain[0] = std::make_shared<tile>(myMap->Terrain(row, colm+2), ren,
-			spriteDir + myMap->TerrainName(row, colm+2) + ".png",
-			TILE_X[0], TILE_Y[0]);
-	terrain[1] = std::make_shared<tile>(myMap->Terrain(row+1, colm+1), ren,
-			spriteDir + myMap->TerrainName(row+1, colm+1) + ".png",
-			TILE_X[1], TILE_Y[1]);
-	terrain[2] = std::make_shared<tile>(myMap->Terrain(row+1, colm-1), ren,
-			spriteDir + myMap->TerrainName(row+1, colm-1) + ".png",
-			TILE_X[2], TILE_Y[2]);
-	terrain[3] = std::make_shared<tile>(myMap->Terrain(row, colm-2), ren,
-			spriteDir + myMap->TerrainName(row, colm-2) + ".png",
-			TILE_X[3], TILE_Y[3]);
-	terrain[4] = std::make_shared<tile>(myMap->Terrain(row-1, colm-1), ren,
-			spriteDir + myMap->TerrainName(row-1, colm-1) + ".png",
-			TILE_X[4], TILE_Y[4]);
-	terrain[5] = std::make_shared<tile>(myMap->Terrain(row-1, colm+1), ren,
-			spriteDir + myMap->TerrainName(row-1, colm+1) + ".png",
-			TILE_X[5], TILE_Y[5]);
+	terrain[0] = myMap->Terrain(row, colm+2);
+	terrain[1] = myMap->Terrain(row+1, colm+1);
+	terrain[2] = myMap->Terrain(row+1, colm-1);
+	terrain[3] = myMap->Terrain(row, colm-2);
+	terrain[4] = myMap->Terrain(row-1, colm-1);
+	terrain[5] = myMap->Terrain(row-1, colm+1);
 
 	// outer ring, starting from right and going CCW
-	terrain[6] = std::make_shared<tile>(myMap->Terrain(row, colm+4), ren,
-			spriteDir + myMap->TerrainName(row, colm+4) + ".png",
-			TILE_X[6], TILE_Y[6]);
-	terrain[7] = std::make_shared<tile>(myMap->Terrain(row+1, colm+3), ren,
-			spriteDir + myMap->TerrainName(row+1, colm+3) + ".png",
-			TILE_X[7], TILE_Y[7]);
-	terrain[8] = std::make_shared<tile>(myMap->Terrain(row+2, colm+2), ren,
-			spriteDir + myMap->TerrainName(row+2, colm+2) + ".png",
-			TILE_X[8], TILE_Y[8]);
-	terrain[9] = std::make_shared<tile>(myMap->Terrain(row+2, colm), ren,
-			spriteDir + myMap->TerrainName(row+2, colm) + ".png",
-			TILE_X[9], TILE_Y[9]);
-	terrain[10] = std::make_shared<tile>(myMap->Terrain(row+2, colm-2), ren,
-			spriteDir + myMap->TerrainName(row+2, colm-2) + ".png",
-			TILE_X[10], TILE_Y[10]);
-	terrain[11] = std::make_shared<tile>(myMap->Terrain(row+1, colm-3), ren,
-			spriteDir + myMap->TerrainName(row+1, colm-3) + ".png",
-			TILE_X[11], TILE_Y[11]);
-	terrain[12] = std::make_shared<tile>(myMap->Terrain(row, colm-4), ren,
-			spriteDir + myMap->TerrainName(row, colm+4) + ".png",
-			TILE_X[12], TILE_Y[12]);
-	terrain[13] = std::make_shared<tile>(myMap->Terrain(row-1, colm-3), ren,
-			spriteDir + myMap->TerrainName(row-1, colm-3) + ".png",
-			TILE_X[13], TILE_Y[13]);
-	terrain[14] = std::make_shared<tile>(myMap->Terrain(row-2, colm-2), ren,
-			spriteDir + myMap->TerrainName(row-2, colm-2) + ".png",
-			TILE_X[14], TILE_Y[14]);
-	terrain[15] = std::make_shared<tile>(myMap->Terrain(row-2, colm), ren,
-			spriteDir + myMap->TerrainName(row-2, colm) + ".png",
-			TILE_X[15], TILE_Y[15]);
-	terrain[16] = std::make_shared<tile>(myMap->Terrain(row-2, colm+2), ren,
-			spriteDir + myMap->TerrainName(row-2, colm+2) + ".png",
-			TILE_X[16], TILE_Y[16]);
-	terrain[17] = std::make_shared<tile>(myMap->Terrain(row-1, colm+1), ren,
-			spriteDir + myMap->TerrainName(row-1, colm+3) + ".png",
-			TILE_X[17], TILE_Y[17]);
+	terrain[6] = myMap->Terrain(row, colm+4);
+	terrain[7] = myMap->Terrain(row+1, colm+3);
+	terrain[8] = myMap->Terrain(row+2, colm+2);
+	terrain[9] = myMap->Terrain(row+2, colm);
+	terrain[10] = myMap->Terrain(row+2, colm-2);
+	terrain[11] = myMap->Terrain(row+1, colm-3);
+	terrain[12] = myMap->Terrain(row, colm-4);
+	terrain[13] = myMap->Terrain(row-1, colm-3);
+	terrain[14] = myMap->Terrain(row-2, colm-2);
+	terrain[15] = myMap->Terrain(row-2, colm);
+	terrain[16] = myMap->Terrain(row-2, colm+2);
+	terrain[17] = myMap->Terrain(row-1, colm+1);
+
+	for(unsigned int i = 0; i < terrain.size(); ++i){
+		terrain[i]->MoveTo(TILE_X[i], TILE_Y[i]);
+	}
 
 	name = "Aurora";
 
@@ -77,7 +43,7 @@ colony::colony(SDL_Renderer* ren, std::shared_ptr<map> myMap,
 
 	for(unsigned int i = 0; i < resourcePanels.size(); ++i){
 		resourcePanels[i] = std::make_shared<uiElement>(ren,
-				spriteDir + ResourceName(static_cast<resource_t>(i)) + "_panel.png", 
+				ResourceName(static_cast<resource_t>(i)) + "_panel", 
 				RES_PANEL_X + i*RES_PANEL_WIDTH, RES_PANEL_Y);
 		resourcePanels[i]->AddText(std::to_string(resources[i]),
 				RES_PANEL_WIDTH/2, 2*RES_PANEL_HEIGHT/3);
@@ -86,22 +52,24 @@ colony::colony(SDL_Renderer* ren, std::shared_ptr<map> myMap,
 	int gridLeftEdge = SCREEN_WIDTH - 50 - 
 		BUILDING_GRID_COLUMNS*(BUILDING_WIDTH + 2*BUILDING_GRID_PADDING);
 	int gridTopEdge = 350;
-	buildingGrid = std::make_shared<uiElement>(ren,
-			spriteDir + "buildingGrid.png", gridLeftEdge, gridTopEdge);
+	buildingGrid = std::make_shared<uiElement>(ren, "buildingGrid", 
+			gridLeftEdge, gridTopEdge);
 
 	SDL_Color color;
 	color.r = 0;
 	color.g = 0;
 	color.b = 0;
 	color.a = 255;
-	endTurnButton = std::make_shared<uiElement>(ren, 
-			spriteDir + "endturn.png", SCREEN_WIDTH-200, 200);
+	leaveColonyButton = std::make_shared<uiElement>(ren, "leavecolony",
+			SCREEN_WIDTH-200, 100);
+	leaveColonyButton->EnableButton(LEAVE_COLONY);
+	endTurnButton = std::make_shared<uiElement>(ren, "endturn", 
+			SCREEN_WIDTH-200, 200);
 	endTurnButton->EnableButton(END_TURN);
 }
 
 void colony::SetBuildingTypes(
 		const std::vector<std::shared_ptr<buildingType>> buildingTypes){
-	std::string spriteDir = GetSpritePath("sprites");
 	int gridLeftEdge = SCREEN_WIDTH - 50 - 
 		BUILDING_GRID_COLUMNS*(BUILDING_WIDTH + 2*BUILDING_GRID_PADDING);
 	int gridTopEdge = 350;
@@ -110,8 +78,7 @@ void colony::SetBuildingTypes(
 
 	for(unsigned int i = 0; i < buildingButtons.size(); ++i){
 		if(i >= buildingTypes.size()) break;
-		buildingButtons[i] = std::make_shared<buildingPrototype>(ren, 
-				spriteDir + "building.png",
+		buildingButtons[i] = std::make_shared<buildingPrototype>(ren, "building",
 				gridLeftEdge + (2*(i%3) + 1)*BUILDING_GRID_PADDING
 					+ (i%3)*BUILDING_WIDTH,
 				gridTopEdge + (2*(i/3) + 1)*BUILDING_GRID_PADDING
@@ -281,7 +248,7 @@ void colony::EnqueueBuilding(const std::shared_ptr<buildingType> type,
 			TakeResource(static_cast<resource_t>(i), cost[i]);
 		}
 		std::shared_ptr<building> newBuilding = std::make_shared<building>
-			(ren, GetSpritePath("sprites") + "building.png", 0, 0, type);
+			(ren, "building", 0, 0, type);
 		newBuilding->StartConstruction();
 		buildQueue.push_back(newBuilding);
 		clickedTile->AddBuilding(newBuilding);
@@ -364,6 +331,7 @@ void colony::DrawColonists(std::shared_ptr<gameWindow> win){
 
 void colony::DrawColonyMisc(std::shared_ptr<gameWindow> win){
 	win->AddObject(buildingGrid);
+	win->AddClickable(leaveColonyButton);
 	win->AddClickable(endTurnButton);
 	for(unsigned int i = 0; i < buildingButtons.size(); ++i){
 		if(buildingButtons[i] == nullptr) break;

@@ -88,12 +88,18 @@ bool tile::AddOccupant(std::shared_ptr<person> newOccupant){
 			return false;
 		}
 	}
+	if(bldg && !bldg->CanTrain().empty()){
+		if(!newOccupant->CanRespec()){
+			std::cout << "This character is unique and can not be retrained."
+				<< std::endl;
+			return false;
+		} else {
+			bldg->StartTraining(bldg->CanTrain()[0]);
+		}
+	}
 	occupants.push_back(newOccupant);
 	newOccupant->MoveTo(layout.x + (TILE_WIDTH - PERSON_WIDTH)/2,
 			layout.y + (4*TILE_HEIGHT/3 - PERSON_HEIGHT)/2);
-	if(bldg && !bldg->CanTrain().empty()){
-		bldg->StartTraining(bldg->CanTrain()[0]);
-	}
 	return true;
 }
 
@@ -125,9 +131,9 @@ void tile::Training(){
 				return;
 			} else {
 				if(!occupants[0]->CanRespec()){
-					std::cout << "This character is unique and can not be "
-						<< "retrained. We probably should have told you that "
-						<< "earlier." << std::endl;
+					std::cerr << "Error: training was completed at a building "
+						<< "but the occupant was unique and could not be "
+						<< "retrained. This should not happen." << std::endl;
 				} else {
 					occupants[0]->ChangeSpec(bldg->NowTraining());
 				}

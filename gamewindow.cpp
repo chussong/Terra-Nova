@@ -15,6 +15,7 @@ gameWindow::gameWindow(const std::string& title, const int x, const int y,
 			LogSDLError(std::cout, "CreateRenderer");
 		}
 	}
+	gfxManager::Initialize(ren);
 }
 
 /*gameWindow::gameWindow(gameWindow&& other): win(nullptr), ren(nullptr),
@@ -156,8 +157,9 @@ signal_t gameWindow::ColonyScreen(std::shared_ptr<colony> col){
 						selected = SelectedObject(e.button.x, e.button.y);
 						if(selected){
 							switch(selected->Select()/100){
-								case NEXT_TURN/100:	return NEXT_TURN;
-								default:			break;
+								case NEXT_TURN/100:		return NEXT_TURN;
+								case SCREEN_CHANGE/100:	return SCREEN_CHANGE;
+								default:				break;
 							}
 						}
 					}
@@ -183,4 +185,17 @@ signal_t gameWindow::ColonyScreen(std::shared_ptr<colony> col){
 		Render();
 	}
 	return QUIT;
+}
+
+signal_t gameWindow::MapScreen(std::shared_ptr<map> theMap, int centerColm,
+		int centerRow){
+	int widthToDisplay = SCREEN_WIDTH/TILE_HEIGHT+2;
+	int heightToDisplay = SCREEN_WIDTH/TILE_WIDTH+2;
+	std::vector<std::vector<std::shared_ptr<tile>>> displayTerrain = 
+		theMap->SurroundingTerrain(centerColm, centerRow, 
+				widthToDisplay, heightToDisplay);
+	std::cout << "This is where we'd display a map screen if one existed, but "
+		<< "it's not done yet so instead we'll just show you its first colony."
+		<< std::endl;
+	return ColonyScreen(theMap->Colony(0));
 }

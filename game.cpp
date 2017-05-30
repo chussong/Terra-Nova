@@ -21,12 +21,41 @@ void game::Begin(){
 	urist2->ChangeName("Commander","Lin");
 	urist2->ChangeSpec(unitTypes[2]);
 
+	bool quit = false;
+	screentype_t nextScreen = COLONY_SCREEN;
+	while(!quit){
+		switch(nextScreen){
+			case COLONY_SCREEN: nextScreen = ThrowToColonyScreen(aurora);
+								break;
+			case MAP_SCREEN:	nextScreen = ThrowToMapScreen(palaven, 50, 50);
+								break;
+			case QUIT_SCREEN:	quit = true;
+								break;
+		}
+	}
+}
+
+screentype_t game::ThrowToColonyScreen(std::shared_ptr<colony> col){
 	while(true){
-		switch(win->ColonyScreen(aurora)){
+		switch(win->ColonyScreen(col)){
 			case NEXT_TURN:		NextTurn();
 								break;
-			case QUIT:			return;
-			default:			return;
+			case SCREEN_CHANGE:	return MAP_SCREEN;
+			case QUIT:			return QUIT_SCREEN;
+			default:			return QUIT_SCREEN;
+		}
+	}
+}
+
+screentype_t game::ThrowToMapScreen(std::shared_ptr<map> theMap, int centerColm,
+		int centerRow){
+	while(true){
+		switch(win->MapScreen(theMap, centerColm, centerRow)){
+			case NEXT_TURN:		NextTurn();
+								break;
+			case SCREEN_CHANGE:	return COLONY_SCREEN;
+			case QUIT:			return QUIT_SCREEN;
+			default:			return QUIT_SCREEN;
 		}
 	}
 }
@@ -119,7 +148,7 @@ std::shared_ptr<colony> game::CreateColony(std::shared_ptr<map> parentMap,
 }
 
 std::shared_ptr<map> game::CreateMap(){
-	std::shared_ptr<map> newMap(std::make_shared<map>());
+	std::shared_ptr<map> newMap(std::make_shared<map>(Window()->Renderer()));
 	maps.push_back(newMap);
 	return newMap;
 }

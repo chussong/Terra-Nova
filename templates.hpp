@@ -21,31 +21,6 @@ inline void LogSDLError(std::ostream& os, const std::string &msg){
 }
 
 
-inline std::string GetSpritePath(const std::string& subDir = ""){
-#ifdef _WIN32
-	const char PATH_SEP = '\\';
-#else
-	const char PATH_SEP = '/';
-#endif
-
-	static std::string baseDir;
-	if(baseDir.empty()){
-		char* basePath = SDL_GetBasePath();
-		if(basePath){
-			baseDir = basePath;
-			SDL_free(basePath);
-		} else {
-			std::cerr << "Error getting resource path: " << SDL_GetError()
-				<< std::endl;
-			return "";
-		}
-		size_t pos = baseDir.rfind("bin");
-		baseDir = baseDir.substr(0, pos);
-	}
-
-	return subDir.empty() ? baseDir : baseDir + subDir + PATH_SEP;
-}
-
 template<typename T, typename... Args>
 inline void SDL_Cleanup(T* t, Args&&... args){
 	SDL_Cleanup(t);

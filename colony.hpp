@@ -51,6 +51,7 @@ class colony {
 	std::shared_ptr<uiElement> buildingGrid;
 	std::array<std::shared_ptr<buildingPrototype>, 
 		BUILDING_GRID_ROWS*BUILDING_GRID_COLUMNS> buildingButtons;
+	std::shared_ptr<uiElement> leaveColonyButton;
 	std::shared_ptr<uiElement> endTurnButton;
 
 	void Clean();

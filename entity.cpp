@@ -6,11 +6,10 @@ entity::entity(SDL_Renderer* ren, const std::string& spriteFile,
 		selectable(selectable) {
 	layout.x = x;
 	layout.y = y;
-	sprite = std::make_unique<gfxObject>(ren, spriteFile, layout);
+	sprite = gfxManager::RequestSprite(spriteFile);
+	sprite->DefaultLayout(layout);
 	if(selectable){
-		std::string selectedFile(spriteFile);
-		selectedFile.insert(selectedFile.size()-4, "_selected");
-		selectedSprite = std::make_unique<gfxObject>(ren, selectedFile, layout);
+		selectedSprite = gfxManager::RequestSprite(spriteFile + "_selected");
 	}
 }
 

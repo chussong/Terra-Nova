@@ -78,6 +78,7 @@ int uiElement::Select(){
 									return static_cast<int>(ERROR);
 								}
 								return static_cast<int>(TRY_BUILD) + values[0];
+			case LEAVE_COLONY:	return static_cast<int>(SCREEN_CHANGE);
 		}
 	}
 	return static_cast<int>(ERROR);

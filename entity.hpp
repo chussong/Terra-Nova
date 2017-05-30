@@ -7,8 +7,8 @@
 class gfxObject;
 class entity {
 	protected:
-		std::unique_ptr<gfxObject> sprite;
-		std::unique_ptr<gfxObject> selectedSprite;
+		std::shared_ptr<gfxObject> sprite;
+		std::shared_ptr<gfxObject> selectedSprite;
 		SDL_Renderer* ren;
 
 		SDL_Rect layout;

@@ -14,6 +14,7 @@
 #include "building.hpp"
 #include "tile.hpp"
 #include "colony.hpp"
+#include "map.hpp"
 
 class uiElement;
 class gameWindow : public std::enable_shared_from_this<gameWindow> {
@@ -56,7 +57,9 @@ class gameWindow : public std::enable_shared_from_this<gameWindow> {
 		static bool InitSDL();
 		static void QuitSDL();
 
-		signal_t ColonyScreen(std::shared_ptr<colony>);
+		signal_t ColonyScreen(std::shared_ptr<colony> col);
+		signal_t MapScreen(std::shared_ptr<map> theMap, int centerColm,
+				int centerRow);
 };
 
 #endif

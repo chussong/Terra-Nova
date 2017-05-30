@@ -1,10 +1,10 @@
 #include "map.hpp"
 
-map::map(){
+map::map(SDL_Renderer* ren): ren(ren){
 	terrain.resize(DEFAULT_HEIGHT);
 	for(unsigned int i = 0; i < terrain.size(); ++i) 
 		terrain[i].resize(DEFAULT_WIDTH);
-	InitTerrain(terrain);
+	InitTerrain();
 }
 	
 void map::Clean(){
@@ -13,11 +13,13 @@ void map::Clean(){
 }
 
 
-void map::InitTerrain(std::vector<std::vector<terrain_t>>& terrain){
+void map::InitTerrain(){
 	for(unsigned int row = 0; row < terrain.size(); ++row){
 		for(unsigned int col = 0; col < terrain[row].size(); ++col){
-			if(col % 2 == 0) terrain[row][col] = PLAINS;
-			if(col % 2 == 1) terrain[row][col] = MOUNTAIN;
+			if(col % 2 == 0) terrain[row][col] = 
+				std::make_shared<tile>(PLAINS, ren, "plains", 0, 0);
+			if(col % 2 == 1) terrain[row][col] = 
+				std::make_shared<tile>(MOUNTAIN, ren, "mountain", 0, 0);
 		}
 	}
 }
@@ -38,8 +40,14 @@ const std::shared_ptr<colony> map::Colony(const int num) const{
 	return colonies[num].lock();
 }
 
-terrain_t map::Terrain(const int row, const int column) const{
+std::shared_ptr<tile> map::Terrain(const int row, const int column) const{
 	return terrain[row][column];
+}
+
+std::vector<std::vector<std::shared_ptr<tile>>> map::SurroundingTerrain(
+		int centerColm, int centerRow, int widthToDisplay, int heightToDisplay){
+	//obviously placeholder
+	return terrain;
 }
 
 std::string map::TerrainName(const unsigned int row, const unsigned int col){
@@ -57,4 +65,8 @@ std::string map::TerrainName(const terrain_t type){
 		default:			return "TERRAIN TYPE NOT FOUND";
 	}
 	return "";
+}
+
+std::string map::TerrainName(const std::shared_ptr<tile> tl){
+	return TerrainName(tl->TileType());
 }

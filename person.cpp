@@ -10,7 +10,7 @@ std::string person::GenerateSurname(){
 
 person::person(SDL_Renderer* ren, const std::shared_ptr<unitSpec> spec, 
 		const int x, const int y): 
-		entity(ren, GetSpritePath("sprites") + spec->Name() + ".png", x, y, true),
+		entity(ren, spec->Name(), x, y, true),
 		spec(spec){
 	givenName = GenerateGivenName();
 	surname = GenerateSurname();
@@ -32,10 +32,8 @@ void person::ChangeGender(const std::string gender){
 
 void person::ChangeSpec(const std::shared_ptr<unitSpec> spec){
 	this->spec = spec;
-	sprite = std::make_unique<gfxObject>(ren, 
-			GetSpritePath("sprites") + spec->Name() + ".png", layout);
-	selectedSprite = std::make_unique<gfxObject>(ren, 
-			GetSpritePath("sprites") + spec->Name() + "_selected.png", layout);
+	sprite = gfxManager::RequestSprite(spec->Name());
+	selectedSprite = gfxManager::RequestSprite(spec->Name() + "_selected");
 }
 
 void person::ChangeMaxHealth(const int maxHealth){

@@ -31,6 +31,9 @@ class game {
 		game();
 
 		void Begin();
+		screentype_t ThrowToColonyScreen(std::shared_ptr<colony> col);
+		screentype_t ThrowToMapScreen(std::shared_ptr<map> theMap,
+				int centerColm, int centerRow);
 
 		bool Tick();	// false means quit, true means continue ticking
 

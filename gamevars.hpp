@@ -8,7 +8,9 @@
 // game state and communication
 
 enum signal_t { ERROR = 0, SELECTED = 100, NEXT_TURN = 200, TRY_BUILD = 300,
-	QUIT = 400};
+	SCREEN_CHANGE = 400, QUIT = 500};
+
+enum screentype_t { QUIT_SCREEN = 0, COLONY_SCREEN = 100, MAP_SCREEN = 200 };
 
 // graphics
 
@@ -103,11 +105,11 @@ constexpr int BUILDING_GRID_COLUMNS = 3;
 constexpr int PERSON_WIDTH = 42;
 constexpr int PERSON_HEIGHT = 42;
 
-const std::string COLONY_BACKGROUND = "Space-Colony.png";
+const std::string COLONY_BACKGROUND = "Space-Colony";
 
 // misc UI
 
-enum button_t { END_TURN = 0, BUILDING = 1 };
+enum button_t { END_TURN = 0, BUILDING = 1, LEAVE_COLONY = 2 };
 
 extern TTF_Font* defaultFont;
 enum textcolor_t { BLACK = 0, RED = 1, BLUE = 2, GREEN = 3,

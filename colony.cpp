@@ -1,45 +1,9 @@
 #include "colony.hpp"
 
-colony::colony(SDL_Renderer* ren, std::shared_ptr<map> myMap,
-		const int row, const int colm): ren(ren), myMap(myMap), row(row), 
-		colm(colm)
+colony::colony(SDL_Renderer* ren, 
+		std::vector<std::vector<std::shared_ptr<tile>>> terrain): 
+		ren(ren), terrain(terrain)
 {
-	// for some reason, terrain[1] isn't appearing; it looks like it's getting
-	// moved to terrain[7]'s location, but I can't figure out how that could
-	// possibly be happening.
-	
-	// inner ring, starting from right and going CCW
-	terrain[0] = myMap->Terrain(row, colm+2);
-	//std::cout << "Terrain 0 is at [" << row << "," << colm+2 << "]." << std::endl;
-	terrain[1] = myMap->Terrain(row+1, colm+1);
-	//std::cout << "Terrain 1 is at [" << row+1 << "," << colm+1 << "]." << std::endl;
-	terrain[2] = myMap->Terrain(row+1, colm-1);
-	//std::cout << "Terrain 2 is at [" << row+1 << "," << colm-1 << "]." << std::endl;
-	terrain[3] = myMap->Terrain(row, colm-2);
-	//std::cout << "Terrain 3 is at [" << row << "," << colm-2 << "]." << std::endl;
-	terrain[4] = myMap->Terrain(row-1, colm-1);
-	//std::cout << "Terrain 4 is at [" << row-1 << "," << colm-1 << "]." << std::endl;
-	terrain[5] = myMap->Terrain(row-1, colm+1);
-	//std::cout << "Terrain 5 is at [" << row-1 << "," << colm+1 << "]." << std::endl;
-
-	// outer ring, starting from right and going CCW
-	terrain[6] = myMap->Terrain(row, colm+4);
-	//std::cout << "Terrain 6 is at [" << row << "," << colm+4 << "]." << std::endl;
-	terrain[7] = myMap->Terrain(row+1, colm+3);
-	//std::cout << "Terrain 7 is at [" << row+1 << "," << colm+3 << "]." << std::endl;
-	terrain[8] = myMap->Terrain(row+2, colm+2);
-	//std::cout << "Terrain 8 is at [" << row+2 << "," << colm+2 << "]." << std::endl;
-	terrain[9] = myMap->Terrain(row+2, colm);
-	//std::cout << "Terrain 9 is at [" << row+2 << "," << colm << "]." << std::endl;
-	terrain[10] = myMap->Terrain(row+2, colm-2);
-	terrain[11] = myMap->Terrain(row+1, colm-3);
-	terrain[12] = myMap->Terrain(row, colm-4);
-	terrain[13] = myMap->Terrain(row-1, colm-3);
-	terrain[14] = myMap->Terrain(row-2, colm-2);
-	terrain[15] = myMap->Terrain(row-2, colm);
-	terrain[16] = myMap->Terrain(row-2, colm+2);
-	terrain[17] = myMap->Terrain(row-1, colm+1);
-
 	name = "Aurora";
 
 	resources.fill(0);
@@ -62,13 +26,6 @@ void colony::Clean(){
 
 void colony::ChangeName(const std::string name){
 	this->name = name;
-}
-
-void colony::Move(const int xdist, const int ydist){
-	if(colm + xdist > 100 || colm + xdist < -100) return; // export these 100s
-	if(row + ydist > 100 || row + ydist < -100) return; // to constexprs
-	colm += xdist;
-	row += ydist;
 }
 
 int colony::AddResource(const resource_t resource, int amount){
@@ -138,16 +95,9 @@ std::string colony::Name() const{
 	return name;
 }
 
-int colony::Column() const{
-	return colm;
-}
-
-int colony::Row() const{
-	return row;
-}
-
-terrain_t colony::Terrain(const unsigned int num) const{
-	if(num < terrain.size()) return terrain[num]->TileType();
+terrain_t colony::Terrain(const unsigned int row, const unsigned int colm) const{
+	if(row < terrain.size() || colm < terrain[row].size())
+		return terrain[row][colm]->TileType();
 	return OCEAN;
 }
 
@@ -257,9 +207,11 @@ void colony::AdvanceQueue(){
 }
 
 void colony::ProcessTurn(){
-	for(auto& space : terrain){
-		AddResources(space->Income());
-		space->Training();
+	for(auto& row : terrain){
+		for(auto& space : row){
+			AddResources(space->Income());
+			space->Training();
+		}
 	}
 	AdvanceQueue();
 }
@@ -283,12 +235,29 @@ void colony::MakeColonyScreen(std::shared_ptr<gameWindow> win) {
 
 void colony::DrawTiles(std::shared_ptr<gameWindow> win){
 	for(unsigned int i = 0; i < terrain.size(); ++i){
-		terrain[i]->MoveTo(TILE_X[i], TILE_Y[i]);
-		win->AddObject(terrain[i]);
-		/*std::cout << "Tile " << i << ", a " << terrain[i]->TileType() << ", "
-			<< "moved to (" << terrain[i]->X() << "," << terrain[i]->Y() << ")."
-			<< std::endl;*/
+		for(unsigned int j = 0; j < terrain[i].size(); ++j){
+			terrain[i][j]->MoveTo(TileX(i,j), TileY(i));
+			win->AddObject(terrain[i][j]);
+			/*std::cout << "Tile " << i << ", a " << terrain[i]->TileType() << ", "
+				<< "moved to (" << terrain[i]->X() << "," << terrain[i]->Y() << ")."
+				<< std::endl;*/
+		}
 	}
+}
+
+int colony::TileX(const unsigned int row, const unsigned int colm){
+	int ret = MAPDISP_ORIGIN_X;
+	ret -= (terrain.size()-1)/2 * TILE_WIDTH;
+	ret += std::abs((int)row - ((int)terrain.size()-1)/2) * TILE_WIDTH/2;
+	ret += colm * TILE_WIDTH;
+	return ret;
+}
+
+int colony::TileY(const unsigned int row){
+	int ret = MAPDISP_ORIGIN_Y;
+	ret -= (static_cast<int>(terrain.size()) - 1)/2 * TILE_HEIGHT;
+	ret += row * TILE_HEIGHT;
+	return ret;
 }
 
 void colony::DrawResources(std::shared_ptr<gameWindow> win){

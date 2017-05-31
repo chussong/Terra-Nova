@@ -11,7 +11,7 @@ void game::Begin(){
 	int temp_colony_colm = 76;
 
 	std::shared_ptr<map> palaven = CreateMap();
-	palaven->AddColony(CreateColony(palaven, temp_colony_row, temp_colony_colm));
+	CreateColony(palaven, temp_colony_row, temp_colony_colm);
 	std::shared_ptr<colony> aurora = palaven->Colony(0);
 	aurora->AddResource(FOOD, 60);
 	aurora->AddResource(CARBON, 120);
@@ -144,9 +144,15 @@ std::shared_ptr<person> game::CreatePerson(const int x, const int y){
 
 std::shared_ptr<colony> game::CreateColony(std::shared_ptr<map> parentMap,
 		const int row, const int colm){
+	if(row < 0 || colm < 0 || static_cast<unsigned int>(row) > parentMap->NumberOfRows() 
+			|| static_cast<unsigned int>(colm) > parentMap->NumberOfColumns()){
+		std::cerr << "Error: attempted to create a colony out of bounds.";
+		return nullptr;
+	}
 	std::shared_ptr<colony> newColony(std::make_shared<colony>(Window()->Renderer(),
-				parentMap, row, colm));
+				parentMap->SurroundingTerrain(row, colm)));
 	newColony->SetBuildingTypes(buildingTypes);
+	parentMap->AddColony(newColony, row, colm);
 	colonies.push_back(newColony);
 	return newColony;
 }

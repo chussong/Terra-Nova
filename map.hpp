@@ -7,6 +7,7 @@
 #include "templates.hpp"
 #include "gamevars.hpp"
 #include "tile.hpp"
+#include "colony.hpp"
 
 class colony;
 class person;
@@ -31,11 +32,13 @@ class map {
 	public:
 		map(SDL_Renderer* ren);
 
-		void AddColony(const std::shared_ptr<colony> colony);
+		void AddColony(const std::shared_ptr<colony> colony, int row, int colm);
 		std::shared_ptr<colony> Colony(const int num);
 		const std::shared_ptr<colony> Colony(const int num) const;
 
 		std::shared_ptr<tile> Terrain(const int row, const int column) const;
+		std::vector<std::vector<std::shared_ptr<tile>>> SurroundingTerrain(
+				const int row, const int colm);
 		unsigned int NumberOfRows() const;
 		unsigned int NumberOfColumns() const;
 

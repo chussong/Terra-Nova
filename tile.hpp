@@ -29,6 +29,7 @@ class tile : public entity {
 
 		bool InsideQ(const int x, const int y) const;
 		terrain_t TileType() const;
+		void SetTileType(const terrain_t newType);
 		std::array<int, LAST_RESOURCE> Income() const;
 
 		void AddBuilding(std::shared_ptr<building> newBldg);

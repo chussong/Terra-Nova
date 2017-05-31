@@ -10,14 +10,12 @@
 #include "person.hpp"
 #include "building.hpp"
 #include "templates.hpp"
-#include "map.hpp"
 #include "tile.hpp"
 #include "gfxobject.hpp"
 #include "ui.hpp"
 #include "gamewindow.hpp"
 #include "gamevars.hpp"
 
-class map;
 class tile;
 class gameWindow;
 //class gfxObject;
@@ -29,11 +27,10 @@ class colony {
 	SDL_Renderer* ren;
 
 	std::string name;
-	std::shared_ptr<map> myMap;
 	int row;
 	int colm; // position on map
 
-	std::array<std::shared_ptr<tile>, 18> terrain;
+	std::vector<std::vector<std::shared_ptr<tile>>> terrain;
 
 	std::array<int, LAST_RESOURCE> resources;
 	std::array<int, LAST_RESOURCE> resourceCap;
@@ -57,8 +54,9 @@ class colony {
 	void Clean();
 
 	public:
-		colony(SDL_Renderer* ren, std::shared_ptr<map> myMap,
-				const int row, const int colm);
+		colony() = delete;
+		colony(SDL_Renderer* ren, 
+				std::vector<std::vector<std::shared_ptr<tile>>> terrain);
 
 		void SetBuildingTypes(
 				const std::vector<std::shared_ptr<buildingType>> buildingTypes);
@@ -77,7 +75,7 @@ class colony {
 		std::string Name() const;
 		int Column() const;
 		int Row() const;
-		terrain_t Terrain(const unsigned int num) const;
+		terrain_t Terrain(const unsigned int row, const unsigned int colm) const;
 		int Resource(const resource_t resource) const;
 		std::string ResAsString(const int res) const;
 
@@ -96,6 +94,8 @@ class colony {
 
 		void MakeColonyScreen(std::shared_ptr<gameWindow> win);
 		void DrawTiles(std::shared_ptr<gameWindow> win);
+		int  TileX(const unsigned int row, const unsigned int colm);
+		int  TileY(const unsigned int row);
 		void DrawResources(std::shared_ptr<gameWindow> win);
 		void DrawColonists(std::shared_ptr<gameWindow> win);
 		void DrawColonyMisc(std::shared_ptr<gameWindow> win);

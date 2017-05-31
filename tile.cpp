@@ -70,6 +70,39 @@ terrain_t tile::TileType() const{
 	return tileType;
 }
 
+void tile::SetTileType(const terrain_t newType){
+	if(newType == COLONY){
+		RemoveBuilding();
+	}
+	std::string spriteFile;
+	switch(newType){
+		case MOUNTAIN:
+			spriteFile = "mountain";
+			break;
+		case PLAINS:
+			spriteFile = "plains";
+			break;
+		case OCEAN:
+			spriteFile = "ocean";
+			break;
+		case COAST:
+			spriteFile = "coast";
+			break;
+		case COLONY:
+			spriteFile = "colony";
+			break;
+		default:
+			spriteFile = "spriteError";
+			break;
+	}
+	sprite = gfxManager::RequestSprite(spriteFile);
+	sprite->DefaultLayout(layout);
+	if(selectable){
+		selectedSprite = gfxManager::RequestSprite(spriteFile + "_selected");
+	}
+	tileType = newType;
+}
+
 std::array<int, LAST_RESOURCE> tile::Income() const{
 	std::array<int, LAST_RESOURCE> inc = {{0}};
 	if(occupants.size() > 0 || (bldg && bldg->Finished() && bldg->Automatic())){

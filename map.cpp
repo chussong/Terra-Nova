@@ -50,8 +50,9 @@ void map::InitTerrain(){
 	}
 }
 
-void map::AddColony(const std::shared_ptr<colony> colony){
-	colonies.emplace_back(colony);
+void map::AddColony(const std::shared_ptr<colony> col, int row, int colm){
+	colonies.emplace_back(col);
+	Terrain(row, colm)->SetTileType(COLONY);
 }
 
 std::shared_ptr<colony> map::Colony(const int num){
@@ -73,6 +74,21 @@ std::shared_ptr<tile> map::Terrain(const int row, const int column) const{
 		return nullptr;
 	}
 	return terrain[row][column];
+}
+
+std::vector<std::vector<std::shared_ptr<tile>>> map::SurroundingTerrain(
+		const int row, const int colm){
+	std::vector<std::vector<std::shared_ptr<tile>>> ret;
+	ret.resize(5);
+	for(unsigned int i = 0; i < ret.size(); ++i){
+		ret[i].resize(ret.size() -
+				std::abs((static_cast<int>(ret.size())-1)/2 - static_cast<int>(i)));
+		for(unsigned int j = 0; j < ret[i].size(); ++j){
+			ret[i][j] = Terrain(row - 2 + i, 
+					colm - (ret.size()-1) + std::abs((int)i - ((int)ret.size()-1)/2) + 2*j);
+		}
+	}
+	return ret;
 }
 
 unsigned int map::NumberOfRows() const{

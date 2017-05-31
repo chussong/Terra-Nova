@@ -16,6 +16,8 @@
 #include "colony.hpp"
 #include "map.hpp"
 
+class map;
+class colony;
 class uiElement;
 class gameWindow : public std::enable_shared_from_this<gameWindow> {
 	protected:

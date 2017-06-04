@@ -117,13 +117,7 @@ const std::shared_ptr<person> colony::Inhabitant(const int number) const {
 
 void colony::AssignWorker(std::shared_ptr<person> worker, 
 		const std::shared_ptr<tile> location){
-	std::shared_ptr<tile> oldLoc = nullptr;
-	if(worker->Location()) oldLoc = worker->Location();
-
-	if(location->AddOccupant(worker)){
-		worker->SetLocation(location);
-		if(oldLoc) oldLoc->RemoveOccupant(worker);
-	}
+	worker->MoveToTile(location);
 }
 
 void colony::EnqueueBuilding(const std::shared_ptr<buildingType> type,

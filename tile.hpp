@@ -46,6 +46,8 @@ class tile : public entity {
 		bool AddOccupant(std::shared_ptr<person> newOccupant);
 		bool RemoveOccupant(std::shared_ptr<person> removeThis);
 		std::vector<std::shared_ptr<person>> Occupants() const;
+		std::shared_ptr<person> Defender() const;
+		char Owner() const;
 
 		void Training();
 };

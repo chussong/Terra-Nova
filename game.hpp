@@ -19,7 +19,8 @@ class gameWindow;
 class map;
 class game {
 	std::vector<std::shared_ptr<buildingType>> buildingTypes;
-	std::vector<std::shared_ptr<unitSpec>> unitTypes;
+	std::vector<std::shared_ptr<attackType>> attackTypes;
+	std::vector<std::shared_ptr<unitType>> unitTypes;
 
 	std::vector<std::shared_ptr<person>> people;
 	std::vector<std::shared_ptr<colony>> colonies;
@@ -37,11 +38,12 @@ class game {
 
 		bool Tick();	// false means quit, true means continue ticking
 
-		void ReadBuildingTypes(); // read exported file listing building types
+		void ReadAttackTypes(); // read exported file listing attack types
 		void ReadUnitTypes(); // read exported file listing unit specs
+		void ReadBuildingTypes(); // read exported file listing building types
 		std::vector<std::shared_ptr<buildingType>> BuildingTypes();
 
-		std::shared_ptr<person> CreatePerson(const int x, const int y);
+		std::shared_ptr<person> CreatePerson(const std::shared_ptr<unitType> spec, const char faction);
 		std::shared_ptr<colony> CreateColony(std::shared_ptr<map> parentMap,
 				const int row, const int colm);
 		std::shared_ptr<map> CreateMap();

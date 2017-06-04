@@ -23,11 +23,11 @@ void tile::Render() const{
 void tile::MoveTo(int x, int y){
 	//std::cout << "A tile has been moved to (" << x << "," << y << ")." << std::endl;
 	entity::MoveTo(x,y);
-	if(bldg) bldg->MoveTo(x + (TILE_WIDTH - BUILDING_WIDTH)/2,
-			y + (4*TILE_HEIGHT/3 - BUILDING_HEIGHT)/2);
+	if(bldg) bldg->MoveTo(MAPDISP_ORIGIN_X + x + (TILE_WIDTH - BUILDING_WIDTH)/2,
+			MAPDISP_ORIGIN_Y + y + (4*TILE_HEIGHT/3 - BUILDING_HEIGHT)/2);
 	for(std::shared_ptr<person> occ : occupants){
-		occ->MoveTo(x + (TILE_WIDTH - PERSON_WIDTH)/2,
-				y + (4*TILE_HEIGHT/3 - PERSON_HEIGHT)/2);
+		occ->MoveTo(MAPDISP_ORIGIN_X + x + (TILE_WIDTH - PERSON_WIDTH)/2,
+				MAPDISP_ORIGIN_Y + y + (4*TILE_HEIGHT/3 - PERSON_HEIGHT)/2);
 	}
 }
 
@@ -48,8 +48,10 @@ void tile::Resize(SDL_Rect newLayout){
 }
 
 bool tile::InsideQ(const int x, const int y) const {
-	int relX = x - layout.x;
-	int relY = y - layout.y;
+	/*std::cout << "Testing to see if a click at (" << x << "," << y << ") is "
+		<< "inside of a tile at (" << layout.x << "," << layout.y << ")." << std::endl;*/
+	int relX = x - layout.x - MAPDISP_ORIGIN_X;
+	int relY = y - layout.y - MAPDISP_ORIGIN_Y;
 	if(relX < 0 || relY < 0 || relX > layout.w || relY > layout.h ||
 			(4*relY < layout.h &&
 			 ((2*relX < layout.w - 3.464*relY) || 
@@ -177,8 +179,8 @@ bool tile::AddOccupant(std::shared_ptr<person> newOccupant){
 		}
 	}
 	occupants.push_back(newOccupant);
-	newOccupant->MoveTo(layout.x + (TILE_WIDTH - PERSON_WIDTH)/2,
-			layout.y + (4*TILE_HEIGHT/3 - PERSON_HEIGHT)/2);
+	/*newOccupant->MoveTo(MAPDISP_ORIGIN_X + layout.x + (TILE_WIDTH - PERSON_WIDTH)/2,
+			MAPDISP_ORIGIN_Y + layout.y + (4*TILE_HEIGHT/3 - PERSON_HEIGHT)/2);*/
 	return true;
 }
 
@@ -203,6 +205,16 @@ bool tile::RemoveOccupant(std::shared_ptr<person> removeThis){
 
 std::vector<std::shared_ptr<person>> tile::Occupants() const{
 	return occupants;
+}
+
+std::shared_ptr<person> tile::Defender() const{
+	if(Occupants().size() == 0) return nullptr;
+	return Occupants()[0];
+}
+
+char tile::Owner() const{
+	if(occupants.size() == 0) return 0;
+	return Occupants()[0]->Faction();
 }
 
 void tile::Training(){

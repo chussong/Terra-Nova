@@ -90,6 +90,9 @@ std::shared_ptr<entity> gameWindow::ClickedObject(const int x, const int y){
 	for(unsigned int i = objects.size()-1; i < objects.size(); --i){
 		if(objects[i]->InsideQ(x, y)) return objects[i];
 	}
+	/*std::cout << "No clickable object detected at clicked location." << std::endl;
+	std::cout << "I am aware of " << clickables.size() << " selectable objects "
+		<< "and " << objects.size() << " non-selectable objects." << std::endl;*/
 	return nullptr;
 }
 
@@ -196,6 +199,10 @@ signal_t gameWindow::MapScreen(std::shared_ptr<map> theMap, int centerColm,
 	bool quit = false;
 	while(!quit){
 		while(SDL_PollEvent(&e)){
+			if(std::dynamic_pointer_cast<person>(selected) && 
+					std::dynamic_pointer_cast<person>(selected)->Dead()){
+				selected.reset();
+			}
 			switch(e.type){
 				case SDL_QUIT:
 					quit = true;
@@ -342,7 +349,12 @@ bool gameWindow::MoveOnMap(std::shared_ptr<person> mover, std::shared_ptr<map> t
 			<< std::endl;
 		return false;
 	}
-	mover->SetLocation(newLoc);
+	if(newLoc->Occupants().size() == 0 || mover->Faction() == newLoc->Owner()){
+		mover->MoveToTile(newLoc);
+	} else {
+		person::Fight(mover, newLoc->Defender());
+		if(newLoc->Occupants().size() == 0) mover->MoveToTile(newLoc);
+	}
 	return true;
 }
 

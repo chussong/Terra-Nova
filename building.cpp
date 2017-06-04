@@ -56,16 +56,16 @@ std::array<int, LAST_RESOURCE> buildingType::BonusResources() const{
 	return bonusResources;
 }
 
-void buildingType::SetCanTrain(const std::vector<std::shared_ptr<unitSpec>>& val){
+void buildingType::SetCanTrain(const std::vector<std::shared_ptr<unitType>>& val){
 	canTrain = val;
 }
 
-void buildingType::SetCanTrain(const std::shared_ptr<unitSpec> val){
+void buildingType::SetCanTrain(const std::shared_ptr<unitType> val){
 	canTrain.clear();
 	canTrain.push_back(val);
 }
 
-std::vector<std::shared_ptr<unitSpec>> buildingType::CanTrain() const{
+std::vector<std::shared_ptr<unitType>> buildingType::CanTrain() const{
 	return canTrain;
 }
 
@@ -129,11 +129,11 @@ std::array<int, LAST_RESOURCE> building::BonusResources() const{
 	return type->BonusResources();
 }
 
-std::vector<std::shared_ptr<unitSpec>> building::CanTrain() const{
+std::vector<std::shared_ptr<unitType>> building::CanTrain() const{
 	return type->CanTrain();
 }
 
-void building::StartTraining(std::shared_ptr<unitSpec> newSpec){
+void building::StartTraining(std::shared_ptr<unitType> newSpec){
 	if(!newSpec){
 		std::cerr << "Error: a building was assigned to respec a unit to a "
 			<< "blank specialization." << std::endl;
@@ -147,7 +147,7 @@ int building::TurnsToTrain() const{
 	return turnsToTrain;
 }
 
-std::shared_ptr<unitSpec> building::NowTraining() const{
+std::shared_ptr<unitType> building::NowTraining() const{
 	return nowTraining;
 }
 

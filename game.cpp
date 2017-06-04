@@ -2,6 +2,7 @@
 
 game::game(){
 	win = std::make_shared<gameWindow>("Terra Nova", 100, 100, 1024, 768);
+	ReadAttackTypes();
 	ReadUnitTypes();
 	ReadBuildingTypes();
 }
@@ -16,13 +17,15 @@ void game::Begin(){
 	aurora->AddResource(FOOD, 60);
 	aurora->AddResource(CARBON, 120);
 	aurora->AddResource(IRON, -20);
-	aurora->AddInhabitant(CreatePerson(110, SCREEN_HEIGHT - 60));
-	aurora->AddInhabitant(CreatePerson(200, SCREEN_HEIGHT - 60));
+	aurora->AddInhabitant(CreatePerson(unitTypes[0], 1));
+	aurora->AddInhabitant(CreatePerson(unitTypes[2], 1));
 	std::shared_ptr<person> urist = aurora->Inhabitant(0);
 	urist->TakeDamage(20);
 	std::shared_ptr<person> urist2 = aurora->Inhabitant(1);
 	urist2->ChangeName("Commander","Lin");
-	urist2->ChangeSpec(unitTypes[2]);
+
+	std::shared_ptr<person> enemy = CreatePerson(unitTypes[1], 2);
+	enemy->MoveToTile(palaven->Terrain(temp_colony_row, temp_colony_colm + 4));
 
 	bool quit = false;
 	screentype_t nextScreen = COLONY_SCREEN;
@@ -68,19 +71,30 @@ bool game::Tick(){
 	return true;
 }
 
+// read exported file listing attack types; this is a placeholder
+void game::ReadAttackTypes(){
+	attackTypes.clear();
+	std::shared_ptr<attackType> newAttack;
+
+	newAttack = std::make_shared<attackType>("Ballistic SMG", 10, 7, 0.67f);
+	attackTypes.push_back(newAttack);
+}
+
 // read exported file listing unit specs; this is a placeholder
 void game::ReadUnitTypes(){
 	int idsUsed = 0;
 	unitTypes.clear();
-	std::shared_ptr<unitSpec> newSpec;
+	std::shared_ptr<unitType> newSpec;
+	std::vector<std::shared_ptr<attackType>> atks;
 
-	newSpec = std::make_shared<unitSpec>(idsUsed++, "Colonist", 100 , 2);
+	newSpec = std::make_shared<unitType>(idsUsed++, "Colonist", 100, atks, 2);
 	unitTypes.push_back(newSpec);
 
-	newSpec = std::make_shared<unitSpec>(idsUsed++, "Marine", 200, 4);
+	atks.push_back(attackTypes[0]);
+	newSpec = std::make_shared<unitType>(idsUsed++, "Marine", 200, atks, 4);
 	unitTypes.push_back(newSpec);
 
-	newSpec = std::make_shared<unitSpec>(idsUsed++, "Commander", 300, 0);
+	newSpec = std::make_shared<unitType>(idsUsed++, "Commander", 300, atks, 0);
 	newSpec->SetCanRespec(false);
 	unitTypes.push_back(newSpec);
 
@@ -130,14 +144,14 @@ std::vector<std::shared_ptr<buildingType>> game::BuildingTypes(){
 	return buildingTypes;
 }
 
-std::shared_ptr<person> game::CreatePerson(const int x, const int y){
+std::shared_ptr<person> game::CreatePerson(const std::shared_ptr<unitType> spec, const char faction){
 	if(unitTypes.size() < 1){
 		std::cerr << "Error: attempted to create a person but no unit types "
 			<< "have been loaded." << std::endl;
 		return nullptr;
 	}
 	std::shared_ptr<person> newPerson(std::make_shared<person>(Window()->Renderer(),
-				unitTypes[0], x, y));
+				spec, faction));
 	people.push_back(newPerson);
 	return newPerson;
 }

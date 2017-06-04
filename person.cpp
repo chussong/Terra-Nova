@@ -8,10 +8,10 @@ std::string person::GenerateSurname(){
 	return std::string("McColonist");
 }
 
-person::person(SDL_Renderer* ren, const std::shared_ptr<unitSpec> spec, 
-		const int x, const int y): 
-		entity(ren, spec->Name(), x, y, true),
-		spec(spec){
+person::person(SDL_Renderer* ren, const std::shared_ptr<unitType> spec, 
+		const char faction): 
+		entity(ren, spec->Name(), 0, 0, true),
+		spec(spec), faction(faction){
 	givenName = GenerateGivenName();
 	surname = GenerateSurname();
 	srand(time(NULL));
@@ -30,7 +30,7 @@ void person::ChangeGender(const std::string gender){
 	if(gender == "male") female = false;
 }
 
-void person::ChangeSpec(const std::shared_ptr<unitSpec> spec){
+void person::ChangeSpec(const std::shared_ptr<unitType> spec){
 	this->spec = spec;
 	sprite = gfxManager::RequestSprite(spec->Name());
 	selectedSprite = gfxManager::RequestSprite(spec->Name() + "_selected");
@@ -44,6 +44,7 @@ void person::ChangeMaxHealth(const int maxHealth){
 bool person::TakeDamage(const int damage){
 	if(damage >= health){
 		health = 0;
+		Die();
 		return true;
 	}
 	health -= damage;
@@ -51,8 +52,21 @@ bool person::TakeDamage(const int damage){
 	return false;
 }
 
+void person::Die(){
+	std::cout << Name() << " belonging to player " << (int)faction << " has died!" 
+		<< std::endl;
+	if(location) location->RemoveOccupant(shared_from_base<person>());
+	location.reset();
+}
+
 void person::AddItem(const std::string item){
 	inventory.push_back(item);
+}
+
+void person::Render() const{
+	//std::cout << Dead() << std::endl;
+	if(Dead()) return;
+	entity::Render();
 }
 
 std::string person::Name() const{
@@ -105,7 +119,7 @@ std::string person::PosPronCap() const{
 	return std::string("His");
 }
 
-std::shared_ptr<unitSpec> person::Spec() const{
+std::shared_ptr<unitType> person::Spec() const{
 	return spec;
 }
 
@@ -121,15 +135,18 @@ std::vector<std::string> person::Inventory() const{
 	return inventory;
 }
 
-void person::SetLocation(std::shared_ptr<tile> newLoc){
+void person::MoveToTile(std::shared_ptr<tile> newLoc){
 	if(!newLoc){
 		std::cerr << "Error: a person tried to move a null tile." << std::endl;
 		return;
 	}
+	if(!newLoc->AddOccupant(shared_from_base<person>())){
+		std::cout << "That tile is already fully occupied." << std::endl;
+		return;
+	}
 	if(location) location->RemoveOccupant(shared_from_base<person>());
-	newLoc->AddOccupant(shared_from_base<person>());
-	layout.x = newLoc->X() + (newLoc->W() - layout.w)/2;
-	layout.y = newLoc->Y() + (newLoc->H() - layout.w)/2;
+	layout.x = MAPDISP_ORIGIN_X + newLoc->X() + (newLoc->W() - layout.w)/2;
+	layout.y = MAPDISP_ORIGIN_Y + newLoc->Y() + (newLoc->H() - layout.w)/2;
 	location = newLoc;
 }
 
@@ -143,4 +160,34 @@ int person::Row() const{
 
 int person::Colm() const{
 	return location->Colm();
+}
+
+void person::Attack(std::shared_ptr<person>& target) const{
+	std::random_device dev;
+	std::mt19937 gen(dev());
+	std::uniform_real_distribution<> dist(0,1);
+	for(auto& atk : Attacks()){
+		for(int hit = 0; hit < atk->NumAttacks(); ++hit){
+			if(dist(gen) <= atk->HitRate()){
+				if(target->TakeDamage(atk->Damage())){
+					target.reset();
+					return;
+				}
+			} else {
+			}
+		}
+	}
+}
+
+void person::Fight(std::shared_ptr<person> attacker, std::shared_ptr<person> target){
+	if(!attacker){
+		std::cerr << "Error: attempting a fight but there is no attacker." << std::endl;
+		return;
+	}
+	if(!target){
+		std::cerr << "Error: attempting a fight but there is no target." << std::endl;
+		return;
+	}
+	attacker->Attack(target);
+	if(target) target->Attack(attacker);
 }

@@ -237,7 +237,11 @@ void colony::DrawTiles(std::shared_ptr<gameWindow> win){
 	for(unsigned int i = 0; i < terrain.size(); ++i){
 		for(unsigned int j = 0; j < terrain[i].size(); ++j){
 			terrain[i][j]->MoveTo(TileX(i,j), TileY(i));
-			win->AddObject(terrain[i][j]);
+			if(terrain[i][j]->TileType() == COLONY){
+				win->AddClickable(terrain[i][j]);
+			} else {
+				win->AddObject(terrain[i][j]);
+			}
 			/*std::cout << "Tile " << i << ", a " << terrain[i]->TileType() << ", "
 				<< "moved to (" << terrain[i]->X() << "," << terrain[i]->Y() << ")."
 				<< std::endl;*/
@@ -246,7 +250,7 @@ void colony::DrawTiles(std::shared_ptr<gameWindow> win){
 }
 
 int colony::TileX(const unsigned int row, const unsigned int colm){
-	int ret = MAPDISP_ORIGIN_X;
+	int ret = 0;
 	ret -= (terrain.size()-1)/2 * TILE_WIDTH;
 	ret += std::abs((int)row - ((int)terrain.size()-1)/2) * TILE_WIDTH/2;
 	ret += colm * TILE_WIDTH;
@@ -254,7 +258,7 @@ int colony::TileX(const unsigned int row, const unsigned int colm){
 }
 
 int colony::TileY(const unsigned int row){
-	int ret = MAPDISP_ORIGIN_Y;
+	int ret = 0;
 	ret -= (static_cast<int>(terrain.size()) - 1)/2 * TILE_HEIGHT;
 	ret += row * TILE_HEIGHT;
 	return ret;

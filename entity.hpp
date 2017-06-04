@@ -5,8 +5,13 @@
 #include "gfxobject.hpp"
 
 class gfxObject;
-class entity {
+class entity : public std::enable_shared_from_this<entity> {
 	protected:
+		template <typename Derived>
+		std::shared_ptr<Derived> shared_from_base(){
+			return std::static_pointer_cast<Derived>(shared_from_this());
+		}
+
 		std::shared_ptr<gfxObject> sprite;
 		std::shared_ptr<gfxObject> selectedSprite;
 		SDL_Renderer* ren;

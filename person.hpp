@@ -84,6 +84,8 @@ class person : public entity {
 
 		void SetLocation(std::shared_ptr<tile> newLoc);
 		std::shared_ptr<tile> Location() const;
+		int Row() const;
+		int Colm() const;
 
 		bool CanRespec()	const			{return spec->CanRespec();}
 };

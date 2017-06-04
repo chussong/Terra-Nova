@@ -122,6 +122,12 @@ std::vector<std::string> person::Inventory() const{
 }
 
 void person::SetLocation(std::shared_ptr<tile> newLoc){
+	if(!newLoc){
+		std::cerr << "Error: a person tried to move a null tile." << std::endl;
+		return;
+	}
+	if(location) location->RemoveOccupant(shared_from_base<person>());
+	newLoc->AddOccupant(shared_from_base<person>());
 	layout.x = newLoc->X() + (newLoc->W() - layout.w)/2;
 	layout.y = newLoc->Y() + (newLoc->H() - layout.w)/2;
 	location = newLoc;
@@ -129,4 +135,12 @@ void person::SetLocation(std::shared_ptr<tile> newLoc){
 
 std::shared_ptr<tile> person::Location() const{
 	return location;
+}
+
+int person::Row() const{
+	return location->Row();
+}
+
+int person::Colm() const{
+	return location->Colm();
 }

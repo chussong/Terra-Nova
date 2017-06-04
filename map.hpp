@@ -42,6 +42,8 @@ class map {
 		unsigned int NumberOfRows() const;
 		unsigned int NumberOfColumns() const;
 
+		void MoveView(direction_t dir);
+
 		std::string TerrainName(const unsigned int x, const unsigned int y);
 		static std::string TerrainName(const terrain_t type);
 		static std::string TerrainName(const std::shared_ptr<tile> tl);

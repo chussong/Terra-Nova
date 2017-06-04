@@ -43,9 +43,9 @@ void map::InitTerrain(){
 	for(unsigned int row = 0; row < terrain.size(); ++row){
 		for(unsigned int col = row%2; col < terrain[row].size(); col+=2){
 			if(col % 2 == 0) terrain[row][col] = 
-				std::make_shared<tile>(PLAINS, ren, "plains", 0, 0);
+				std::make_shared<tile>(PLAINS, ren, "plains", row, col);
 			if(col % 2 == 1) terrain[row][col] = 
-				std::make_shared<tile>(MOUNTAIN, ren, "mountain", 0, 0);
+				std::make_shared<tile>(MOUNTAIN, ren, "mountain", row, col);
 		}
 	}
 }
@@ -129,6 +129,31 @@ std::vector<std::vector<std::shared_ptr<tile>>> map::SurroundingTerrain(
 	return sur;
 }
 */
+
+void map::MoveView(direction_t dir){
+	int xShift=0, yShift=0;
+	switch(dir){
+		case VIEW_DOWN:
+			yShift = -TILE_HEIGHT;
+			break;
+		case VIEW_UP:
+			yShift = TILE_HEIGHT;
+			break;
+		case VIEW_LEFT:
+			xShift = TILE_WIDTH;
+			break;
+		case VIEW_RIGHT:
+			xShift = -TILE_WIDTH;
+			break;
+	}
+	for(unsigned int i = 0; i < terrain.size(); ++i){
+		for(unsigned int j = i%2; j < terrain[i].size(); j+=2){
+			Terrain(i,j)->MoveTo(Terrain(i,j)->X() + xShift,
+						Terrain(i,j)->Y() + yShift);
+		}
+	}
+}
+
 std::string map::TerrainName(const unsigned int row, const unsigned int col){
 	if(row < terrain.size() && col < terrain[row].size())
 		return TerrainName(terrain[row][col]);

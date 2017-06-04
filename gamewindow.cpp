@@ -146,7 +146,7 @@ signal_t gameWindow::ColonyScreen(std::shared_ptr<colony> col){
 					quit = true;
 					break;
 				case SDL_KEYUP:			
-					if(e.key.keysym.sym == SDLK_c){
+					if(e.key.keysym.sym == SDLK_c || e.key.keysym.sym == SDLK_s){
 						return SCREEN_CHANGE;
 					} else {
 						quit = true;
@@ -201,11 +201,56 @@ signal_t gameWindow::MapScreen(std::shared_ptr<map> theMap, int centerColm,
 					quit = true;
 					break;
 				case SDL_KEYUP:
-					if(e.key.keysym.sym == SDLK_c){
-						return SCREEN_CHANGE;
-					} else {
-						quit = true;
-						break;
+					switch(e.key.keysym.sym){
+						case SDLK_c:
+							return SCREEN_CHANGE;
+						case SDLK_s:
+							return SCREEN_CHANGE;
+						case SDLK_LEFT:
+							theMap->MoveView(VIEW_LEFT);
+							break;
+						case SDLK_RIGHT:
+							theMap->MoveView(VIEW_RIGHT);
+							break;
+						case SDLK_UP:
+							theMap->MoveView(VIEW_UP);
+							break;
+						case SDLK_DOWN:
+							theMap->MoveView(VIEW_DOWN);
+							break;
+						case SDLK_w:
+							if(selected && std::dynamic_pointer_cast<person>(selected))
+								MoveUpLeft(std::dynamic_pointer_cast<person>(selected),
+										theMap);
+							break;
+						case SDLK_e:
+							if(selected && std::dynamic_pointer_cast<person>(selected))
+								MoveUpRight(std::dynamic_pointer_cast<person>(selected),
+										theMap);
+							break;
+						case SDLK_a:
+							if(selected && std::dynamic_pointer_cast<person>(selected))
+								MoveLeft(std::dynamic_pointer_cast<person>(selected),
+										theMap);
+							break;
+						case SDLK_d:
+							if(selected && std::dynamic_pointer_cast<person>(selected))
+								MoveRight(std::dynamic_pointer_cast<person>(selected),
+										theMap);
+							break;
+						case SDLK_z:
+							if(selected && std::dynamic_pointer_cast<person>(selected))
+								MoveDownLeft(std::dynamic_pointer_cast<person>(selected),
+										theMap);
+							break;
+						case SDLK_x:
+							if(selected && std::dynamic_pointer_cast<person>(selected))
+								MoveDownRight(std::dynamic_pointer_cast<person>(selected),
+										theMap);
+							break;
+						default:
+							quit = true;
+							break;
 					}
 				case SDL_MOUSEBUTTONDOWN:
 					if(e.button.button == SDL_BUTTON_LEFT){
@@ -257,8 +302,8 @@ void gameWindow::AddMapTiles(std::shared_ptr<map> theMap, const int centerRow,
 	for(unsigned int i = 0; i < theMap->NumberOfRows(); ++i){
 		for(unsigned int j = i%2; j < theMap->NumberOfColumns(); j+=2){
 			theMap->Terrain(i,j)->MoveTo(
-					MAPDISP_ORIGIN_X + (static_cast<int>(j)-centerColm)*TILE_WIDTH/2,
-					MAPDISP_ORIGIN_Y + (static_cast<int>(i)-centerRow)*TILE_HEIGHT);
+					0 + (static_cast<int>(j)-centerColm)*TILE_WIDTH/2,
+					0 + (static_cast<int>(i)-centerRow)*TILE_HEIGHT);
 			if(theMap->Terrain(i,j)->X() > 0
 					&& theMap->Terrain(i,j)->X() < SCREEN_WIDTH
 					&& theMap->Terrain(i,j)->Y() > 0
@@ -267,8 +312,60 @@ void gameWindow::AddMapTiles(std::shared_ptr<map> theMap, const int centerRow,
 					<< "appear on the screen at (" << theMap->Terrain(i,j)->X()
 					<< "," << theMap->Terrain(i,j)->Y() << ")." << std::endl;*/
 			}
-			AddObject(theMap->Terrain(i,j));
+			if(theMap->Terrain(i,j)->TileType() == COLONY){
+				AddClickable(theMap->Terrain(i,j));
+			} else {
+				AddObject(theMap->Terrain(i,j));
+			}
+			for(auto& occ : theMap->Terrain(i,j)->Occupants()){
+				AddClickable(occ);
+			}
 		}
 	}
 }
 
+bool gameWindow::MoveOnMap(std::shared_ptr<person> mover, std::shared_ptr<map> theMap,
+		const int newRow, const int newColm){
+	if(!mover){
+		std::cerr << "Error: attempted to move a person on the map but the "
+			<< "person was a nullptr." << std::endl;
+		return false;
+	}
+	if(!mover->Location()){
+		std::cerr << "Error: attempted to move a person on the map but they "
+			<< "had no initial location." << std::endl;
+		return false;
+	}
+	std::shared_ptr<tile> newLoc = theMap->Terrain(newRow, newColm);
+	if(!newLoc){
+		std::cerr << "Error: attempted to move a person to an invalid tile."
+			<< std::endl;
+		return false;
+	}
+	mover->SetLocation(newLoc);
+	return true;
+}
+
+void gameWindow::MoveUpLeft(std::shared_ptr<person> mover, std::shared_ptr<map> theMap){
+	MoveOnMap(mover, theMap, mover->Row()-1, mover->Colm()-1);
+}
+
+void gameWindow::MoveUpRight(std::shared_ptr<person> mover, std::shared_ptr<map> theMap){
+	MoveOnMap(mover, theMap, mover->Row()-1, mover->Colm()+1);
+}
+
+void gameWindow::MoveLeft(std::shared_ptr<person> mover, std::shared_ptr<map> theMap){
+	MoveOnMap(mover, theMap, mover->Row(), mover->Colm()-2);
+}
+
+void gameWindow::MoveRight(std::shared_ptr<person> mover, std::shared_ptr<map> theMap){
+	MoveOnMap(mover, theMap, mover->Row(), mover->Colm()+2);
+}
+
+void gameWindow::MoveDownLeft(std::shared_ptr<person> mover, std::shared_ptr<map> theMap){
+	MoveOnMap(mover, theMap, mover->Row()+1, mover->Colm()-1);
+}
+
+void gameWindow::MoveDownRight(std::shared_ptr<person> mover, std::shared_ptr<map> theMap){
+	MoveOnMap(mover, theMap, mover->Row()+1, mover->Colm()+1);
+}

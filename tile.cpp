@@ -1,15 +1,14 @@
 #include "tile.hpp"
 
 tile::tile(terrain_t tileType, SDL_Renderer* ren, const std::string spriteFile,
-		const int x, const int y): entity(ren, spriteFile, x, y), tileType(tileType)
-{
-/*	std::cout << "Using the renderer at " << ren <<
-		", I have rendered the sprite at " << spriteFile <<
-		", resulting in a sprite at " << sprite.get() << std::endl;*/
-}
+		const int row, const int colm): entity(ren, spriteFile, 0, 0),
+		tileType(tileType), row(row), colm(colm) {}
 
 void tile::Render() const{
-	sprite->RenderTo(ren, layout);
+	SDL_Rect renderLayout = layout;
+	renderLayout.x += MAPDISP_ORIGIN_X;
+	renderLayout.y += MAPDISP_ORIGIN_Y;
+	sprite->RenderTo(ren, renderLayout);
 	if(bldg) bldg->Render();
 	for(auto& occ : occupants){
 		if(!occ){
@@ -23,8 +22,7 @@ void tile::Render() const{
 
 void tile::MoveTo(int x, int y){
 	//std::cout << "A tile has been moved to (" << x << "," << y << ")." << std::endl;
-	layout.x = x;
-	layout.y = y;
+	entity::MoveTo(x,y);
 	if(bldg) bldg->MoveTo(x + (TILE_WIDTH - BUILDING_WIDTH)/2,
 			y + (4*TILE_HEIGHT/3 - BUILDING_HEIGHT)/2);
 	for(std::shared_ptr<person> occ : occupants){
@@ -39,10 +37,7 @@ void tile::MoveTo(SDL_Rect newLayout){
 }
 
 void tile::Resize(int w, int h){
-	if(w < 0) w = 0;
-	if(h < 0) h = 0;
-	layout.w = w;
-	layout.h = h;
+	entity::Resize(w,h);
 	if(bldg) bldg->Resize(w, h);
 	for(std::shared_ptr<person> occ : occupants) occ->Resize(w, h);
 }
@@ -66,6 +61,11 @@ bool tile::InsideQ(const int x, const int y) const {
 	return true;
 }
 
+int tile::Select() {
+	if(tileType == COLONY) return SCREEN_CHANGE;
+	return NOTHING;
+}
+
 terrain_t tile::TileType() const{
 	return tileType;
 }
@@ -73,6 +73,7 @@ terrain_t tile::TileType() const{
 void tile::SetTileType(const terrain_t newType){
 	if(newType == COLONY){
 		RemoveBuilding();
+		//selectable = true;
 	}
 	std::string spriteFile;
 	switch(newType){
@@ -95,6 +96,7 @@ void tile::SetTileType(const terrain_t newType){
 			spriteFile = "spriteError";
 			break;
 	}
+	//if(tileType == COLONY && newType != COLONY) selectable = false;
 	sprite = gfxManager::RequestSprite(spriteFile);
 	sprite->DefaultLayout(layout);
 	if(selectable){
@@ -122,6 +124,19 @@ std::array<int, LAST_RESOURCE> tile::Income() const{
 		}
 	}
 	return inc;
+}
+
+void tile::SetLocation(const int row, const int colm){
+	this->row = row;
+	this->colm = colm;
+}
+
+int tile::Row() const{
+	return row;
+}
+
+int tile::Colm() const{
+	return colm;
 }
 
 void tile::AddBuilding(std::shared_ptr<building> newBldg){
@@ -180,9 +195,14 @@ bool tile::RemoveOccupant(std::shared_ptr<person> removeThis){
 			return true;
 		}
 	}
-	std::cerr << "Error: attempted to remove an occupant from a tile but the "
-		<< "occupant was not found." << std::endl;
+	std::cerr << "Error: attempted to remove an occupant from a tile but they "
+		<< "were not found among its " << occupants.size() << " occupant(s)."
+		<< std::endl;
 	return false;
+}
+
+std::vector<std::shared_ptr<person>> tile::Occupants() const{
+	return occupants;
 }
 
 void tile::Training(){

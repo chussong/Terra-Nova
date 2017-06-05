@@ -27,6 +27,7 @@ class colony {
 	SDL_Renderer* ren;
 
 	std::string name;
+	int faction;
 	int row;
 	int colm; // position on map
 
@@ -38,9 +39,7 @@ class colony {
 	int powerSupply;
 	int powerDemand;
 
-	std::vector<std::weak_ptr<person>> inhabitants;
 	std::vector<std::string> buildings;
-	std::vector<std::weak_ptr<person>> stagingArea;
 
 	std::vector<std::shared_ptr<building>> buildQueue;
 
@@ -51,17 +50,17 @@ class colony {
 	std::shared_ptr<uiElement> leaveColonyButton;
 	std::shared_ptr<uiElement> endTurnButton;
 
-	void Clean();
-
 	public:
 		colony() = delete;
 		colony(SDL_Renderer* ren, 
-				std::vector<std::vector<std::shared_ptr<tile>>> terrain);
+				std::vector<std::vector<std::shared_ptr<tile>>> terrain,
+				const int faction);
 
 		void SetBuildingTypes(
 				const std::vector<std::shared_ptr<buildingType>> buildingTypes);
 
 		void ChangeName(const std::string name);
+		int Owner() const { return faction; }
 		void Move(const int xdist, const int ydist);
 		int  AddResource(const resource_t resource, int amount);
 		std::array<int, LAST_RESOURCE> AddResources(
@@ -69,7 +68,6 @@ class colony {
 		int  TakeResource(const resource_t resource, int amount);
 		void SetResourceIncome(const resource_t resource, int amount);
 		void AddResourceIncome(const resource_t resource, int amount);
-		void AddInhabitant(std::shared_ptr<person> inhabitant);
 		void AddBuilding(const std::string building);
 
 		std::string Name() const;
@@ -79,8 +77,6 @@ class colony {
 		int Resource(const resource_t resource) const;
 		std::string ResAsString(const int res) const;
 
-		std::shared_ptr<person> Inhabitant(const int number);
-		const std::shared_ptr<person> Inhabitant(const int number) const;
 		void AssignWorker(std::shared_ptr<person> worker,
 				const std::shared_ptr<tile> location);
 
@@ -97,7 +93,7 @@ class colony {
 		int  TileX(const unsigned int row, const unsigned int colm);
 		int  TileY(const unsigned int row);
 		void DrawResources(std::shared_ptr<gameWindow> win);
-		void DrawColonists(std::shared_ptr<gameWindow> win);
+		//void DrawColonists(std::shared_ptr<gameWindow> win);
 		void DrawColonyMisc(std::shared_ptr<gameWindow> win);
 		
 		static std::string ResourceName(const resource_t resource);

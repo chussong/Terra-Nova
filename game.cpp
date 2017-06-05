@@ -11,21 +11,23 @@ void game::Begin(){
 	int temp_colony_row = 28;
 	int temp_colony_colm = 76;
 
-	std::shared_ptr<map> palaven = CreateMap();
-	CreateColony(palaven, temp_colony_row, temp_colony_colm);
-	std::shared_ptr<colony> aurora = palaven->Colony(0);
+	std::shared_ptr<map> terraNova = CreateMap();
+	std::shared_ptr<colony> aurora = CreateColony(terraNova, 
+			temp_colony_row, temp_colony_colm, 1);
 	aurora->AddResource(FOOD, 60);
 	aurora->AddResource(CARBON, 120);
 	aurora->AddResource(IRON, -20);
-	aurora->AddInhabitant(CreatePerson(unitTypes[0], 1));
-	aurora->AddInhabitant(CreatePerson(unitTypes[2], 1));
-	std::shared_ptr<person> urist = aurora->Inhabitant(0);
-	urist->TakeDamage(20);
-	std::shared_ptr<person> urist2 = aurora->Inhabitant(1);
-	urist2->ChangeName("Commander","Lin");
+	std::shared_ptr<person> col = CreatePerson(
+			terraNova->Terrain(aurora->Row(), aurora->Column()+2),
+			unitTypes[0], 1);
+	std::shared_ptr<person> lin = CreatePerson(
+			terraNova->Terrain(aurora->Row()+1, aurora->Column()+1),
+			unitTypes[2], 1);
+	lin->ChangeName("Commander","Lin");
 
-	std::shared_ptr<person> enemy = CreatePerson(unitTypes[1], 2);
-	enemy->MoveToTile(palaven->Terrain(temp_colony_row, temp_colony_colm + 4));
+	std::shared_ptr<person> enemy = CreatePerson(
+			terraNova->Terrain(aurora->Row(), aurora->Column()+4),
+			unitTypes[1], 2);
 
 	bool quit = false;
 	screentype_t nextScreen = COLONY_SCREEN;
@@ -33,7 +35,7 @@ void game::Begin(){
 		switch(nextScreen){
 			case COLONY_SCREEN: nextScreen = ThrowToColonyScreen(aurora);
 								break;
-			case MAP_SCREEN:	nextScreen = ThrowToMapScreen(palaven, 
+			case MAP_SCREEN:	nextScreen = ThrowToMapScreen(terraNova, 
 										temp_colony_row, temp_colony_colm);
 								break;
 			case QUIT_SCREEN:	quit = true;
@@ -87,14 +89,14 @@ void game::ReadUnitTypes(){
 	std::shared_ptr<unitType> newSpec;
 	std::vector<std::shared_ptr<attackType>> atks;
 
-	newSpec = std::make_shared<unitType>(idsUsed++, "Colonist", 100, atks, 2);
+	newSpec = std::make_shared<unitType>(idsUsed++, "Colonist", 100, 3, atks, 2);
 	unitTypes.push_back(newSpec);
 
 	atks.push_back(attackTypes[0]);
-	newSpec = std::make_shared<unitType>(idsUsed++, "Marine", 200, atks, 4);
+	newSpec = std::make_shared<unitType>(idsUsed++, "Marine", 200, 4, atks, 4);
 	unitTypes.push_back(newSpec);
 
-	newSpec = std::make_shared<unitType>(idsUsed++, "Commander", 300, atks, 0);
+	newSpec = std::make_shared<unitType>(idsUsed++, "Commander", 300, 5, atks, 0);
 	newSpec->SetCanRespec(false);
 	unitTypes.push_back(newSpec);
 
@@ -144,7 +146,8 @@ std::vector<std::shared_ptr<buildingType>> game::BuildingTypes(){
 	return buildingTypes;
 }
 
-std::shared_ptr<person> game::CreatePerson(const std::shared_ptr<unitType> spec, const char faction){
+std::shared_ptr<person> game::CreatePerson(const std::shared_ptr<tile> location,
+		const std::shared_ptr<unitType> spec, const char faction){
 	if(unitTypes.size() < 1){
 		std::cerr << "Error: attempted to create a person but no unit types "
 			<< "have been loaded." << std::endl;
@@ -152,19 +155,24 @@ std::shared_ptr<person> game::CreatePerson(const std::shared_ptr<unitType> spec,
 	}
 	std::shared_ptr<person> newPerson(std::make_shared<person>(Window()->Renderer(),
 				spec, faction));
+	if(!newPerson->MoveToTile(location)){
+		std::cerr << "Error: attempted to create a new person but they were not "
+			<< "able to occupy the given tile." << std::endl;
+		return nullptr;
+	}
 	people.push_back(newPerson);
 	return newPerson;
 }
 
 std::shared_ptr<colony> game::CreateColony(std::shared_ptr<map> parentMap,
-		const int row, const int colm){
+		const int row, const int colm, const int faction){
 	if(row < 0 || colm < 0 || static_cast<unsigned int>(row) > parentMap->NumberOfRows() 
 			|| static_cast<unsigned int>(colm) > parentMap->NumberOfColumns()){
 		std::cerr << "Error: attempted to create a colony out of bounds.";
 		return nullptr;
 	}
 	std::shared_ptr<colony> newColony(std::make_shared<colony>(Window()->Renderer(),
-				parentMap->SurroundingTerrain(row, colm)));
+				parentMap->SurroundingTerrain(row, colm), faction));
 	newColony->SetBuildingTypes(buildingTypes);
 	parentMap->AddColony(newColony, row, colm);
 	colonies.push_back(newColony);
@@ -180,4 +188,5 @@ std::shared_ptr<map> game::CreateMap(){
 void game::NextTurn(){
 	std::cout << "A new turn dawns..." << std::endl;
 	for(unsigned int i = 0; i < colonies.size(); ++i) colonies[i]->ProcessTurn();
+	for(auto& u : people) u->ProcessTurn();
 }

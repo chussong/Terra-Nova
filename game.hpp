@@ -43,9 +43,10 @@ class game {
 		void ReadBuildingTypes(); // read exported file listing building types
 		std::vector<std::shared_ptr<buildingType>> BuildingTypes();
 
-		std::shared_ptr<person> CreatePerson(const std::shared_ptr<unitType> spec, const char faction);
+		std::shared_ptr<person> CreatePerson(const std::shared_ptr<tile> loc,
+				const std::shared_ptr<unitType> spec, const char faction);
 		std::shared_ptr<colony> CreateColony(std::shared_ptr<map> parentMap,
-				const int row, const int colm);
+				const int row, const int colm, const int faction);
 		std::shared_ptr<map> CreateMap();
 
 		std::shared_ptr<gameWindow> Window() { return win; }

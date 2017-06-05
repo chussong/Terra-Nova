@@ -1,8 +1,9 @@
 #include "colony.hpp"
 
 colony::colony(SDL_Renderer* ren, 
-		std::vector<std::vector<std::shared_ptr<tile>>> terrain): 
-		ren(ren), terrain(terrain)
+		std::vector<std::vector<std::shared_ptr<tile>>> terrain,
+		const int faction): 
+		ren(ren), faction(faction), terrain(terrain)
 {
 	name = "Aurora";
 
@@ -16,12 +17,6 @@ colony::colony(SDL_Renderer* ren,
 void colony::SetBuildingTypes(
 		const std::vector<std::shared_ptr<buildingType>> buildingTypes){
 	this->buildingTypes = buildingTypes;
-}
-
-
-void colony::Clean(){
-	CleanExpired(inhabitants);
-	CleanExpired(stagingArea);
 }
 
 void colony::ChangeName(const std::string name){
@@ -87,12 +82,16 @@ void colony::AddResourceIncome(const resource_t resource, int amount){
 	resPerTurn[resource] += amount;
 }
 
-void colony::AddInhabitant(std::shared_ptr<person> inhabitant){
-	inhabitants.emplace_back(inhabitant);
-}
-
 std::string colony::Name() const{
 	return name;
+}
+
+int colony::Row() const{
+	return terrain[2][2]->Row();
+}
+
+int colony::Column() const{
+	return terrain[2][2]->Colm();
 }
 
 terrain_t colony::Terrain(const unsigned int row, const unsigned int colm) const{
@@ -103,16 +102,6 @@ terrain_t colony::Terrain(const unsigned int row, const unsigned int colm) const
 
 int colony::Resource(const resource_t resource) const{
 	return resources[resource];
-}
-
-std::shared_ptr<person> colony::Inhabitant(const int number) {
-	if(number < 0 || (unsigned int)number >= inhabitants.size()) return nullptr;
-	return inhabitants[number].lock();
-}
-
-const std::shared_ptr<person> colony::Inhabitant(const int number) const {
-	if(number < 0 || (unsigned int)number >= inhabitants.size()) return nullptr;
-	return inhabitants[number].lock();
 }
 
 void colony::AssignWorker(std::shared_ptr<person> worker, 
@@ -128,6 +117,11 @@ void colony::EnqueueBuilding(const std::shared_ptr<buildingType> type,
 	}
 	if(!clickedTile){
 		std::cerr << "Error: attempted to add a building to a nullptr tile." << std::endl;
+		return;
+	}
+
+	if(clickedTile->Owner() != 0 && Owner() != clickedTile->Owner()){
+		std::cout << "Can not build on occupied territory." << std::endl;
 		return;
 	}
 
@@ -203,6 +197,7 @@ void colony::AdvanceQueue(){
 void colony::ProcessTurn(){
 	for(auto& row : terrain){
 		for(auto& space : row){
+			if(space->Owner() != Owner()) continue;
 			AddResources(space->Income());
 			space->Training();
 		}
@@ -223,7 +218,7 @@ void colony::MakeColonyScreen(std::shared_ptr<gameWindow> win) {
 	win->ResetObjects();
 	DrawTiles(win);
 	DrawResources(win);
-	DrawColonists(win);
+	//DrawColonists(win);
 	DrawColonyMisc(win);
 }
 
@@ -236,6 +231,7 @@ void colony::DrawTiles(std::shared_ptr<gameWindow> win){
 			} else {
 				win->AddObject(terrain[i][j]);
 			}
+			for(auto& occ : terrain[i][j]->Occupants()) win->AddClickable(occ);
 			/*std::cout << "Tile " << i << ", a " << terrain[i]->TileType() << ", "
 				<< "moved to (" << terrain[i]->X() << "," << terrain[i]->Y() << ")."
 				<< std::endl;*/
@@ -269,14 +265,11 @@ void colony::DrawResources(std::shared_ptr<gameWindow> win){
 	}
 }
 
-void colony::DrawColonists(std::shared_ptr<gameWindow> win){
-/*	std::string spriteDir = GetSpritePath("sprites");
-	std::shared_ptr<entity> placeholderColonist = std::make_shared<entity>(ren,
-			spriteDir + "colonist.png", 110, SCREEN_HEIGHT-60);*/
+/*void colony::DrawColonists(std::shared_ptr<gameWindow> win){
 	for(unsigned int i = 0; i < inhabitants.size(); ++i){
 		win->AddClickable(inhabitants[i].lock());
 	}
-}
+}*/
 
 void colony::DrawColonyMisc(std::shared_ptr<gameWindow> win){
 	int gridLeftEdge = SCREEN_WIDTH - 50 - 

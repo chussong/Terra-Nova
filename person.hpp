@@ -37,6 +37,7 @@ class unitType {
 	const std::string name;
 	
 	const int maxHealth;
+	const int moveSpeed;
 	const std::vector<std::shared_ptr<attackType>> attacks;
 
 	const int trainingTime;
@@ -44,16 +45,19 @@ class unitType {
 	bool canRespec = true;
 
 	public:
+	// ultimately we want to construct this from a line of text as std::string
 		unitType() = delete;
 		unitType(const int id, const std::string& name, const int maxHealth,
+			const int moveSpeed,
 			const std::vector<std::shared_ptr<attackType>>& attacks, 
 			const int trainingTime):
-			id(id), name(name), maxHealth(maxHealth), attacks(attacks),
-			trainingTime(trainingTime) {}
+			id(id), name(name), maxHealth(maxHealth), moveSpeed(moveSpeed), 
+			attacks(attacks), trainingTime(trainingTime) {}
 
 		int ID()			const			{return id;}
 		std::string Name()	const			{return name;}
 		int MaxHealth()		const			{return maxHealth;}
+		int MoveSpeed()		const			{return moveSpeed;}
 		int TrainingTime()	const			{return trainingTime;}
 
 		bool CanRespec()	const 			{return canRespec;}
@@ -68,8 +72,8 @@ class person : public entity {
 	bool female;
 	std::shared_ptr<unitType> spec;
 	
-	int maxHealth;
 	int health;
+	int movesLeft;
 	std::vector<std::string> inventory;
 
 	char faction;
@@ -80,21 +84,20 @@ class person : public entity {
 
 	public:
 		person() = delete;
-		person(SDL_Renderer* ren, const std::shared_ptr<unitType> spec,
-				const char faction);
+		person(SDL_Renderer* ren,
+				const std::shared_ptr<unitType> spec, const char faction);
 		person(const person& other) = delete;
 		person& operator=(const person other) = delete;
 
 		void ChangeName(const std::string givenName, const std::string surname);
 		void ChangeGender(const std::string gender);
 		void ChangeSpec(const std::shared_ptr<unitType> spec);
-		void ChangeMaxHealth(const int maxHealth);
 		bool TakeDamage(const int damage); // false = survived
 		void Die();
 		bool Dead() const { return health <= 0; }
-		void AddItem(const std::string item);
 
 		void Render() const;
+		void ProcessTurn();
 
 		std::string					Name()		const;
 		std::string 				GivenName() const;
@@ -110,8 +113,11 @@ class person : public entity {
 		int							MaxHealth() const;
 		int							Health()	const;
 		std::vector<std::string> 	Inventory() const;
+		void AddItem(const std::string item);
+		int							MoveSpeed()	const;
+		int							MovesLeft()	const;
 
-		void MoveToTile(std::shared_ptr<tile> newLoc);
+		bool MoveToTile(std::shared_ptr<tile> newLoc);
 		std::shared_ptr<tile> Location() const;
 		int Row() const;
 		int Colm() const;
@@ -120,6 +126,7 @@ class person : public entity {
 		char Faction() const			{return faction;}
 
 		std::vector<std::shared_ptr<attackType>> Attacks() const {return spec->Attacks();}
+		bool CanAttack() const { return Attacks().size() > 0; }
 		void Attack(std::shared_ptr<person>& target) const;
 		static void Fight(std::shared_ptr<person> attacker, 
 						std::shared_ptr<person> target);

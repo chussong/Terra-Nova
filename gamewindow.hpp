@@ -59,6 +59,9 @@ class gameWindow : public std::enable_shared_from_this<gameWindow> {
 		static bool InitSDL();
 		static void QuitSDL();
 
+		signal_t HandleKeyPress(SDL_Keycode key, std::shared_ptr<entity> selected,
+				std::shared_ptr<map> theMap);
+
 		signal_t ColonyScreen(std::shared_ptr<colony> col);
 		signal_t MapScreen(std::shared_ptr<map> theMap, int centerColm,
 				int centerRow);

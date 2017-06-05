@@ -144,8 +144,8 @@ int tile::Colm() const{
 void tile::AddBuilding(std::shared_ptr<building> newBldg){
 	bldg = newBldg;
 	SDL_Rect bldgLayout = layout;
-	bldgLayout.x += (TILE_WIDTH - BUILDING_WIDTH)/2;
-	bldgLayout.y += (4*TILE_HEIGHT/3 - BUILDING_HEIGHT)/2;
+	bldgLayout.x += MAPDISP_ORIGIN_X + (TILE_WIDTH - BUILDING_WIDTH)/2;
+	bldgLayout.y += MAPDISP_ORIGIN_Y + (4*TILE_HEIGHT/3 - BUILDING_HEIGHT)/2;
 	bldg->MoveTo(bldgLayout);
 }
 

@@ -73,23 +73,23 @@ std::string gfxManager::GetSpritePath(const std::string& subDir){
 	const char PATH_SEP = '/';
 #endif
 
-	static std::string baseDir;
-	if(baseDir.empty()){
+	static std::string baseSpriteDir;
+	if(baseSpriteDir.empty()){
 		char* basePath = SDL_GetBasePath();
 		if(basePath){
-			baseDir = basePath;
-			baseDir += std::string("sprites") + PATH_SEP;
+			baseSpriteDir = basePath;
+			baseSpriteDir += std::string("sprites") + PATH_SEP;
 			SDL_free(basePath);
 		} else {
 			std::cerr << "Error getting resource path: " << SDL_GetError()
 				<< std::endl;
 			return "";
 		}
-		size_t pos = baseDir.rfind("bin");
-		baseDir = baseDir.substr(0, pos);
+		size_t pos = baseSpriteDir.rfind("bin");
+		baseSpriteDir = baseSpriteDir.substr(0, pos);
 	}
 
-	return subDir.empty() ? baseDir : baseDir + subDir + PATH_SEP;
+	return subDir.empty() ? baseSpriteDir : baseSpriteDir + subDir + PATH_SEP;
 }
 
 std::shared_ptr<gfxObject> gfxManager::LoadSprite(const std::string& name){

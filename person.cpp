@@ -201,12 +201,12 @@ int person::Damage(const unsigned int num) const{
 }
 
 float person::Accuracy(const unsigned int num) const{
-	if(num < Attacks().size()) return Attacks()[num]->HitRate();
+	if(num < Attacks().size()) return Attacks()[num]->Accuracy();
 	return 0;
 }
 
-int person::NumAttacks(const unsigned int num) const{
-	if(num < Attacks().size()) return Attacks()[num]->NumAttacks();
+int person::AttackRate(const unsigned int num) const{
+	if(num < Attacks().size()) return Attacks()[num]->AttackRate();
 	return 0;
 }
 
@@ -220,8 +220,8 @@ void person::Attack(std::shared_ptr<person>& target) const{
 	std::mt19937 gen(dev());
 	std::uniform_real_distribution<> dist(0,1);
 	for(auto& atk : Attacks()){
-		for(int hit = 0; hit < atk->NumAttacks(); ++hit){
-			if(dist(gen) <= atk->HitRate()){
+		for(int hit = 0; hit < atk->AttackRate(); ++hit){
+			if(dist(gen) <= atk->Accuracy()){
 				if(target->TakeDamage(atk->Damage())){
 					target.reset();
 					return;

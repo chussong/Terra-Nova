@@ -1,0 +1,4 @@
+% name | max health | move speed | attacks (sep. by commas) | training time | other attributes
+Colonist	| 100 | 3 | None 			| 2 |
+Marine		| 200 | 4 | Ballistic SMG	| 4 |
+Commander	| 300 | 5 | Ballistic SMG	| 0 | no respec

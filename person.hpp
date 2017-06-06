@@ -16,25 +16,24 @@ class tile;
 class attackType {
 	const std::string name;
 
-	const int numAttacks;
+	const float accuracy;
+	const int attackRate;
 	const int damage;
-	const float hitRate;
 
 	public:
 		attackType() = delete;
-		attackType(const std::string& name, const int numAttacks,
-				const int damage, const float hitRate): name(name),
-			numAttacks(numAttacks), damage(damage), hitRate(hitRate) {}
+		attackType(const std::string& name, const float accuracy,
+				const int attackRate, const int damage): name(name),
+			accuracy(accuracy), attackRate(attackRate), damage(damage) {}
 
 		std::string Name() const		{return name;}
-		int NumAttacks() const			{return numAttacks;}
+		float Accuracy() const			{return accuracy;}
+		int AttackRate() const			{return attackRate;}
 		int Damage() const				{return damage;}
-		float HitRate() const			{return hitRate;}
 		std::string DamageType() const	{return "ballistic";}
 };
 
 class unitType {
-	const int id;
 	const std::string name;
 	
 	const int maxHealth;
@@ -48,14 +47,13 @@ class unitType {
 	public:
 	// ultimately we want to construct this from a line of text as std::string
 		unitType() = delete;
-		unitType(const int id, const std::string& name, const int maxHealth,
+		unitType(const std::string& name, const int maxHealth,
 			const int moveSpeed,
 			const std::vector<std::shared_ptr<attackType>>& attacks, 
 			const int trainingTime):
-			id(id), name(name), maxHealth(maxHealth), moveSpeed(moveSpeed), 
+			name(name), maxHealth(maxHealth), moveSpeed(moveSpeed), 
 			attacks(attacks), trainingTime(trainingTime) {}
 
-		int ID()			const			{return id;}
 		std::string Name()	const			{return name;}
 		int MaxHealth()		const			{return maxHealth;}
 		int MoveSpeed()		const			{return moveSpeed;}
@@ -135,7 +133,7 @@ class person : public entity {
 		std::vector<std::shared_ptr<attackType>> Attacks() const;
 		int Damage(const unsigned int num = 0) const;
 		float Accuracy(const unsigned int num = 0) const;
-		int NumAttacks(const unsigned int num = 0) const;
+		int AttackRate(const unsigned int num = 0) const;
 		std::string DamageType(const unsigned int num = 0) const;
 
 		bool CanAttack() const { return Attacks().size() > 0; }

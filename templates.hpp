@@ -1,8 +1,25 @@
 #ifndef TEMPLATES_HPP
 #define TEMPLATES_HPP
 
+#include <string>
 #include <iostream>
+#include <boost/algorithm/string/trim.hpp>
 #include <SDL.h>
+
+
+template<class T>
+std::shared_ptr<T> FindByName(std::vector<std::shared_ptr<T>> vec,
+		std::string name){
+	boost::trim(name);
+	for(auto& entry : vec){
+		if(name == entry->Name()){
+			//std::cout << "Found an object named " << name << "." << std::endl;
+			return entry;
+		}
+	}
+	//std::cout << "Failed to find an object named " << name << "." << std::endl;
+	return nullptr;
+}
 
 template<class T>
 void CleanExpired(std::vector<std::weak_ptr<T>> vec){

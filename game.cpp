@@ -2,9 +2,16 @@
 
 game::game(){
 	win = std::make_shared<gameWindow>("Terra Nova", 100, 100, 1024, 768);
-	ReadAttackTypes();
-	ReadUnitTypes();
-	ReadBuildingTypes();
+	try{
+		ReadAttackTypes();
+		ReadUnitTypes();
+		ReadBuildingTypes();
+	}
+	catch(const readError &e){
+		// instead of complaining, generate the def files from hard-coded versions
+		std::cout << e.what() << std::endl;
+		throw;
+	}
 }
 
 void game::Begin(){
@@ -73,35 +80,128 @@ bool game::Tick(){
 	return true;
 }
 
-// read exported file listing attack types; this is a placeholder
-void game::ReadAttackTypes(){
-	attackTypes.clear();
-	std::shared_ptr<attackType> newAttack;
+std::vector<std::string> game::LoadDefFile(const std::string& name){
+#ifdef _WIN32
+	const char PATH_SEP = '\\';
+#else
+	const char PATH_SEP = '/';
+#endif
 
-	newAttack = std::make_shared<attackType>("Ballistic SMG", 10, 7, 0.67f);
-	attackTypes.push_back(newAttack);
+	std::vector<std::string> ret;
+
+	static std::string baseDefDir;
+	if(baseDefDir.empty()){
+		char* basePath = SDL_GetBasePath();
+		if(basePath){
+			baseDefDir = basePath;
+			baseDefDir += std::string("defs") + PATH_SEP;
+			SDL_free(basePath);
+		} else {
+			std::cerr << "Error getting resource path: " << SDL_GetError()
+				<< std::endl;
+			return ret;
+		}
+		size_t pos = baseDefDir.rfind("bin");
+		baseDefDir = baseDefDir.substr(0, pos);
+	}
+
+	std::ifstream in(baseDefDir + name);
+	if((in.rdstate() & std::ifstream::failbit) != 0){
+		std::cerr << "Error: unable to open necessary definition file at "
+			<< baseDefDir + name << ". Does it exist?" << std::endl;
+		return ret;
+	}
+
+	std::string line;
+	do{
+		std::getline(in, line);
+		if(line.length() > 0 && line[0] != '%') ret.push_back(line);
+	}while((in.rdstate() & std::ifstream::eofbit) == 0);
+	return ret;
 }
 
-// read exported file listing unit specs; this is a placeholder
+void game::ReadAttackTypes(){
+	std::vector<std::string> attackDefs = LoadDefFile("weapons.txt");
+	if(attackDefs.size() == 0){
+		std::cerr << "This is bad but I don't have the exceptions working "
+			<< "yet." << std::endl;
+		return;
+		//throw readError();
+	}
+	
+	attackTypes.clear();
+	std::shared_ptr<attackType> newAttack;
+	std::vector<std::string> entries;
+	
+	for(auto& attack : attackDefs){
+		boost::split(entries, attack, boost::is_any_of("|"));
+		/*std::cout << entries[0] << " | " << boost::trim_copy(entries[0]) << std::endl;
+		std::cout << entries[1] << " | " << std::stof(entries[1]) << std::endl;
+		std::cout << entries[2] << " | " << std::stoi(entries[2]) << std::endl;
+		std::cout << entries[3] << " | " << std::stoi(entries[3]) << std::endl;*/
+		try{
+			newAttack = std::make_shared<attackType>(boost::trim_copy(entries[0]),
+						std::stof(entries[1]), std::stoi(entries[2]),
+						std::stoi(entries[3]));
+		}
+		catch(const std::exception &e){
+			std::cout << "An attack definition file was detected, but its "
+				<< "contents were not in a readable format. Please fix it or "
+				<< "delete it so that it can be regenerated." << std::endl;
+			std::cout << e.what() << std::endl;
+			throw;
+		}
+		/*std::cout << newAttack->Name() << " " << newAttack->Accuracy() << " "
+			<< newAttack->AttackRate() << " " << newAttack->Damage() << std::endl;*/
+		attackTypes.push_back(newAttack);
+	}
+}
+
 void game::ReadUnitTypes(){
-	int idsUsed = 0;
+	std::vector<std::string> unitDefs = LoadDefFile("unit_types.txt");
+	if(unitDefs.size() == 0){
+		std::cerr << "This is bad but I don't have the exceptions working yet."
+			<< std::endl;
+		return;
+		//throw readError();
+	}
+	
 	unitTypes.clear();
 	std::shared_ptr<unitType> newSpec;
+	std::vector<std::string> entries;
+
 	std::vector<std::shared_ptr<attackType>> atks;
+	std::shared_ptr<attackType> atk;
+	std::vector<std::string> atkNames;
 
-	newSpec = std::make_shared<unitType>(idsUsed++, "Colonist", 100, 3, atks, 2);
-	unitTypes.push_back(newSpec);
+	/*std::cout << "Going to loop over these " << unitDefs.size() << " lines:"
+		<< std::endl;*/
+	for(auto& line : unitDefs){
+		//std::cout << line << std::endl;
+		boost::split(entries, line, boost::is_any_of("|"));
+		boost::split(atkNames, entries[3], boost::is_any_of(","));
+		atks.clear();
+		for(auto& name : atkNames){
+			if((atk = FindByName(attackTypes, name)) != nullptr) atks.push_back(atk);
+		}
 
-	atks.push_back(attackTypes[0]);
-	newSpec = std::make_shared<unitType>(idsUsed++, "Marine", 200, 4, atks, 4);
-	unitTypes.push_back(newSpec);
-
-	newSpec = std::make_shared<unitType>(idsUsed++, "Commander", 300, 5, atks, 0);
-	newSpec->SetCanRespec(false);
-	unitTypes.push_back(newSpec);
-
-	if(unitTypes.size() > 100){
-		std::cerr << "Error: only up to 100 unit types are supported." << std::endl;
+		try{
+			newSpec = std::make_shared<unitType>(boost::trim_copy(entries[0]),
+					std::stoi(entries[1]), std::stoi(entries[2]), atks,
+					std::stoi(entries[4]));
+		}
+		catch(const std::exception &e){
+			std::cout << "A unit type definition file was detected, but its "
+				<< "contents were not in a readable format. Please fix it or "
+				<< "delete it so that it can be regenerated." << std::endl;
+			std::cout << e.what() << std::endl;
+			throw;
+		}
+		if(entries.size() > 5){
+			if(entries[5].find("no respec") < std::string::npos)
+				newSpec->SetCanRespec(false);
+		}
+		unitTypes.push_back(newSpec);
 	}
 }
 

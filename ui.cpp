@@ -134,7 +134,7 @@ unitInfoPanel::unitInfoPanel(SDL_Renderer* ren, std::shared_ptr<person> unit){
 				panelX + WEAPONICON_X, panelY + WEAPONICON_Y);
 		attackIcon->AddText(std::to_string(
 				static_cast<int>(std::floor(100*unit->Accuracy()))) + "% | " 
-				+ std::to_string(unit->NumAttacks()) + "x "
+				+ std::to_string(unit->AttackRate()) + "x "
 				+ std::to_string(unit->Damage()) + " "
 				+ unit->DamageType(),
 				UNIT_ATTACK_X, UNIT_ATTACK_Y);

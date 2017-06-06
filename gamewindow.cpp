@@ -33,9 +33,13 @@ gameWindow::~gameWindow(){
 
 void gameWindow::Render(){
 	SDL_RenderClear(ren);
-	for(unsigned int i = 0; i < background.size(); ++i) background[i]->Render();
+	/*for(unsigned int i = 0; i < background.size(); ++i) background[i]->Render();
 	for(unsigned int i = 0; i < objects.size(); ++i) objects[i]->Render();
-	for(unsigned int i = 0; i < clickables.size(); ++i) clickables[i]->Render();
+	for(unsigned int i = 0; i < clickables.size(); ++i) clickables[i]->Render();*/
+	for(auto& thing : background) thing->Render();
+	for(auto& thing : objects	) thing->Render();
+	for(auto& thing : clickables) thing->Render();
+	for(auto& thing : topLevelUI) thing->Render();
 	SDL_RenderPresent(ren);
 }
 
@@ -127,6 +131,7 @@ void gameWindow::AddToBackground(std::shared_ptr<uiElement> newThing){
 void gameWindow::ResetObjects(){
 	objects.clear();
 	clickables.clear();
+	topLevelUI.clear();
 }
 
 void gameWindow::AddObject(std::shared_ptr<entity> newThing){
@@ -135,6 +140,10 @@ void gameWindow::AddObject(std::shared_ptr<entity> newThing){
 
 void gameWindow::AddClickable(std::shared_ptr<entity> newThing){
 	clickables.push_back(newThing);
+}
+
+void gameWindow::AddTopLevelUI(std::shared_ptr<uiAggregate> newThing){
+	topLevelUI.push_back(newThing);
 }
 
 signal_t gameWindow::HandleKeyPress(SDL_Keycode key,
@@ -250,6 +259,8 @@ signal_t gameWindow::ColonyScreen(std::shared_ptr<colony> col){
 
 signal_t gameWindow::MapScreen(std::shared_ptr<map> theMap, int centerColm,
 		int centerRow){
+	// we should be able to handle NEXT_TURN without resetting the screen
+	// entirely. Put the loop in a separate function.
 	MapScreenCenteredOn(theMap, centerColm, centerRow);
 
 	SDL_Event e;
@@ -278,7 +289,10 @@ signal_t gameWindow::MapScreen(std::shared_ptr<map> theMap, int centerColm,
 					}
 				case SDL_MOUSEBUTTONDOWN:
 					if(e.button.button == SDL_BUTTON_LEFT){
-						if(selected) selected->Deselect();
+						if(selected){
+							selected->Deselect();
+							RemoveUnitInfoPanel();
+						}
 						selected = SelectedObject(e.button.x, e.button.y);
 						if(selected){
 							switch(selected->Select()/100){
@@ -289,6 +303,7 @@ signal_t gameWindow::MapScreen(std::shared_ptr<map> theMap, int centerColm,
 								default:
 									break;
 							}
+							MakeUnitInfoPanel(selected);
 						}
 					}
 					if(e.button.button == SDL_BUTTON_RIGHT && selected){
@@ -317,6 +332,11 @@ void gameWindow::MapScreenCenteredOn(std::shared_ptr<map> theMap, const int cent
 	}
 	ResetObjects();
 	AddMapTiles(theMap, centerRow, centerColm);
+
+	std::shared_ptr<uiElement> endTurnButton = std::make_shared<uiElement>(ren,
+			"endturn", SCREEN_WIDTH-200, 200);
+	endTurnButton->EnableButton(END_TURN);
+	AddClickable(endTurnButton);
 }
 
 void gameWindow::AddMapTiles(std::shared_ptr<map> theMap, const int centerRow, 
@@ -348,6 +368,30 @@ void gameWindow::AddMapTiles(std::shared_ptr<map> theMap, const int centerRow,
 	}
 }
 
+void gameWindow::MakeUnitInfoPanel(const std::shared_ptr<entity> source){
+	if(!std::dynamic_pointer_cast<person>(source)) return;
+	AddTopLevelUI(std::make_shared<unitInfoPanel>(ren, 
+				std::dynamic_pointer_cast<person>(source)));
+}
+
+void gameWindow::UpdateUnitInfoPanel(const std::shared_ptr<entity> source){
+	if(!std::dynamic_pointer_cast<person>(source)) return;
+	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
+		if(std::dynamic_pointer_cast<unitInfoPanel>(topLevelUI[i])){
+			std::dynamic_pointer_cast<unitInfoPanel>(topLevelUI[i])->UpdateHealth(
+					std::dynamic_pointer_cast<person>(source));
+		}
+	}
+}
+
+void gameWindow::RemoveUnitInfoPanel(){
+	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
+		if(std::dynamic_pointer_cast<unitInfoPanel>(topLevelUI[i])){
+			topLevelUI.erase(topLevelUI.begin() + i);
+		}
+	}
+}
+
 bool gameWindow::MoveOnMap(std::shared_ptr<person> mover, std::shared_ptr<map> theMap,
 		const int newRow, const int newColm){
 	if(!mover){
@@ -374,6 +418,7 @@ bool gameWindow::MoveOnMap(std::shared_ptr<person> mover, std::shared_ptr<map> t
 		mover->MoveToTile(newLoc);
 	} else if(mover->CanAttack()) {
 		person::Fight(mover, newLoc->Defender());
+		UpdateUnitInfoPanel(mover);
 		if(newLoc->Occupants().size() == 0) mover->MoveToTile(newLoc);
 	}
 	return true;

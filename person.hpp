@@ -30,6 +30,7 @@ class attackType {
 		int NumAttacks() const			{return numAttacks;}
 		int Damage() const				{return damage;}
 		float HitRate() const			{return hitRate;}
+		std::string DamageType() const	{return "ballistic";}
 };
 
 class unitType {
@@ -63,10 +64,15 @@ class unitType {
 		bool CanRespec()	const 			{return canRespec;}
 		void SetCanRespec(const bool val)	{canRespec = val;}
 
-		std::vector<std::shared_ptr<attackType>> Attacks() const	{return attacks;}
+		std::vector<std::shared_ptr<attackType>> Attacks() const {return attacks;}
+		std::shared_ptr<attackType> Attack(const int num) const 
+			{if(num >= (int)attacks.size()) return nullptr; return attacks[num];}
 };
 
 class person : public entity {
+	std::shared_ptr<gfxObject> healthBackground;
+	std::shared_ptr<gfxObject> healthBar;
+
 	std::string givenName;
 	std::string surname;
 	bool female;
@@ -102,6 +108,7 @@ class person : public entity {
 		std::string					Name()		const;
 		std::string 				GivenName() const;
 		std::string 				Surname() 	const;
+		std::string					Species()	const;
 		std::string					Gender()	const;
 		std::string					NomPronoun()const;
 		std::string					NomPronCap()const;
@@ -125,7 +132,12 @@ class person : public entity {
 		bool CanRespec() const			{return spec->CanRespec();}
 		char Faction() const			{return faction;}
 
-		std::vector<std::shared_ptr<attackType>> Attacks() const {return spec->Attacks();}
+		std::vector<std::shared_ptr<attackType>> Attacks() const;
+		int Damage(const unsigned int num = 0) const;
+		float Accuracy(const unsigned int num = 0) const;
+		int NumAttacks(const unsigned int num = 0) const;
+		std::string DamageType(const unsigned int num = 0) const;
+
 		bool CanAttack() const { return Attacks().size() > 0; }
 		void Attack(std::shared_ptr<person>& target) const;
 		static void Fight(std::shared_ptr<person> attacker, 

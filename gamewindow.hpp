@@ -19,14 +19,16 @@
 class map;
 class colony;
 class uiElement;
+
 class gameWindow : public std::enable_shared_from_this<gameWindow> {
 	protected:
 		SDL_Window* win;
 		SDL_Renderer* ren;
 
-		std::vector<std::shared_ptr<uiElement>> background;
+		std::vector<std::shared_ptr<uiAggregate>> topLevelUI;
 		std::vector<std::shared_ptr<entity>> clickables;
 		std::vector<std::shared_ptr<entity>> objects;
+		std::vector<std::shared_ptr<uiElement>> background;
 
 		std::shared_ptr<entity> selected;
 
@@ -55,6 +57,7 @@ class gameWindow : public std::enable_shared_from_this<gameWindow> {
 		void ResetObjects();
 		void AddObject(std::shared_ptr<entity> newThing);
 		void AddClickable(std::shared_ptr<entity> newThing);
+		void AddTopLevelUI(std::shared_ptr<uiAggregate> newThing);
 
 		static bool InitSDL();
 		static void QuitSDL();
@@ -70,6 +73,9 @@ class gameWindow : public std::enable_shared_from_this<gameWindow> {
 				const int centerRow, const int centerColm);
 		void AddMapTiles(std::shared_ptr<map> theMap,
 				const int centerRow, const int centerColm);
+		void MakeUnitInfoPanel(const std::shared_ptr<entity> unit);
+		void UpdateUnitInfoPanel(const std::shared_ptr<entity> unit);
+		void RemoveUnitInfoPanel();
 
 		bool MoveOnMap(std::shared_ptr<person> mover, std::shared_ptr<map> theMap,
 				const int newRow, const int newColm);

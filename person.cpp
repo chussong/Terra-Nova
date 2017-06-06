@@ -18,6 +18,9 @@ person::person(SDL_Renderer* ren,
 	female = std::rand() % 2;
 	health = MaxHealth();
 	movesLeft = MoveSpeed()+1;
+
+	healthBackground = gfxManager::RequestSprite("healthbar_background");
+	healthBar = gfxManager::RequestSprite("healthbar_p" + std::to_string(faction));
 }
 
 void person::ChangeName(const std::string givenName, const std::string surname){
@@ -62,6 +65,19 @@ void person::Render() const{
 	//std::cout << Dead() << std::endl;
 	if(Dead()) return;
 	entity::Render();
+	SDL_Rect healthLayout;
+	healthLayout.w = HEALTH_BAR_WIDTH;
+	healthLayout.h = HEALTH_BAR_HEIGHT;
+	healthLayout.x = layout.x + (layout.w - healthLayout.w)/2;
+	healthLayout.y = layout.y - healthLayout.h;
+	healthBackground->RenderTo(ren, healthLayout);
+	healthLayout.x += 1;
+	healthLayout.y += 1;
+	healthLayout.h -= 2;
+	healthLayout.w -= 2;
+	healthLayout.w *= Health();
+	healthLayout.w /= MaxHealth();
+	healthBar->RenderTo(ren, healthLayout);
 }
 
 void person::ProcessTurn(){
@@ -81,6 +97,10 @@ std::string person::GivenName() const{
 
 std::string person::Surname() const{
 	return surname;
+}
+
+std::string person::Species() const{
+	return "human";
 }
 
 std::string person::Gender() const{
@@ -169,6 +189,30 @@ int person::Row() const{
 
 int person::Colm() const{
 	return location->Colm();
+}
+
+std::vector<std::shared_ptr<attackType>> person::Attacks() const{
+	return spec->Attacks();
+}
+
+int person::Damage(const unsigned int num) const{
+	if(num < Attacks().size()) return Attacks()[num]->Damage();
+	return 0;
+}
+
+float person::Accuracy(const unsigned int num) const{
+	if(num < Attacks().size()) return Attacks()[num]->HitRate();
+	return 0;
+}
+
+int person::NumAttacks(const unsigned int num) const{
+	if(num < Attacks().size()) return Attacks()[num]->NumAttacks();
+	return 0;
+}
+
+std::string person::DamageType(const unsigned int num) const{
+	if(num < Attacks().size()) return Attacks()[num]->DamageType();
+	return 0;
 }
 
 void person::Attack(std::shared_ptr<person>& target) const{

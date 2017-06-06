@@ -6,10 +6,14 @@ entity::entity(SDL_Renderer* ren, const std::string& spriteFile,
 		selectable(selectable) {
 	layout.x = x;
 	layout.y = y;
-	sprite = gfxManager::RequestSprite(spriteFile);
+	ChangeSprite(spriteFile);
+}
+
+void entity::ChangeSprite(const std::string& spriteName){
+	sprite = gfxManager::RequestSprite(spriteName);
 	sprite->DefaultLayout(layout);
 	if(selectable){
-		selectedSprite = gfxManager::RequestSprite(spriteFile + "_selected");
+		selectedSprite = gfxManager::RequestSprite(spriteName + "_selected");
 	}
 }
 

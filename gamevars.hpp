@@ -42,6 +42,10 @@ enum resource_t { FOOD = 0, CARBON = 1, SILICON = 2, IRON = 3,
 
 constexpr int RESCAP = 100;
 
+const std::string COLONY_BACKGROUND = "Space-Colony";
+
+// UI sizes and positioning
+
 constexpr int MAPDISP_ORIGIN_X = 300;
 constexpr int MAPDISP_ORIGIN_Y = 300;
 constexpr int RES_PANEL_WIDTH = 90;
@@ -57,8 +61,25 @@ constexpr int BUILDING_GRID_COLUMNS = 3;
 
 constexpr int PERSON_WIDTH = 42;
 constexpr int PERSON_HEIGHT = 42;
+constexpr int HEALTH_BAR_WIDTH = 40;
+constexpr int HEALTH_BAR_HEIGHT = 10;
 
-const std::string COLONY_BACKGROUND = "Space-Colony";
+constexpr int UNIT_INFO_PANEL_WIDTH = 410;
+constexpr int UNIT_INFO_PANEL_HEIGHT = 160;
+constexpr int PORTRAIT_X = 5;
+constexpr int PORTRAIT_Y = 5;
+constexpr int FACTIONCOLOR_X = 156;
+constexpr int FACTIONCOLOR_Y = 6;
+constexpr int HEALTHICON_X = 156;
+constexpr int HEALTHICON_Y = 56;
+constexpr int WEAPONICON_X = 156;
+constexpr int WEAPONICON_Y = 106;
+constexpr int UNIT_NAME_X = 140;
+constexpr int UNIT_NAME_Y = 25;
+constexpr int UNIT_HEALTH_X = 140;
+constexpr int UNIT_HEALTH_Y = 25;
+constexpr int UNIT_ATTACK_X = 145;
+constexpr int UNIT_ATTACK_Y = 25;
 
 // misc UI
 

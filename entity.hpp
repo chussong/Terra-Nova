@@ -28,9 +28,11 @@ class entity : public std::enable_shared_from_this<entity> {
 		entity(entity&& other) noexcept = default;
 		entity& operator=(const entity& other) = delete;
 
+		virtual void ChangeSprite(const std::string& spriteName);
 		virtual void Render() const;
 		virtual int Select();
 		virtual void Deselect();
+
 
 		virtual void MoveTo(int x, int y);
 		virtual void MoveTo(SDL_Rect newLayout);

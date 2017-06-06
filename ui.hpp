@@ -3,8 +3,10 @@
 
 #include <memory>
 #include <vector>
+#include <algorithm>
 #include "gamevars.hpp"
 #include "entity.hpp"
+#include "person.hpp"
 
 class uiElement : public entity {
 	std::unique_ptr<gfxObject> textSprite;
@@ -44,6 +46,27 @@ class uiElement : public entity {
 		void Render() const;
 		void MoveTo(int x, int y);
 		void MoveTo(SDL_Rect newLayout);
+};
+
+class uiAggregate {
+	public:
+		virtual void Render() {}
+};
+
+class unitInfoPanel : public uiAggregate {
+	std::shared_ptr<uiElement> background;
+	std::shared_ptr<uiElement> portrait;
+	std::shared_ptr<uiElement> factionIcon;
+	std::shared_ptr<uiElement> healthIcon;
+	std::shared_ptr<uiElement> attackIcon;
+
+	public:
+		unitInfoPanel() = delete;
+		unitInfoPanel(SDL_Renderer* ren, std::shared_ptr<person> unit);
+
+		void Render();
+
+		void UpdateHealth(const std::shared_ptr<person> unit);
 };
 
 #endif

@@ -1,8 +1,8 @@
 #include "tile.hpp"
 
-tile::tile(terrain_t tileType, SDL_Renderer* ren, const std::string spriteFile,
-		const int row, const int colm): entity(ren, spriteFile, 0, 0),
-		tileType(tileType), row(row), colm(colm) {}
+tile::tile(std::shared_ptr<tileType> type, SDL_Renderer* ren,
+		const int row, const int colm): entity(ren, type->Path(), 0, 0),
+		type(type), row(row), colm(colm) {}
 
 void tile::Render() const{
 	SDL_Rect renderLayout = layout;
@@ -64,68 +64,47 @@ bool tile::InsideQ(const int x, const int y) const {
 }
 
 int tile::Select() {
-	if(tileType == COLONY) return SCREEN_CHANGE;
+	if(hasColony) return SCREEN_CHANGE;
 	return NOTHING;
 }
 
-terrain_t tile::TileType() const{
-	return tileType;
+std::shared_ptr<tileType> tile::TileType() const{
+	return type;
 }
 
-void tile::SetTileType(const terrain_t newType){
-	if(newType == COLONY){
-		RemoveBuilding();
-		//selectable = true;
-	}
-	std::string spriteFile;
-	switch(newType){
-		case MOUNTAIN:
-			spriteFile = "mountain";
-			break;
-		case PLAINS:
-			spriteFile = "plains";
-			break;
-		case OCEAN:
-			spriteFile = "ocean";
-			break;
-		case COAST:
-			spriteFile = "coast";
-			break;
-		case COLONY:
-			spriteFile = "colony";
-			break;
-		default:
-			spriteFile = "spriteError";
-			break;
-	}
-	//if(tileType == COLONY && newType != COLONY) selectable = false;
-	sprite = gfxManager::RequestSprite(spriteFile);
-	sprite->DefaultLayout(layout);
-	if(selectable){
-		selectedSprite = gfxManager::RequestSprite(spriteFile + "_selected");
-	}
-	tileType = newType;
+void tile::SetTileType(const std::shared_ptr<tileType> newType){
+	ChangeSprite(newType->Path());
+	type = newType;
 }
 
 std::array<int, LAST_RESOURCE> tile::Income() const{
 	std::array<int, LAST_RESOURCE> inc = {{0}};
 	if(occupants.size() > 0 || (bldg && bldg->Finished() && bldg->Automatic())){
 		if(bldg && !bldg->CanHarvest()) return inc;
-		switch(tileType){
-			case PLAINS:	inc[FOOD] = 4;
-							inc[SILICON] = 4;	// for testing only
-							break;
-			case MOUNTAIN:	inc[IRON] = 4;
-							inc[SILICON] = 4;	// for testing only
-							break;
-			default:		break;
-		}
+		inc = type->Yield();
 		if(bldg && bldg->CanHarvest()){
 			for(unsigned int i = 0; i < inc.size(); ++i) 
 				inc[i] += bldg->BonusResources()[i];
 		}
 	}
 	return inc;
+}
+
+bool tile::HasColony() const{
+	return hasColony;
+}
+
+void tile::SetHasColony(const bool val){
+	if(val == true){
+		RemoveBuilding();
+		//selectable = true;
+		ChangeSprite("terrain/colony");
+	}
+	if(val == false){
+		//selectable = false;
+		ChangeSprite(type->Path());
+	}
+	hasColony = val;
 }
 
 void tile::SetLocation(const int row, const int colm){

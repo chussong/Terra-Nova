@@ -356,7 +356,7 @@ void gameWindow::AddMapTiles(std::shared_ptr<map> theMap, const int centerRow,
 					<< "appear on the screen at (" << theMap->Terrain(i,j)->X()
 					<< "," << theMap->Terrain(i,j)->Y() << ")." << std::endl;*/
 			}
-			if(theMap->Terrain(i,j)->TileType() == COLONY){
+			if(theMap->Terrain(i,j)->HasColony()){
 				AddClickable(theMap->Terrain(i,j));
 			} else {
 				AddObject(theMap->Terrain(i,j));

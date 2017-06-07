@@ -25,9 +25,6 @@ constexpr int DEFAULT_FONT_SIZE = 20;
 constexpr int TILE_WIDTH = 87;
 constexpr int TILE_HEIGHT = 75;\
 
-enum terrain_t { OCEAN = 0, COAST = 1, PLAINS = 2, MOUNTAIN = 3, COLONY = 4,
-	LAST_TERRAIN = 5 };
-
 // from the map
 
 enum direction_t { VIEW_RIGHT = 0, VIEW_UP = 1, VIEW_LEFT = 2, VIEW_DOWN = 3 };

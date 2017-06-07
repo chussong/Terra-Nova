@@ -73,7 +73,7 @@ class colony {
 		std::string Name() const;
 		int Column() const;
 		int Row() const;
-		terrain_t Terrain(const unsigned int row, const unsigned int colm) const;
+		std::shared_ptr<tileType> Terrain(const unsigned int row, const unsigned int colm) const;
 		int Resource(const resource_t resource) const;
 		std::string ResAsString(const int res) const;
 

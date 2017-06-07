@@ -8,7 +8,7 @@ game::game(){
 		ReadBuildingTypes();
 	}
 	catch(const readError &e){
-		// instead of complaining, generate the def files from hard-coded versions
+		// instead of complaining, should generate the def files from hard-coded versions
 		std::cout << e.what() << std::endl;
 		throw;
 	}
@@ -211,11 +211,11 @@ void game::ReadBuildingTypes(){
 	buildingTypes.clear();
 	std::shared_ptr<buildingType> newType;
 	std::array<int, 4> costs;
-	std::vector<terrain_t> allowedTerrain;
+	std::vector<std::shared_ptr<tileType>> allowedTerrain;
 
 	costs = {{0,60,40,40}};
 	allowedTerrain.clear();
-	allowedTerrain.push_back(PLAINS);
+	//allowedTerrain.push_back(PLAINS);
 	newType = std::make_shared<buildingType>(idsUsed++, "Factory Farm", costs,3);
 	newType->SetAllowedTerrain(allowedTerrain);
 	newType->SetBonusResources({{4,0,0,0}});
@@ -223,7 +223,7 @@ void game::ReadBuildingTypes(){
 
 	costs = {{0,20,60,80}};
 	allowedTerrain.clear();
-	allowedTerrain.push_back(MOUNTAIN);
+	//allowedTerrain.push_back(MOUNTAIN);
 	newType = std::make_shared<buildingType>(idsUsed++, "Automated Mine", costs,
 			4);
 	newType->SetAllowedTerrain(allowedTerrain);
@@ -245,6 +245,75 @@ void game::ReadBuildingTypes(){
 std::vector<std::shared_ptr<buildingType>> game::BuildingTypes(){
 	return buildingTypes;
 }
+
+void game::ReadTileTypes(){
+	std::vector<std::string> terrainDefs = LoadDefFile("terrain.txt");
+	std::string name;
+	std::array<int, LAST_RESOURCE> yield;
+	int moveCost;
+	std::shared_ptr<tileType> newType;
+	for(auto& defLine : terrainDefs){
+		std::vector<std::string> defArgs;
+		boost::split(defArgs, defLine, boost::is_any_of("|"));
+		if(defArgs.size() < 3){
+			std::cerr << "Error: terrain description incomplete." << std::endl;
+			return;
+		}
+
+		name = boost::trim_copy(defArgs[0]);
+
+		std::vector<std::string> yieldStrings;
+		boost::split(yieldStrings, defArgs[1], boost::is_any_of(","));
+		if(yieldStrings.size() != yield.size()){
+			std::cerr << "Error: incorrect number of resource yields provided in "
+				<< "definition of " << name << "." << std::endl;
+			return;
+		}
+		try{
+			for(unsigned int i = 0; i < yieldStrings.size(); ++i){
+				yield[i] = std::stoi(yieldStrings[i]);
+			}
+		}
+		catch(const std::invalid_argument &e){
+			std::cerr << "Error: resource yield formatted incorrectly in "
+				<< "definition of " << name << "." << std::endl;
+			throw;
+		}
+
+		try{
+			moveCost = std::stoi(defArgs[2]);
+		}
+		catch(const std::invalid_argument &e){
+			std::cerr << "Error: movement cost not a number in definition of "
+				<< name << "." << std::endl;
+			throw;
+		}
+
+		newType = std::make_shared<tileType>(name, yield, moveCost);
+
+		std::vector<std::string> attribs;
+		boost::split(attribs, defArgs[3], boost::is_any_of(","));
+		for(auto& att : attribs){
+			boost::trim(att);
+			if(att == "cold"){
+				newType->SetCold(true);
+				continue;
+			}
+			if(att == "wooded"){
+				newType->SetWooded(true);
+				continue;
+			}
+			if(att == "aquatic"){
+				newType->SetAquatic(true);
+				continue;
+			}
+		}
+
+		tileTypes.push_back(newType);
+	}
+}
+
+//void game::ReadMap();
 
 std::shared_ptr<person> game::CreatePerson(const std::shared_ptr<tile> location,
 		const std::shared_ptr<unitType> spec, const char faction){
@@ -280,7 +349,9 @@ std::shared_ptr<colony> game::CreateColony(std::shared_ptr<map> parentMap,
 }
 
 std::shared_ptr<map> game::CreateMap(){
-	std::shared_ptr<map> newMap(std::make_shared<map>(Window()->Renderer()));
+	ReadTileTypes();
+	std::shared_ptr<map> newMap(std::make_shared<map>(Window()->Renderer(),
+			tileTypes));
 	maps.push_back(newMap);
 	return newMap;
 }

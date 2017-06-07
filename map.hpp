@@ -27,10 +27,11 @@ class map {
 
 	void Clean();
 
-	void InitTerrain();
+	void InitTerrain(std::vector<std::shared_ptr<tileType>> types);
 
 	public:
-		map(SDL_Renderer* ren);
+		map() = delete;
+		map(SDL_Renderer* ren, std::vector<std::shared_ptr<tileType>> types);
 
 		void AddColony(const std::shared_ptr<colony> colony, int row, int colm);
 		std::shared_ptr<colony> Colony(const int num);
@@ -45,7 +46,5 @@ class map {
 		void MoveView(direction_t dir);
 
 		std::string TerrainName(const unsigned int x, const unsigned int y);
-		static std::string TerrainName(const terrain_t type);
-		static std::string TerrainName(const std::shared_ptr<tile> tl);
 };
 #endif

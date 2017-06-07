@@ -27,9 +27,10 @@ class game {
 	std::vector<std::shared_ptr<attackType>> attackTypes;
 	std::vector<std::shared_ptr<unitType>> unitTypes;
 
+	std::vector<std::shared_ptr<tileType>> tileTypes;
+	std::vector<std::shared_ptr<map>> maps;
 	std::vector<std::shared_ptr<person>> people;
 	std::vector<std::shared_ptr<colony>> colonies;
-	std::vector<std::shared_ptr<map>> maps;
 
 	std::shared_ptr<gameWindow> win;
 
@@ -45,9 +46,12 @@ class game {
 
 		std::vector<std::string> LoadDefFile(const std::string& name);
 		void ReadAttackTypes(); // read exported file listing attack types
-		void ReadUnitTypes(); // read exported file listing unit specs
-		void ReadBuildingTypes(); // read exported file listing building types
+		void ReadUnitTypes();
+		void ReadBuildingTypes();
 		std::vector<std::shared_ptr<buildingType>> BuildingTypes();
+
+		void ReadTileTypes();
+		void ReadMap();
 
 		std::shared_ptr<person> CreatePerson(const std::shared_ptr<tile> loc,
 				const std::shared_ptr<unitType> spec, const char faction);

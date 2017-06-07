@@ -1,12 +1,13 @@
 #include "map.hpp"
 
-map::map(SDL_Renderer* ren): ren(ren){
+map::map(SDL_Renderer* ren, std::vector<std::shared_ptr<tileType>> types):
+	ren(ren){
 	height = DEFAULT_HEIGHT;
 	width = DEFAULT_WIDTH;
 	terrain.resize(height);
 	for(unsigned int i = 0; i < terrain.size(); ++i) 
 		terrain[i].resize(2*width);
-	InitTerrain();
+	InitTerrain(types);
 }
 	
 /*
@@ -39,20 +40,20 @@ void map::Clean(){
 }
 
 
-void map::InitTerrain(){
+void map::InitTerrain(std::vector<std::shared_ptr<tileType>> types){
 	for(unsigned int row = 0; row < terrain.size(); ++row){
 		for(unsigned int col = row%2; col < terrain[row].size(); col+=2){
 			if(col % 2 == 0) terrain[row][col] = 
-				std::make_shared<tile>(PLAINS, ren, "plains", row, col);
+				std::make_shared<tile>(FindByName(types, "plains"), ren, row, col);
 			if(col % 2 == 1) terrain[row][col] = 
-				std::make_shared<tile>(MOUNTAIN, ren, "mountain", row, col);
+				std::make_shared<tile>(FindByName(types, "mountain"), ren, row, col);
 		}
 	}
 }
 
 void map::AddColony(const std::shared_ptr<colony> col, int row, int colm){
 	colonies.emplace_back(col);
-	Terrain(row, colm)->SetTileType(COLONY);
+	Terrain(row, colm)->SetHasColony(true);
 }
 
 std::shared_ptr<colony> map::Colony(const int num){
@@ -156,21 +157,6 @@ void map::MoveView(direction_t dir){
 
 std::string map::TerrainName(const unsigned int row, const unsigned int col){
 	if(row < terrain.size() && col < terrain[row].size())
-		return TerrainName(terrain[row][col]);
+		return Terrain(row, col)->Name();
 	return "OUTSIDE_OF_MAP";
-}
-
-std::string map::TerrainName(const terrain_t type){
-	switch(type){
-		case OCEAN:			return "ocean";
-		case COAST:			return "coast";
-		case PLAINS:		return "plains";
-		case MOUNTAIN:		return "mountain";
-		default:			return "TERRAIN TYPE NOT FOUND";
-	}
-	return "";
-}
-
-std::string map::TerrainName(const std::shared_ptr<tile> tl){
-	return TerrainName(tl->TileType());
 }

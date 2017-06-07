@@ -94,10 +94,10 @@ int colony::Column() const{
 	return terrain[2][2]->Colm();
 }
 
-terrain_t colony::Terrain(const unsigned int row, const unsigned int colm) const{
+std::shared_ptr<tileType> colony::Terrain(const unsigned int row, const unsigned int colm) const{
 	if(row < terrain.size() || colm < terrain[row].size())
 		return terrain[row][colm]->TileType();
-	return OCEAN;
+	return nullptr;
 }
 
 int colony::Resource(const resource_t resource) const{
@@ -125,7 +125,7 @@ void colony::EnqueueBuilding(const std::shared_ptr<buildingType> type,
 		return;
 	}
 
-	std::vector<terrain_t> allowedTerrain = type->AllowedTerrain();
+	std::vector<std::shared_ptr<tileType>> allowedTerrain = type->AllowedTerrain();
 	bool allowedToBuild = allowedTerrain.empty();
 	for(auto& terrainType : allowedTerrain){
 		if(terrainType == clickedTile->TileType()){
@@ -226,7 +226,7 @@ void colony::DrawTiles(std::shared_ptr<gameWindow> win){
 	for(unsigned int i = 0; i < terrain.size(); ++i){
 		for(unsigned int j = 0; j < terrain[i].size(); ++j){
 			terrain[i][j]->MoveTo(TileX(i,j), TileY(i));
-			if(terrain[i][j]->TileType() == COLONY){
+			if(terrain[i][j]->HasColony()){
 				win->AddClickable(terrain[i][j]);
 			} else {
 				win->AddObject(terrain[i][j]);

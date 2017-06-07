@@ -1,8 +1,9 @@
-% name | food | carbon | silicon | iron | move cost | other attributes
-Plains		| 4 | 0 | 0 | 0 |	1 |
-Mountain	| 0 | 0 | 0 | 4 |	2 |
-Ocean		| 2 | 0 | 0 | 0 |	1 | aquatic
-Coast		| 2 | 0 | 2 | 0 |	1 | aquatic
-Tundra		| 0 | 2 | 0 | 0 |	2 | cold
-Permafrost	| 0 | 0 | 0 | 0 |	3 | cold
-Forest		| 2 | 2 | 0 | 0 |	2 |
+% name | food, carbon, silicon, iron | move cost | other attributes
+plains		| 4, 0, 0, 0 |	1 |
+mountain	| 0, 0, 0, 4 |	2 |
+ocean		| 2, 0, 0, 0 |	1 | aquatic
+coast		| 2, 0, 2, 0 |	1 | aquatic
+tundra		| 0, 2, 0, 0 |	2 | cold
+permafrost	| 0, 0, 0, 0 |	3 | cold
+forest		| 2, 2, 0, 0 |	2 | wooded
+taiga		| 1, 2, 0, 0 |	3 | cold, wooded

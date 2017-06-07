@@ -16,11 +16,11 @@ int buildingType::BuildTime() const{
 	return buildTime;
 }
 
-void buildingType::SetAllowedTerrain(const std::vector<terrain_t>& val){
+void buildingType::SetAllowedTerrain(const std::vector<std::shared_ptr<tileType>>& val){
 	allowedTerrain = val;
 }
 
-std::vector<terrain_t> buildingType::AllowedTerrain() const{
+std::vector<std::shared_ptr<tileType>> buildingType::AllowedTerrain() const{
 	return allowedTerrain;
 }
 

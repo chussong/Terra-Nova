@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <map>
 #include <iostream>
 #include <fstream>
 #include <boost/algorithm/string/split.hpp>
@@ -40,7 +41,7 @@ class game {
 		void Begin();
 		screentype_t ThrowToColonyScreen(std::shared_ptr<colony> col);
 		screentype_t ThrowToMapScreen(std::shared_ptr<map> theMap,
-				int centerColm, int centerRow);
+				int centerRow, int centerColm);
 
 		bool Tick();	// false means quit, true means continue ticking
 
@@ -51,12 +52,36 @@ class game {
 		std::vector<std::shared_ptr<buildingType>> BuildingTypes();
 
 		void ReadTileTypes();
-		void ReadMap();
+		void ReadMap(const std::string& mapName);
+		std::vector<std::string> ExtractMapSection(
+				const std::vector<std::string>& lines, const unsigned int i);
+		std::string ParseDescLine(const std::string& line, const std::string& key);
+
+		std::map<char, std::shared_ptr<tileType>> ParseTerrainDictionary(
+				const std::vector<std::string> desc);
+		std::vector<std::vector<std::shared_ptr<tile>>> ParseMap(
+				const std::map<char, std::shared_ptr<tileType>> tileDict, 
+				std::vector<std::string> desc);
+
+		void ParseFeatures(std::shared_ptr<map> parentMap, 
+				const std::vector<std::string> desc);
+		std::shared_ptr<colony> ParseColony(std::shared_ptr<map> parentMap,
+				const std::vector<std::string>& desc);
+
+		void ParseUnits(std::shared_ptr<map> parentMap,
+				const std::vector<std::string>& desc);
+		std::shared_ptr<person> ParseUniqueUnit(std::shared_ptr<map> parentMap,
+				const std::vector<std::string>& unitDesc);
+		std::vector<std::shared_ptr<person>> ParseGenericUnits(
+				std::shared_ptr<map> parentMap, 
+				const std::shared_ptr<unitType> genericType, 
+				std::vector<std::string> unitDesc);
 
 		std::shared_ptr<person> CreatePerson(const std::shared_ptr<tile> loc,
 				const std::shared_ptr<unitType> spec, const char faction);
 		std::shared_ptr<colony> CreateColony(std::shared_ptr<map> parentMap,
-				const int row, const int colm, const int faction);
+				const int row, const int colm, const std::string& name, 
+				const int faction);
 		std::shared_ptr<map> CreateMap();
 
 		std::shared_ptr<gameWindow> Window() { return win; }

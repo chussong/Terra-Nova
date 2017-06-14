@@ -74,6 +74,11 @@ std::shared_ptr<tile> map::Terrain(const int row, const int column) const{
 			<< "tile at row " << row << ", column " << column << "." << std::endl;
 		return nullptr;
 	}
+	if(!terrain[row][column]){
+		std::cerr << "Error: someone is trying to access the valid tile at row "
+			<< row << ", column " << column << ", but there's nothing there."
+			<< std::endl;
+	}
 	return terrain[row][column];
 }
 

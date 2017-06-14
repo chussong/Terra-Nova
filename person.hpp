@@ -94,6 +94,7 @@ class person : public entity {
 		person& operator=(const person other) = delete;
 
 		void ChangeName(const std::string givenName, const std::string surname);
+		void ChangeName(const std::string fullName);
 		void ChangeGender(const std::string gender);
 		void ChangeSpec(const std::shared_ptr<unitType> spec);
 		bool TakeDamage(const int damage); // false = survived

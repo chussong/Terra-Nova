@@ -28,6 +28,11 @@ void person::ChangeName(const std::string givenName, const std::string surname){
 	this->surname = surname;
 }
 
+void person::ChangeName(const std::string fullName){
+	givenName = fullName.substr(0, fullName.find(' '));
+	surname = fullName.substr(fullName.find(' ') + 1);
+}
+
 void person::ChangeGender(const std::string gender){
 	if(gender == "female") female = true;
 	if(gender == "male") female = false;

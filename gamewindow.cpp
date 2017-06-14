@@ -257,11 +257,11 @@ signal_t gameWindow::ColonyScreen(std::shared_ptr<colony> col){
 	return QUIT;
 }
 
-signal_t gameWindow::MapScreen(std::shared_ptr<map> theMap, int centerColm,
-		int centerRow){
+signal_t gameWindow::MapScreen(std::shared_ptr<map> theMap, int centerRow,
+		int centerColm){
 	// we should be able to handle NEXT_TURN without resetting the screen
 	// entirely. Put the loop in a separate function.
-	MapScreenCenteredOn(theMap, centerColm, centerRow);
+	MapScreenCenteredOn(theMap, centerRow, centerColm);
 
 	SDL_Event e;
 	bool quit = false;

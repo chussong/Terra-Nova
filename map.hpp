@@ -32,6 +32,8 @@ class map {
 	public:
 		map() = delete;
 		map(SDL_Renderer* ren, std::vector<std::shared_ptr<tileType>> types);
+		map(SDL_Renderer* ren, std::vector<std::vector<std::shared_ptr<tile>>> tiles):
+			ren(ren), terrain(tiles) {}
 
 		void AddColony(const std::shared_ptr<colony> colony, int row, int colm);
 		std::shared_ptr<colony> Colony(const int num);

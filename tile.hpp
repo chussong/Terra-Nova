@@ -20,10 +20,11 @@ class tileType {
 	const std::array<int, LAST_RESOURCE> yield;
 	const int moveCost;
 
-	std::vector<std::shared_ptr<buildingType>> allowedBuildings;
+	std::vector<std::weak_ptr<buildingType>> allowedBuildings;
 	bool cold = false;
 	bool wooded = false;
 	bool aquatic = false;
+	bool hilly = false;
 
 	public:
 		tileType() = delete;
@@ -35,13 +36,14 @@ class tileType {
 		std::array<int, LAST_RESOURCE> Yield() const 		{ return yield; }
 		int MoveCost() const								{ return moveCost; }
 		
-		bool AllowedToBuild(const std::string name) const	{ return true; }
+		bool AllowedToBuild(const std::string name) const	{ return !name.empty(); }
 		void AddAllowedBuilding(const std::shared_ptr<buildingType> newBldg)
 			{ allowedBuildings.push_back(newBldg); }
 
 		bool Cold() const		{ return cold; }
 		bool Wooded() const		{ return wooded; }
 		bool Aquatic() const	{ return aquatic; }
+		bool Hilly() const		{ return hilly; }
 		void SetCold(const bool val)	{ cold = val; }
 		void SetWooded(const bool val)	{ wooded = val; }
 		void SetAquatic(const bool val)	{ aquatic = val; }
@@ -49,9 +51,9 @@ class tileType {
 };
 
 class tile : public entity {
-	std::shared_ptr<tileType> type;
+	std::weak_ptr<tileType> type;
 	std::shared_ptr<building> bldg;
-	std::vector<std::shared_ptr<person>> occupants;
+	std::vector<std::weak_ptr<person>> occupants;
 
 	int row;
 	int colm;
@@ -81,6 +83,10 @@ class tile : public entity {
 		std::string Name() const { return TileType()->Name(); }
 		void SetTileType(const std::shared_ptr<tileType> newType);
 		std::array<int, LAST_RESOURCE> Income() const;
+		bool Cold() const		{ return TileType()->Cold(); }
+		bool Wooded() const		{ return TileType()->Wooded(); }
+		bool Aquatic() const	{ return TileType()->Aquatic(); }
+		bool Hilly() const		{ return TileType()->Hilly(); }
 
 		bool HasColony() const;
 		void SetHasColony(const bool val);
@@ -94,7 +100,7 @@ class tile : public entity {
 
 		bool AddOccupant(std::shared_ptr<person> newOccupant);
 		bool RemoveOccupant(std::shared_ptr<person> removeThis);
-		std::vector<std::shared_ptr<person>> Occupants() const;
+		std::vector<std::weak_ptr<person>> Occupants() const;
 		std::shared_ptr<person> Defender() const;
 		char Owner() const;
 

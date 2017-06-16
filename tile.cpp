@@ -11,12 +11,12 @@ void tile::Render() const{
 	sprite->RenderTo(ren, renderLayout);
 	if(bldg) bldg->Render();
 	for(auto& occ : occupants){
-		if(!occ){
+		if(!occ.lock()){
 			std::cerr << "Error: attempted to render a non-existent occupant."
 				<< std::endl;
 			continue;
 		}
-		occ->Render();
+		occ.lock()->Render();
 	}
 }
 
@@ -25,8 +25,8 @@ void tile::MoveTo(int x, int y){
 	entity::MoveTo(x,y);
 	if(bldg) bldg->MoveTo(MAPDISP_ORIGIN_X + x + (TILE_WIDTH - BUILDING_WIDTH)/2,
 			MAPDISP_ORIGIN_Y + y + (4*TILE_HEIGHT/3 - BUILDING_HEIGHT)/2);
-	for(std::shared_ptr<person> occ : occupants){
-		occ->MoveTo(MAPDISP_ORIGIN_X + x + (TILE_WIDTH - PERSON_WIDTH)/2,
+	for(auto& occ : occupants){
+		occ.lock()->MoveTo(MAPDISP_ORIGIN_X + x + (TILE_WIDTH - PERSON_WIDTH)/2,
 				MAPDISP_ORIGIN_Y + y + (4*TILE_HEIGHT/3 - PERSON_HEIGHT)/2);
 	}
 }
@@ -37,9 +37,12 @@ void tile::MoveTo(SDL_Rect newLayout){
 }
 
 void tile::Resize(int w, int h){
+	if(bldg) bldg->Resize(bldg->W()*w/this->W(), bldg->H()*h/this->H());
+	for(auto& occ : occupants){
+		std::shared_ptr<person> lockOcc = occ.lock();
+		lockOcc->Resize(lockOcc->W()*w/this->W(), lockOcc->H()*h/this->H());
+	}
 	entity::Resize(w,h);
-	if(bldg) bldg->Resize(w, h);
-	for(std::shared_ptr<person> occ : occupants) occ->Resize(w, h);
 }
 
 // this takes an entire SDL_Rect but only uses the sizes, not the positions
@@ -69,7 +72,7 @@ int tile::Select() {
 }
 
 std::shared_ptr<tileType> tile::TileType() const{
-	return type;
+	return type.lock();
 }
 
 void tile::SetTileType(const std::shared_ptr<tileType> newType){
@@ -81,7 +84,7 @@ std::array<int, LAST_RESOURCE> tile::Income() const{
 	std::array<int, LAST_RESOURCE> inc = {{0}};
 	if(occupants.size() > 0 || (bldg && bldg->Finished() && bldg->Automatic())){
 		if(bldg && !bldg->CanHarvest()) return inc;
-		inc = type->Yield();
+		inc = type.lock()->Yield();
 		if(bldg && bldg->CanHarvest()){
 			for(unsigned int i = 0; i < inc.size(); ++i) 
 				inc[i] += bldg->BonusResources()[i];
@@ -102,7 +105,7 @@ void tile::SetHasColony(const bool val){
 	}
 	if(val == false){
 		//selectable = false;
-		ChangeSprite(type->Path());
+		ChangeSprite(type.lock()->Path());
 	}
 	hasColony = val;
 }
@@ -142,7 +145,7 @@ bool tile::AddOccupant(std::shared_ptr<person> newOccupant){
 			(!bldg && occupants.size() > 0)) return false;
 
 	for(auto& oldOccupant : occupants){
-		if(oldOccupant == newOccupant){
+		if(oldOccupant.lock() == newOccupant){
 			std::cerr << "Error: attempted to add an occupant to a tile who was"
 				<< " already occupying it." << std::endl;
 			return false;
@@ -170,7 +173,7 @@ bool tile::RemoveOccupant(std::shared_ptr<person> removeThis){
 		return false;
 	}
 	for(unsigned int i = occupants.size()-1; i <= occupants.size(); --i){
-		if(occupants[i] == removeThis){
+		if(occupants[i].lock() == removeThis){
 			occupants.erase(occupants.begin()+i);
 			if(bldg && occupants.empty()) bldg->FinishTraining();
 			return true;
@@ -182,18 +185,18 @@ bool tile::RemoveOccupant(std::shared_ptr<person> removeThis){
 	return false;
 }
 
-std::vector<std::shared_ptr<person>> tile::Occupants() const{
+std::vector<std::weak_ptr<person>> tile::Occupants() const{
 	return occupants;
 }
 
 std::shared_ptr<person> tile::Defender() const{
 	if(Occupants().size() == 0) return nullptr;
-	return Occupants()[0];
+	return Occupants()[0].lock();
 }
 
 char tile::Owner() const{
 	if(occupants.size() == 0) return 0;
-	return Occupants()[0]->Faction();
+	return Occupants()[0].lock()->Faction();
 }
 
 void tile::Training(){
@@ -205,12 +208,12 @@ void tile::Training(){
 					<< "there were no occupants to receive it." << std::endl;
 				return;
 			} else {
-				if(!occupants[0]->CanRespec()){
+				if(!occupants[0].lock()->CanRespec()){
 					std::cerr << "Error: training was completed at a building "
 						<< "but the occupant was unique and could not be "
 						<< "retrained. This should not happen." << std::endl;
 				} else {
-					occupants[0]->ChangeSpec(bldg->NowTraining());
+					occupants[0].lock()->ChangeSpec(bldg->NowTraining());
 				}
 				bldg->FinishTraining();
 			}

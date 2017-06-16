@@ -15,7 +15,7 @@ class buildingType{
 	const std::array<int, LAST_RESOURCE> cost;
 	const int buildTime;
 
-	std::vector<std::shared_ptr<tileType>> allowedTerrain; // empty means all terrain allowed
+	std::vector<std::weak_ptr<tileType>> allowedTerrain; // empty means all terrain allowed
 	bool canHarvest = true;
 	bool automatic = false;	// i.e. automatically harvests resources on its tile
 	unsigned int maxOccupants = 1;
@@ -37,6 +37,7 @@ class buildingType{
 
 		void SetAllowedTerrain(const std::vector<std::shared_ptr<tileType>>& val);
 		std::vector<std::shared_ptr<tileType>> AllowedTerrain() const;
+
 		void SetCanHarvest(const bool val);
 		bool CanHarvest() const;
 		void SetAutomatic(const bool val);

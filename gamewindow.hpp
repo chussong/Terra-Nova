@@ -19,6 +19,7 @@
 class map;
 class colony;
 class uiElement;
+class uiAggregate;
 
 class gameWindow : public std::enable_shared_from_this<gameWindow> {
 	protected:

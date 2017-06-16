@@ -231,7 +231,7 @@ void colony::DrawTiles(std::shared_ptr<gameWindow> win){
 			} else {
 				win->AddObject(terrain[i][j]);
 			}
-			for(auto& occ : terrain[i][j]->Occupants()) win->AddClickable(occ);
+			for(auto& occ : terrain[i][j]->Occupants()) win->AddClickable(occ.lock());
 			/*std::cout << "Tile " << i << ", a " << terrain[i]->TileType() << ", "
 				<< "moved to (" << terrain[i]->X() << "," << terrain[i]->Y() << ")."
 				<< std::endl;*/

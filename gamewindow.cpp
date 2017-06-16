@@ -362,7 +362,7 @@ void gameWindow::AddMapTiles(std::shared_ptr<map> theMap, const int centerRow,
 				AddObject(theMap->Terrain(i,j));
 			}
 			for(auto& occ : theMap->Terrain(i,j)->Occupants()){
-				AddClickable(occ);
+				AddClickable(occ.lock());
 			}
 		}
 	}

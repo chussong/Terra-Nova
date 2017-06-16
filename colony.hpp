@@ -17,7 +17,12 @@
 #include "gamevars.hpp"
 
 class tile;
+class tileType;
 class gameWindow;
+class buildingPrototype;
+class buildingType;
+class uiElement;
+class building;
 //class gfxObject;
 
 class colony {

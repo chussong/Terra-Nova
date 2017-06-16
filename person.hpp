@@ -10,8 +10,18 @@
 #include "gamevars.hpp"
 #include "entity.hpp"
 #include "tile.hpp"
+#include "path.hpp"
 
 class tile;
+class path;
+
+struct moveCostTable {
+	int base = 0;
+	int aquatic = -1;
+	int wooded = 1;
+	int hilly = 1;
+	int cold = 1;
+};
 
 class attackType {
 	const std::string name;
@@ -34,10 +44,13 @@ class attackType {
 };
 
 class unitType {
+	private:
+
 	const std::string name;
 	
 	const int maxHealth;
 	const int moveSpeed;
+	const moveCostTable moveCosts;
 	const std::vector<std::shared_ptr<attackType>> attacks;
 
 	const int trainingTime;
@@ -57,6 +70,7 @@ class unitType {
 		std::string Name()	const			{return name;}
 		int MaxHealth()		const			{return maxHealth;}
 		int MoveSpeed()		const			{return moveSpeed;}
+		moveCostTable MoveCosts() const		{return moveCosts;}
 		int TrainingTime()	const			{return trainingTime;}
 
 		bool CanRespec()	const 			{return canRespec;}
@@ -82,6 +96,7 @@ class person : public entity {
 
 	char faction;
 	std::shared_ptr<tile> location;
+	std::shared_ptr<path> myPath;
 
 	static std::string GenerateGivenName();
 	static std::string GenerateSurname();
@@ -125,6 +140,8 @@ class person : public entity {
 
 		bool MoveToTile(std::shared_ptr<tile> newLoc);
 		std::shared_ptr<tile> Location() const;
+		std::shared_ptr<path> Path() const { return myPath; }
+		moveCostTable MoveCosts() const {return spec->MoveCosts(); }
 		int Row() const;
 		int Colm() const;
 

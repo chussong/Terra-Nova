@@ -7,8 +7,11 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <SDL.h>
 
+constexpr std::array<std::array<int, 2>, 6> hexAdj{{
+	{{0, 2}}, {{-1, 1}}, {{-1, -1}}, {{0, -2}}, {{1, -1}}, {{1, 1}}
+}};
 
-// beware: this is case insensitive!
+// beware: this is NOT case sensitive!
 template<class T>
 std::shared_ptr<T> FindByName(std::vector<std::shared_ptr<T>> vec,
 		std::string name){
@@ -24,6 +27,45 @@ std::shared_ptr<T> FindByName(std::vector<std::shared_ptr<T>> vec,
 			<< std::endl;
 	}
 	return nullptr;
+}
+
+template<typename T, typename U>
+std::array<U,6> GetSurrounding(const T& container, const int centerRow,
+		const int centerColumn){
+	std::array<U,6> ret = {{
+		container[centerRow    ][centerColumn + 2],
+		container[centerRow - 1][centerColumn + 1],
+		container[centerRow - 1][centerColumn - 1],
+		container[centerRow    ][centerColumn - 2],
+		container[centerRow + 1][centerColumn - 1],
+		container[centerRow + 1][centerColumn + 1]
+	}};
+	return ret;
+}
+
+template<typename T>
+void SetSurrounding(std::vector<std::vector<T>>& array, const int centerRow, 
+		const int centerColumn, const std::array<T,6>& values){
+	array[centerRow    ][centerColumn + 2] = values[0];
+	array[centerRow - 1][centerColumn + 1] = values[1];
+	array[centerRow - 1][centerColumn - 1] = values[2];
+	array[centerRow    ][centerColumn - 2] = values[3];
+	array[centerRow + 1][centerColumn - 1] = values[4];
+	array[centerRow + 1][centerColumn + 1] = values[5];
+}
+
+template<typename T, typename U>
+std::array<U,6> ForSurrounding(std::function<T(int,int)> Fetch, const int centerRow,
+		const int centerColumn, std::function<U(T)> Func){
+	std::array<U,6> ret = {{
+		Func(Fetch(centerRow    , centerColumn + 2)),
+		Func(Fetch(centerRow - 1, centerColumn + 1)),
+		Func(Fetch(centerRow - 1, centerColumn - 1)),
+		Func(Fetch(centerRow    , centerColumn - 2)),
+		Func(Fetch(centerRow + 1, centerColumn - 1)),
+		Func(Fetch(centerRow + 1, centerColumn + 1))
+	}};
+	return ret;
 }
 
 template<class T>

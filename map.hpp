@@ -11,6 +11,8 @@
 
 class colony;
 class person;
+class tileType;
+class tile;
 
 class map {
 	SDL_Renderer* ren;

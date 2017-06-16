@@ -8,12 +8,14 @@
 #include "entity.hpp"
 #include "person.hpp"
 
+class person;
 class uiElement : public entity {
 	std::unique_ptr<gfxObject> textSprite;
 	SDL_Rect textLayout;
 
 	bool button = false;
 	button_t type = END_TURN;
+	// should replace button system with function pointers to be used on click
 
 	std::vector<int> values;
 

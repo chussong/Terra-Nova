@@ -17,11 +17,20 @@ int buildingType::BuildTime() const{
 }
 
 void buildingType::SetAllowedTerrain(const std::vector<std::shared_ptr<tileType>>& val){
-	allowedTerrain = val;
+	std::vector<std::weak_ptr<tileType>> weakVal;
+	weakVal.resize(val.size());
+	for(unsigned int i = 0; i < weakVal.size(); ++i) weakVal[i] = val[i];
+	allowedTerrain = weakVal;
 }
 
+// this is obviously a very stupid implementation
 std::vector<std::shared_ptr<tileType>> buildingType::AllowedTerrain() const{
-	return allowedTerrain;
+	std::vector<std::shared_ptr<tileType>> strongTerrain;
+	strongTerrain.resize(allowedTerrain.size());
+	for(auto i = 0u; i < strongTerrain.size(); ++i){
+		strongTerrain[i] = allowedTerrain[i].lock();
+	}
+	return strongTerrain;
 }
 
 void buildingType::SetCanHarvest(const bool val){

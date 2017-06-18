@@ -1,6 +1,6 @@
-% name | food, carbon, silicon, iron | move cost | other attributes
+% name | food, carbon, silicon, iron | other attributes
 plains		| 4, 0, 0, 0 |	1 |
-mountain	| 0, 0, 0, 4 |	2 |
+mountain	| 0, 0, 0, 4 |	2 | hilly
 ocean		| 2, 0, 0, 0 |	1 | aquatic
 coast		| 2, 0, 2, 0 |	1 | aquatic
 tundra		| 0, 2, 0, 0 |	2 | cold

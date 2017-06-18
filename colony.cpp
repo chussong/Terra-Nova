@@ -106,7 +106,7 @@ int colony::Resource(const resource_t resource) const{
 
 void colony::AssignWorker(std::shared_ptr<person> worker, 
 		const std::shared_ptr<tile> location){
-	worker->MoveToTile(location);
+	worker->SetLocation(location->Row(), location->Colm(), false);
 }
 
 void colony::EnqueueBuilding(const std::shared_ptr<buildingType> type,

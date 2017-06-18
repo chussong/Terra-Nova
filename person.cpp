@@ -58,12 +58,15 @@ bool person::TakeDamage(const int damage){
 void person::Die(){
 	std::cout << Name() << " belonging to player " << (int)faction << " has died!" 
 		<< std::endl;
-	if(location) location->RemoveOccupant(shared_from_base<person>());
-	location.reset();
 }
 
 void person::AddItem(const std::string item){
 	inventory.push_back(item);
+}
+
+void person::MoveSpriteToTile(const int X, const int Y, const int W, const int H){
+	MoveTo((MAPDISP_ORIGIN_X + X + W - layout.w)/2, 
+			(MAPDISP_ORIGIN_Y + Y + H - layout.w)/2);
 }
 
 void person::Render() const{
@@ -83,10 +86,14 @@ void person::Render() const{
 	healthLayout.w *= Health();
 	healthLayout.w /= MaxHealth();
 	healthBar->RenderTo(ren, healthLayout);
+
+	if(myPath) myPath->RenderStartingFrom(X() + PERSON_WIDTH/2,
+			Y() - PERSON_HEIGHT/2);
 }
 
 void person::ProcessTurn(){
 	movesLeft = MoveSpeed();
+	// should advance along path here and also call path::Advance()
 }
 
 std::string person::Name() const{
@@ -167,33 +174,26 @@ int person::MovesLeft()	const{
 	return movesLeft;
 }
 
-bool person::MoveToTile(std::shared_ptr<tile> newLoc){
-	if(!newLoc){
-		std::cerr << "Error: a person tried to move a null tile." << std::endl;
-		return false;
-	}
-	if(!newLoc->AddOccupant(shared_from_base<person>())){
-		std::cout << "That tile is already fully occupied." << std::endl;
-		return false;
-	}
-	if(location) location->RemoveOccupant(shared_from_base<person>());
-	layout.x = MAPDISP_ORIGIN_X + newLoc->X() + (newLoc->W() - layout.w)/2;
-	layout.y = MAPDISP_ORIGIN_Y + newLoc->Y() + (newLoc->H() - layout.w)/2;
-	--movesLeft;
-	location = newLoc;
-	return true;
+void person::SetLocation(const int row, const int colm, const bool usesMove){
+	location[0] = row;
+	location[1] = colm;
+	if(usesMove) movesLeft--;
 }
 
-std::shared_ptr<tile> person::Location() const{
+std::array<int, 2> person::Location() const{
 	return location;
 }
 
 int person::Row() const{
-	return location->Row();
+	return location[0];
 }
 
 int person::Colm() const{
-	return location->Colm();
+	return location[1];
+}
+
+void person::SetPath(std::unique_ptr<path> newPath){
+	if(newPath) myPath = std::move(newPath);
 }
 
 std::vector<std::shared_ptr<attackType>> person::Attacks() const{

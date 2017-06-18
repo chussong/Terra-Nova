@@ -9,14 +9,10 @@
 #include <random>
 #include "gamevars.hpp"
 #include "entity.hpp"
-#include "tile.hpp"
 #include "path.hpp"
 
-class tile;
-class path;
-
 struct moveCostTable {
-	int base = 0;
+	int base = 1;
 	int aquatic = -1;
 	int wooded = 1;
 	int hilly = 1;
@@ -95,8 +91,8 @@ class person : public entity {
 	std::vector<std::string> inventory;
 
 	char faction;
-	std::shared_ptr<tile> location;
-	std::shared_ptr<path> myPath;
+	std::array<int, 2> location;
+	std::unique_ptr<path> myPath;
 
 	static std::string GenerateGivenName();
 	static std::string GenerateSurname();
@@ -116,6 +112,7 @@ class person : public entity {
 		void Die();
 		bool Dead() const { return health <= 0; }
 
+		void MoveSpriteToTile(const int X, const int Y, const int W, const int H);
 		void Render() const;
 		void ProcessTurn();
 
@@ -138,9 +135,10 @@ class person : public entity {
 		int							MoveSpeed()	const;
 		int							MovesLeft()	const;
 
-		bool MoveToTile(std::shared_ptr<tile> newLoc);
-		std::shared_ptr<tile> Location() const;
-		std::shared_ptr<path> Path() const { return myPath; }
+		void SetLocation(const int row, const int colm, const bool usesMove);
+		std::array<int, 2> Location() const;
+		path* Path() const { return myPath.get(); }
+		void SetPath(std::unique_ptr<path> newPath);
 		moveCostTable MoveCosts() const {return spec->MoveCosts(); }
 		int Row() const;
 		int Colm() const;

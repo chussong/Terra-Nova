@@ -8,11 +8,13 @@
 #include "gamevars.hpp"
 #include "tile.hpp"
 #include "colony.hpp"
+#include "path.hpp"
 
 class colony;
 class person;
 class tileType;
 class tile;
+class path;
 
 class map {
 	SDL_Renderer* ren;
@@ -31,6 +33,25 @@ class map {
 
 	void InitTerrain(std::vector<std::shared_ptr<tileType>> types);
 
+	// path construction functions
+	std::vector<std::array<unsigned int, 2>> ShortestPath(const unsigned int startRow, 
+			const unsigned int startColm, const unsigned int destRow, 
+			const unsigned int destColm, const moveCostTable& moveCosts);
+
+	void UpdateNode(std::vector<std::vector<unsigned int>>& distMap,
+			const unsigned int nodeRow, const unsigned int nodeColm, 
+			const unsigned int value, const moveCostTable& moveCosts);
+
+	std::array<unsigned int, 3> FindNextLowestOpen(
+			const std::vector<std::vector<unsigned int>>& distMap,
+			const std::vector<std::vector<bool>>& closedNodes,
+			std::vector<std::vector<bool>>& checkedNodes,
+			const std::array<unsigned int, 3> startingNode);
+
+	std::vector<std::array<unsigned int, 2>> BuildPathVector(
+			const std::vector<std::vector<unsigned int>>& distMap, 
+			const unsigned int destRow, const unsigned int destColm);
+
 	public:
 		map() = delete;
 		map(SDL_Renderer* ren, std::vector<std::shared_ptr<tileType>> types);
@@ -46,9 +67,15 @@ class map {
 				const int row, const int colm);
 		unsigned int NumberOfRows() const;
 		unsigned int NumberOfColumns() const;
+		bool OutOfBounds(const unsigned int row, const unsigned int colm) const;
+		bool OutOfBounds(const int row, const int colm) const;
 
 		void MoveView(direction_t dir);
 
 		std::string TerrainName(const unsigned int x, const unsigned int y);
+
+		std::unique_ptr<path> PathTo(const int startRow, const int startColm, 
+				const int destRow, const int destColm, 
+				const moveCostTable& moveCosts);
 };
 #endif

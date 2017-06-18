@@ -34,12 +34,13 @@ class gfxObject {
 		gfxObject(gfxObject&& that) noexcept;
 		gfxObject& operator=(const gfxObject that) = delete;
 
-		void RenderTo(SDL_Renderer* ren, const SDL_Rect& layout) const;
+		void RenderTo(SDL_Renderer* ren, const SDL_Rect& layout) const; // deprecated
+		void RenderTo(const SDL_Rect& layout) const;
 		void DefaultLayout(SDL_Rect& layout) const;
 };
 
 class gfxManager {
-	static SDL_Renderer* ren;
+	static SDL_Renderer* ren; // despite appearances, gfxManager owns this
 	static std::vector<std::string> loadedSpriteNames;
 	static std::vector<std::shared_ptr<gfxObject>> loadedSprites;
 
@@ -50,6 +51,8 @@ class gfxManager {
 		gfxManager() = delete;
 		static void Initialize(SDL_Renderer* newRen);
 		static std::shared_ptr<gfxObject> RequestSprite(const std::string& name);
+
+		static SDL_Renderer* Ren() { return ren; }
 };
 
 #endif

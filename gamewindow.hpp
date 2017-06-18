@@ -20,6 +20,7 @@ class map;
 class colony;
 class uiElement;
 class uiAggregate;
+class tile;
 
 class gameWindow : public std::enable_shared_from_this<gameWindow> {
 	protected:
@@ -80,6 +81,7 @@ class gameWindow : public std::enable_shared_from_this<gameWindow> {
 
 		bool MoveOnMap(std::shared_ptr<person> mover, std::shared_ptr<map> theMap,
 				const int newRow, const int newColm);
+		bool MoveUnitToTile(std::shared_ptr<person> mover, tile* origin, tile* destination);
 		void MoveUpLeft(std::shared_ptr<person> mover, std::shared_ptr<map> theMap);
 		void MoveUpRight(std::shared_ptr<person> mover, std::shared_ptr<map> theMap);
 		void MoveLeft(std::shared_ptr<person> mover, std::shared_ptr<map> theMap);

@@ -311,8 +311,14 @@ signal_t gameWindow::MapScreen(std::shared_ptr<map> theMap, int centerRow,
 							ClickedObject(e.button.x, e.button.y);
 						if(obj && std::dynamic_pointer_cast<person>(selected) &&
 								std::dynamic_pointer_cast<tile>(obj)){
-							std::cout << "This character would now move if it "
-								"knew how to do so." << std::endl;
+							/*std::cout << "This character will now attempt to "
+								"construct a path to that tile." << std::endl;*/
+							std::dynamic_pointer_cast<person>(selected)->SetPath(theMap->PathTo(
+									std::dynamic_pointer_cast<person>(selected)->Row(),
+									std::dynamic_pointer_cast<person>(selected)->Colm(),
+									std::dynamic_pointer_cast<tile>(obj)->Row(),
+									std::dynamic_pointer_cast<tile>(obj)->Colm(),
+									std::dynamic_pointer_cast<person>(selected)->MoveCosts()));
 						}
 					}
 					break;
@@ -399,12 +405,8 @@ bool gameWindow::MoveOnMap(std::shared_ptr<person> mover, std::shared_ptr<map> t
 			<< "person was a nullptr." << std::endl;
 		return false;
 	}
-	if(!mover->Location()){
-		std::cerr << "Error: attempted to move a person on the map but they "
-			<< "had no initial location." << std::endl;
-		return false;
-	}
-	std::shared_ptr<tile> newLoc = theMap->Terrain(newRow, newColm);
+	tile* startLoc = theMap->Terrain(mover->Row(), mover->Colm()).get();
+	tile* newLoc = theMap->Terrain(newRow, newColm).get();
 	if(!newLoc){
 		std::cerr << "Error: attempted to move a person to an invalid tile."
 			<< std::endl;
@@ -415,11 +417,27 @@ bool gameWindow::MoveOnMap(std::shared_ptr<person> mover, std::shared_ptr<map> t
 		return false;
 	}
 	if(newLoc->Occupants().size() == 0 || mover->Faction() == newLoc->Owner()){
-		mover->MoveToTile(newLoc);
+		MoveUnitToTile(mover, startLoc, newLoc);
 	} else if(mover->CanAttack()) {
 		person::Fight(mover, newLoc->Defender());
 		UpdateUnitInfoPanel(mover);
-		if(newLoc->Occupants().size() == 0) mover->MoveToTile(newLoc);
+		if(newLoc->Occupants().size() == 0) MoveUnitToTile(mover, startLoc, newLoc);
+	}
+	return true;
+}
+
+// null origin = place unit on tile, it wasn't anywhere before
+// null destination = remove unit from tile, it's not going to a place
+bool gameWindow::MoveUnitToTile(std::shared_ptr<person> mover, tile* origin, tile* destination){
+	if(destination && !destination->AddOccupant(mover)){
+		std::cout << "That tile is already fully occupied." << std::endl;
+		return false;
+	}
+	if(origin) origin->RemoveOccupant(mover);
+	if(destination){
+		mover->MoveSpriteToTile(destination->X(), destination->Y(),
+				destination->W(), destination->H());
+		mover->SetLocation(destination->Row(), destination->Colm(), origin!=nullptr);
 	}
 	return true;
 }

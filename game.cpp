@@ -251,7 +251,6 @@ void game::ReadTileTypes(){
 	std::vector<std::string> terrainDefs = LoadDefFile("terrain.txt");
 	std::string name;
 	std::array<int, LAST_RESOURCE> yield;
-	int moveCost;
 	std::shared_ptr<tileType> newType;
 	for(auto& defLine : terrainDefs){
 		std::vector<std::string> defArgs;
@@ -281,16 +280,7 @@ void game::ReadTileTypes(){
 			throw;
 		}
 
-		try{
-			moveCost = std::stoi(defArgs[2]);
-		}
-		catch(const std::invalid_argument &e){
-			std::cerr << "Error: movement cost not a number in definition of "
-				<< name << "." << std::endl;
-			throw;
-		}
-
-		newType = std::make_shared<tileType>(name, yield, moveCost);
+		newType = std::make_shared<tileType>(name, yield);
 
 		std::vector<std::string> attribs;
 		boost::split(attribs, defArgs[3], boost::is_any_of(","));
@@ -306,6 +296,10 @@ void game::ReadTileTypes(){
 			}
 			if(att == "aquatic"){
 				newType->SetAquatic(true);
+				continue;
+			}
+			if(att == "hilly"){
+				newType->SetHilly(true);
 				continue;
 			}
 		}
@@ -605,11 +599,8 @@ std::shared_ptr<person> game::CreatePerson(const std::shared_ptr<tile> location,
 	}
 	std::shared_ptr<person> newPerson(std::make_shared<person>(Window()->Renderer(),
 				spec, faction));
-	if(!newPerson->MoveToTile(location)){
-		std::cerr << "Error: attempted to create a new person but they were not "
-			<< "able to occupy the given tile." << std::endl;
-		return nullptr;
-	}
+	location->AddOccupant(newPerson);
+	newPerson->SetLocation(location->Row(), location->Colm(), false);
 	people.push_back(newPerson);
 	return newPerson;
 }

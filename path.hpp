@@ -7,43 +7,29 @@
 #include <memory>
 
 #include "templates.hpp"
-#include "map.hpp"
-#include "tile.hpp"
-#include "person.hpp"
+#include "gfxobject.hpp"
 
 struct moveCostTable;
-class map;
-class tile;
-class person;
 class path {
-	std::vector<std::array<int, 2>> steps;
+	std::vector<std::array<unsigned int, 2>> steps;	// each entry is the actual
+											// coords of a tile, not increments
+	std::vector<gfxObject*> sprites;
 
-	static std::vector<std::array<int, 2>> ShortestPath(const map& theMap,
-			const int startRow, const int startColm, const int destRow, 
-			const int destColm, const moveCostTable& moveCosts);
+	void SpritifyPath();
 
-	static void UpdateNode(const map& theMap,
-			std::vector<std::vector<unsigned int>>& distMap,
-			const int nodeRow, const int nodeColm, const unsigned int value,
-			const moveCostTable& moveCosts);
-
-	static unsigned int MoveCost(const std::shared_ptr<tile> destination,
-		const moveCostTable moveCosts);
-
-	static std::array<int, 3> FindNextLowestOpen(
-			const std::vector<std::vector<unsigned int>>& distMap,
-			const std::vector<std::vector<bool>>& closedNodes,
-			std::vector<std::vector<bool>>& checkedNodes,
-			const std::array<int, 3> startingNode);
-
-	static std::vector<std::array<int, 2>> BuildPathVector(
-			const std::vector<std::vector<unsigned int>>& distMap, const int destRow,
-			const int destColm);
 	public:
 		path() = delete;
-		path(const person& mover, const map& theMap, const int destRow,
-				const int destColm);
+		path(std::vector<std::array<unsigned int, 2>> steps): steps(steps) {}
 
+		bool Advance(); // return true if you've arrived at your destination
+
+		gfxObject* FetchPathSegment(const std::array<unsigned int, 2>& start,
+				const std::array<unsigned int, 2>& end, const bool endOfPath);
+		void RenderStartingFrom(const int spriteX, const int spriteY); 
+		SDL_Rect StartingSpriteLayout(const int spriteX, const int spriteY);
+		void PathSpriteFromTo(SDL_Rect& layout, const int startX,
+				const int startY, const int startRow, const int startColm,
+				const int endRow, const int endColm, const bool firstSegment);
 };
 
 #endif

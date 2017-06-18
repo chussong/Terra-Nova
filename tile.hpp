@@ -18,7 +18,6 @@ class buildingType;
 class tileType {
 	const std::string name;
 	const std::array<int, LAST_RESOURCE> yield;
-	const int moveCost;
 
 	std::vector<std::weak_ptr<buildingType>> allowedBuildings;
 	bool cold = false;
@@ -28,13 +27,12 @@ class tileType {
 
 	public:
 		tileType() = delete;
-		tileType(const std::string name, const std::array<int, LAST_RESOURCE>& yield,
-				const int moveCost): name(name), yield(yield), moveCost(moveCost) {}
+		tileType(const std::string name, const std::array<int, LAST_RESOURCE>& yield):
+			name(name), yield(yield) {}
 
 		std::string Name() const 							{ return name; }
 		std::string Path() const				{return "terrain/" + Name();}
 		std::array<int, LAST_RESOURCE> Yield() const 		{ return yield; }
-		int MoveCost() const								{ return moveCost; }
 		
 		bool AllowedToBuild(const std::string name) const	{ return !name.empty(); }
 		void AddAllowedBuilding(const std::shared_ptr<buildingType> newBldg)
@@ -47,6 +45,7 @@ class tileType {
 		void SetCold(const bool val)	{ cold = val; }
 		void SetWooded(const bool val)	{ wooded = val; }
 		void SetAquatic(const bool val)	{ aquatic = val; }
+		void SetHilly(const bool val)	{ hilly = val; }
 
 };
 
@@ -105,6 +104,9 @@ class tile : public entity {
 		char Owner() const;
 
 		void Training();
+
+		static unsigned int MoveCost(const tile& destination,
+			const moveCostTable moveCosts);
 };
 
 #endif

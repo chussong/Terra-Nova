@@ -58,6 +58,15 @@ void gfxObject::RenderTo(SDL_Renderer* ren, const SDL_Rect& layout) const{
 		<< ")." << std::endl;*/
 }
 
+void gfxObject::RenderTo(const SDL_Rect& layout) const{
+	if(SDL_RenderCopy(gfxManager::Ren(), image, nullptr, &layout))
+		LogSDLError(std::cout, "RenderCopy");
+/*std::cout << "Rendered the image at " << image <<
+		" to the renderer at " << ren << " in position (" <<
+		layout.x << "," << layout.y << "), (" << layout.w << "," << layout.h
+		<< ")." << std::endl;*/
+}
+
 void gfxObject::DefaultLayout(SDL_Rect& layout) const{
 	SDL_QueryTexture(image, NULL, NULL, &layout.w, &layout.h);
 }

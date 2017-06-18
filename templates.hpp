@@ -46,12 +46,22 @@ std::array<U,6> GetSurrounding(const T& container, const int centerRow,
 template<typename T>
 void SetSurrounding(std::vector<std::vector<T>>& array, const int centerRow, 
 		const int centerColumn, const std::array<T,6>& values){
-	array[centerRow    ][centerColumn + 2] = values[0];
-	array[centerRow - 1][centerColumn + 1] = values[1];
-	array[centerRow - 1][centerColumn - 1] = values[2];
-	array[centerRow    ][centerColumn - 2] = values[3];
-	array[centerRow + 1][centerColumn - 1] = values[4];
-	array[centerRow + 1][centerColumn + 1] = values[5];
+	if(centerRow < 0 || static_cast<unsigned int>(centerRow) >= array.size() 
+			|| centerColumn < 0
+			|| static_cast<unsigned int>(centerColumn) >= array[0].size()){
+		std::cerr << "Error: SetSurrounding on invalid coordinate (" << centerRow 
+			<< "," << centerColumn << ")." << std::endl;
+		return;
+	}
+	unsigned int row;
+	unsigned int colm;
+	for(auto i = 0; i < 6; ++i){
+		row = centerRow + hexAdj[i][0];
+		colm = centerColumn + hexAdj[i][1];
+		if(row >= array.size() || colm >= array[row].size()) continue;
+		//std::cout << "(" << row << "," << colm << ") = " << values[i] << std::endl;
+		array[row][colm] = values[i];
+	}
 }
 
 template<typename T, typename U>

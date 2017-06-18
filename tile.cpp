@@ -220,3 +220,44 @@ void tile::Training(){
 		}
 	}
 }
+
+unsigned int tile::MoveCost(const tile& destination,
+		const moveCostTable moveCosts){
+	//std::cout << destination.Name() << " move cost:";
+	unsigned int cost = moveCosts.base;
+	if(destination.Wooded()){
+		if(moveCosts.wooded < 0){
+			//std::cout << -1u << std::endl;
+			return -1u;
+		} else {
+			cost += moveCosts.wooded;
+		}
+	}
+	if(destination.Aquatic()){
+		if(moveCosts.aquatic < 0){
+			//std::cout << -1u << std::endl;
+			return -1u;
+		} else {
+			cost += moveCosts.aquatic;
+		}
+	}
+	if(destination.Cold()){
+		if(moveCosts.cold < 0){
+			//std::cout << -1u << std::endl;
+			return -1u;
+		} else {
+			cost += moveCosts.cold;
+		}
+	}
+	if(destination.Hilly()){
+		if(moveCosts.hilly < 0){
+			//std::cout << -1u << std::endl;
+			return -1u;
+		} else {
+			cost += moveCosts.hilly;
+		}
+	}
+	//std::cout << cost << std::endl;
+	return cost;
+}
+

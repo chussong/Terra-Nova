@@ -36,7 +36,9 @@ void map::DrawTiles(const int centerColm, const int centerRow,
 
 void map::Clean(){
 	CleanExpired(colonies);
-	CleanExpired(roamers);
+	roamers.erase(std::remove_if(roamers.begin(), roamers.end(),
+				[](const person* p) { return !p || p->Dead(); }),
+			roamers.end());
 }
 
 
@@ -182,6 +184,28 @@ std::vector<std::array<unsigned int, 2>> map::BuildPathVector(
 
 // end of path construction
 
+void map::ProcessTurn(){
+	//std::cout << "Processing turns for (" << roamers.size() << "/";
+	Clean();
+	//std::cout << roamers.size() << ") tracked roamers." << std::endl;
+	for(auto& r : roamers){
+		// We actually need to find everyone who wants to advance and everyone
+		// who wants to patrol, check for conflicts, do fights, THEN move them.
+		if(r->Orders() == ORDER_ADVANCE){
+			if(!r->Path()){
+				std::cerr << "Error: a unit (" << r->Name() << ") attempted to "
+					<< "move as ordered but did not have a path." << std::endl;
+				return;
+			}
+			std::array<unsigned int, 2> nextStep = r->NextStep();
+			std::cout << "Move " << r->Name() << " to (" << nextStep[0] << "," 
+				<< nextStep[1] << ")." << std::endl;
+			MoveUnitTo(r, nextStep[0], nextStep[1]);
+			if(r->Path()->Advance()) r->OrderPatrol();
+		}
+	}
+}
+
 void map::AddColony(const std::shared_ptr<colony> col, int row, int colm){
 	colonies.emplace_back(col);
 	Terrain(row, colm)->SetHasColony(true);
@@ -199,13 +223,29 @@ const std::shared_ptr<colony> map::Colony(const int num) const{
 	return colonies[num].lock();
 }
 
+void map::AddRoamer(person* newRoamer, const int row, const int colm){
+	if(!newRoamer){
+		std::cerr << "Error: told to add a roamer to a map, but it was a "
+			<< "nullptr." << std::endl;
+		return;
+	}
+	if(OutOfBounds(row, colm)){
+		std::cerr << "Error: told to add a roamer to a map, but the given "
+			<< "coordinates (" << row << "," << colm << ") are out of bounds."
+			<< std::endl;
+		return;
+	}
+	roamers.push_back(newRoamer);
+	MoveUnitTo(newRoamer, row, colm);
+}
+
 std::shared_ptr<tile> map::Terrain(const int row, const int column) const{
+	if(OutOfBounds(row, column)) return nullptr;
 	if((row + column)%2 != 0){
 		std::cerr << "Error: someone is trying to access the non-existent "
 			<< "tile at row " << row << ", column " << column << "." << std::endl;
 		return nullptr;
 	}
-	if(OutOfBounds(row, column)) return nullptr;
 	if(!terrain[row][column]){
 		std::cerr << "Error: someone is trying to access the valid tile at row "
 			<< row << ", column " << column << ", but there's nothing there."
@@ -298,6 +338,51 @@ void map::MoveView(direction_t dir){
 						Terrain(i,j)->Y() + yShift);
 		}
 	}
+}
+
+// null origin = place unit on tile, it wasn't anywhere before
+// null destination = remove unit from tile, it's not going to a place
+// return true if the unit was moved, false if not
+bool map::MoveUnitTo(person* mover, const int row, const int colm){
+	if(!mover){
+		std::cerr << "Error: a map was told to move a person, but was given a "
+			<< "nullptr." << std::endl;
+		return false;
+	}
+	if(OutOfBounds(row, colm)){
+		std::cerr << "Error: a map was told to move a person, but the given "
+			<< "destination was out of bounds." << std::endl;
+		return false;
+	}
+	tile* origin = Terrain(mover->Row(), mover->Colm()).get();
+	tile* destination = Terrain(row, colm).get();
+	if(!destination){
+		std::cerr << "Error: a map was told to move a person, but the "
+			<< "destination tile returned a nullptr." << std::endl;
+		return false;
+	}
+	/*if(mover->MovesLeft() < 1){
+		std::cout << "This unit has used all of its moves." << std::endl;
+		return false;
+	}*/
+
+	// if there's an enemy there, fight it
+	if(destination->Occupants().size() != 0 
+			&& mover->Faction() != destination->Owner()){
+		person::Fight(mover, destination->Defender());
+		if(destination->Occupants().size() > 0) return true; //enemy lived=>stay
+	}
+	
+	// do the actual moving
+	if(!destination->AddOccupant(mover)){
+		std::cout << "That tile is already fully occupied." << std::endl;
+		return false;
+	}
+	if(origin) origin->RemoveOccupant(mover);
+	mover->MoveSpriteToTile(destination->X(), destination->Y(),
+			destination->W(), destination->H());
+	mover->SetLocation(destination->Row(), destination->Colm(), origin!=nullptr);
+	return true;
 }
 
 std::string map::TerrainName(const unsigned int row, const unsigned int col){

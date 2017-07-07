@@ -6,6 +6,7 @@
 #include <array>
 #include <iostream>
 #include <memory>
+#include <typeinfo>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
@@ -27,12 +28,15 @@ class gameWindow : public std::enable_shared_from_this<gameWindow> {
 		SDL_Window* win;
 		SDL_Renderer* ren;
 
+		// gameWindow owns the pure UI stuff; the others are pointers to
+		// objects owned by someone else, e.g. the map
 		std::vector<std::shared_ptr<uiAggregate>> topLevelUI;
-		std::vector<std::shared_ptr<entity>> clickables;
-		std::vector<std::shared_ptr<entity>> objects;
+		std::vector<std::unique_ptr<entity>> UI;
+		std::vector<entity*> clickables;
+		std::vector<entity*> objects;
 		std::vector<std::shared_ptr<uiElement>> background;
 
-		std::shared_ptr<entity> selected;
+		entity* selected;
 
 	public:
 		gameWindow() = delete;
@@ -44,28 +48,30 @@ class gameWindow : public std::enable_shared_from_this<gameWindow> {
 //		gameWindow(gameWindow&& other);
 		gameWindow& operator=(const gameWindow other) = delete;
 
+		void Clean();
 		void Render();
-		void AddObject(std::string filename, const int x = 0, const int y = 0);
+		//void AddObject(std::string filename, const int x = 0, const int y = 0);
 
 		SDL_Renderer* Renderer() const;
-		std::shared_ptr<entity> Object(const int num);
-		std::shared_ptr<entity> SelectedObject(const int x, const int y);
-		std::shared_ptr<entity> ClickedObject(const int x, const int y);
+		entity* Object(const int num);
+		entity* SelectedObject(const int x, const int y);
+		entity* ClickedObject(const int x, const int y);
 		std::array<int, 4> Layout() const;
 		bool Ready() const;
 
 		void ResetBackground(std::shared_ptr<uiElement> newThing);
 		void AddToBackground(std::shared_ptr<uiElement> newThing);
 		void ResetObjects();
-		void AddObject(std::shared_ptr<entity> newThing);
-		void AddClickable(std::shared_ptr<entity> newThing);
 		void AddTopLevelUI(std::shared_ptr<uiAggregate> newThing);
+		void AddUI(std::unique_ptr<entity> newThing);
+		void AddClickable(entity* newThing);
+		void AddClickable(std::shared_ptr<entity> newThing);
+		void AddObject(entity* newThing);
 
 		static bool InitSDL();
 		static void QuitSDL();
 
-		signal_t HandleKeyPress(SDL_Keycode key, std::shared_ptr<entity> selected,
-				std::shared_ptr<map> theMap);
+		signal_t HandleKeyPress(SDL_Keycode key, std::shared_ptr<map> theMap);
 
 		signal_t ColonyScreen(std::shared_ptr<colony> col);
 		signal_t MapScreen(std::shared_ptr<map> theMap, int centerRow,
@@ -75,19 +81,16 @@ class gameWindow : public std::enable_shared_from_this<gameWindow> {
 				const int centerRow, const int centerColm);
 		void AddMapTiles(std::shared_ptr<map> theMap,
 				const int centerRow, const int centerColm);
-		void MakeUnitInfoPanel(const std::shared_ptr<entity> unit);
-		void UpdateUnitInfoPanel(const std::shared_ptr<entity> unit);
+		void MakeUnitInfoPanel(const entity* unit);
+		void UpdateUnitInfoPanel(const entity* unit);
 		void RemoveUnitInfoPanel();
 
-		bool MoveOnMap(std::shared_ptr<person> mover, std::shared_ptr<map> theMap,
-				const int newRow, const int newColm);
-		bool MoveUnitToTile(std::shared_ptr<person> mover, tile* origin, tile* destination);
-		void MoveUpLeft(std::shared_ptr<person> mover, std::shared_ptr<map> theMap);
-		void MoveUpRight(std::shared_ptr<person> mover, std::shared_ptr<map> theMap);
-		void MoveLeft(std::shared_ptr<person> mover, std::shared_ptr<map> theMap);
-		void MoveRight(std::shared_ptr<person> mover, std::shared_ptr<map> theMap);
-		void MoveDownLeft(std::shared_ptr<person> mover, std::shared_ptr<map> theMap);
-		void MoveDownRight(std::shared_ptr<person> mover, std::shared_ptr<map> theMap);
+		void MoveUpLeft(person* mover, std::shared_ptr<map> theMap);
+		void MoveUpRight(person* mover, std::shared_ptr<map> theMap);
+		void MoveLeft(person* mover, std::shared_ptr<map> theMap);
+		void MoveRight(person* mover, std::shared_ptr<map> theMap);
+		void MoveDownLeft(person* mover, std::shared_ptr<map> theMap);
+		void MoveDownRight(person* mover, std::shared_ptr<map> theMap);
 };
 
 #endif

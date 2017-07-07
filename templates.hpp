@@ -11,6 +11,15 @@ constexpr std::array<std::array<int, 2>, 6> hexAdj{{
 	{{0, 2}}, {{-1, 1}}, {{-1, -1}}, {{0, -2}}, {{1, -1}}, {{1, 1}}
 }};
 
+/*template<typename T>
+class matrix {
+	std::vector<std::vector<T>> m;
+
+	public:
+		// put operator[] and all the std::vector member functions in here
+		// we can enforce squareness in the constructor and resizing function
+};*/
+
 // beware: this is NOT case sensitive!
 template<class T>
 std::shared_ptr<T> FindByName(std::vector<std::shared_ptr<T>> vec,

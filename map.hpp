@@ -27,7 +27,7 @@ class map {
 	 * odd entries and even rows have only even entries.*/
 	std::vector<std::vector<std::shared_ptr<tile>>> terrain;
 	std::vector<std::weak_ptr<colony>> colonies;
-	std::vector<std::weak_ptr<person>> roamers;
+	std::vector<person*> roamers;
 
 	void Clean();
 
@@ -58,9 +58,12 @@ class map {
 		map(SDL_Renderer* ren, std::vector<std::vector<std::shared_ptr<tile>>> tiles):
 			ren(ren), terrain(tiles) {}
 
+		void ProcessTurn();
+
 		void AddColony(const std::shared_ptr<colony> colony, int row, int colm);
 		std::shared_ptr<colony> Colony(const int num);
 		const std::shared_ptr<colony> Colony(const int num) const;
+		void AddRoamer(person* newRoamer, const int row, const int colm);
 
 		std::shared_ptr<tile> Terrain(const int row, const int column) const;
 		std::vector<std::vector<std::shared_ptr<tile>>> SurroundingTerrain(
@@ -71,6 +74,7 @@ class map {
 		bool OutOfBounds(const int row, const int colm) const;
 
 		void MoveView(direction_t dir);
+		bool MoveUnitTo(person* mover, const int row, const int colm);
 
 		std::string TerrainName(const unsigned int x, const unsigned int y);
 

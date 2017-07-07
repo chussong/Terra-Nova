@@ -27,6 +27,7 @@ class building;
 
 class colony {
 	std::shared_ptr<uiElement> colonyBackground;
+	// buildingTypes should really be a game-level constant
 	std::vector<std::shared_ptr<buildingType>> buildingTypes;
 
 	SDL_Renderer* ren;
@@ -50,9 +51,6 @@ class colony {
 
 	std::array<std::shared_ptr<uiElement>, LAST_RESOURCE> resourcePanels;
 	std::shared_ptr<uiElement> buildingGrid;
-	std::array<std::shared_ptr<buildingPrototype>, 
-		BUILDING_GRID_ROWS*BUILDING_GRID_COLUMNS> buildingButtons;
-	std::shared_ptr<uiElement> leaveColonyButton;
 	std::shared_ptr<uiElement> endTurnButton;
 
 	public:
@@ -82,13 +80,10 @@ class colony {
 		int Resource(const resource_t resource) const;
 		std::string ResAsString(const int res) const;
 
-		void AssignWorker(std::shared_ptr<person> worker,
-				const std::shared_ptr<tile> location);
+		void AssignWorker(person* worker, const tile* location);
 
-		void EnqueueBuilding(const std::shared_ptr<buildingType> type,
-				std::shared_ptr<tile> destinationTile);
-		void EnqueueBuilding(const unsigned int id,
-				std::shared_ptr<tile> destinationTile);
+		void EnqueueBuilding(const buildingType* type, tile* destinationTile);
+		void EnqueueBuilding(const unsigned int id, tile* destinationTile);
 		void AdvanceQueue();
 
 		void ProcessTurn();

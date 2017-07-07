@@ -11,12 +11,12 @@ void tile::Render() const{
 	sprite->RenderTo(ren, renderLayout);
 	if(bldg) bldg->Render();
 	for(auto& occ : occupants){
-		if(!occ.lock()){
+		if(!occ){
 			std::cerr << "Error: attempted to render a non-existent occupant."
 				<< std::endl;
 			continue;
 		}
-		occ.lock()->Render();
+		occ->Render();
 	}
 }
 
@@ -26,7 +26,7 @@ void tile::MoveTo(int x, int y){
 	if(bldg) bldg->MoveTo(MAPDISP_ORIGIN_X + x + (TILE_WIDTH - BUILDING_WIDTH)/2,
 			MAPDISP_ORIGIN_Y + y + (4*TILE_HEIGHT/3 - BUILDING_HEIGHT)/2);
 	for(auto& occ : occupants){
-		occ.lock()->MoveTo(MAPDISP_ORIGIN_X + x + (TILE_WIDTH - PERSON_WIDTH)/2,
+		occ->MoveTo(MAPDISP_ORIGIN_X + x + (TILE_WIDTH - PERSON_WIDTH)/2,
 				MAPDISP_ORIGIN_Y + y + (4*TILE_HEIGHT/3 - PERSON_HEIGHT)/2);
 	}
 }
@@ -39,8 +39,7 @@ void tile::MoveTo(SDL_Rect newLayout){
 void tile::Resize(int w, int h){
 	if(bldg) bldg->Resize(bldg->W()*w/this->W(), bldg->H()*h/this->H());
 	for(auto& occ : occupants){
-		std::shared_ptr<person> lockOcc = occ.lock();
-		lockOcc->Resize(lockOcc->W()*w/this->W(), lockOcc->H()*h/this->H());
+		occ->Resize(occ->W()*w/this->W(), occ->H()*h/this->H());
 	}
 	entity::Resize(w,h);
 }
@@ -82,13 +81,20 @@ void tile::SetTileType(const std::shared_ptr<tileType> newType){
 
 std::array<int, LAST_RESOURCE> tile::Income() const{
 	std::array<int, LAST_RESOURCE> inc = {{0}};
-	if(occupants.size() > 0 || (bldg && bldg->Finished() && bldg->Automatic())){
-		if(bldg && !bldg->CanHarvest()) return inc;
-		inc = type.lock()->Yield();
-		if(bldg && bldg->CanHarvest()){
-			for(unsigned int i = 0; i < inc.size(); ++i) 
-				inc[i] += bldg->BonusResources()[i];
-		}
+
+	if(bldg && !bldg->CanHarvest()) return inc;
+
+	bool hasHarvester = false;
+	for(auto& occ : occupants){
+		if(occ->Orders() == ORDER_HARVEST) hasHarvester = true;
+	}
+	if(bldg && bldg->Finished() && bldg->Automatic()) hasHarvester = true;
+	if(!hasHarvester) return inc;
+
+	inc = type.lock()->Yield();
+	if(bldg){
+		for(unsigned int i = 0; i < inc.size(); ++i) 
+			inc[i] += bldg->BonusResources()[i];
 	}
 	return inc;
 }
@@ -135,7 +141,7 @@ void tile::RemoveBuilding(){
 	bldg.reset();
 }
 
-bool tile::AddOccupant(std::shared_ptr<person> newOccupant){
+bool tile::AddOccupant(person* newOccupant){
 	if(!newOccupant){
 		std::cerr << "Error: attempted to add a blank occupant to a tile."
 			<< std::endl;
@@ -145,7 +151,7 @@ bool tile::AddOccupant(std::shared_ptr<person> newOccupant){
 			(!bldg && occupants.size() > 0)) return false;
 
 	for(auto& oldOccupant : occupants){
-		if(oldOccupant.lock() == newOccupant){
+		if(oldOccupant == newOccupant){
 			std::cerr << "Error: attempted to add an occupant to a tile who was"
 				<< " already occupying it." << std::endl;
 			return false;
@@ -166,37 +172,39 @@ bool tile::AddOccupant(std::shared_ptr<person> newOccupant){
 	return true;
 }
 
-bool tile::RemoveOccupant(std::shared_ptr<person> removeThis){
+bool tile::RemoveOccupant(person* removeThis){
 	if(!removeThis){
 		std::cerr << "Error: attempted to remove a blank occupant from a tile."
 			<< std::endl;
 		return false;
 	}
+	// doing this instead of remove_if so that we can error if they're not found
 	for(unsigned int i = occupants.size()-1; i <= occupants.size(); --i){
-		if(occupants[i].lock() == removeThis){
+		if(occupants[i] == removeThis){
 			occupants.erase(occupants.begin()+i);
 			if(bldg && occupants.empty()) bldg->FinishTraining();
 			return true;
 		}
 	}
-	std::cerr << "Error: attempted to remove an occupant from a tile but they "
-		<< "were not found among its " << occupants.size() << " occupant(s)."
-		<< std::endl;
+	std::cerr << "Error: attempted to remove an occupant from the tile at ("
+		<< row << "," << colm << "), but they were not found among its " 
+		<< occupants.size() << " occupant(s)." << std::endl;
 	return false;
 }
 
-std::vector<std::weak_ptr<person>> tile::Occupants() const{
+std::vector<person*> tile::Occupants() const{
 	return occupants;
 }
 
-std::shared_ptr<person> tile::Defender() const{
+// eventually we want this to return the strongest occupant, not the first one
+person* tile::Defender() const{
 	if(Occupants().size() == 0) return nullptr;
-	return Occupants()[0].lock();
+	return Occupants()[0];
 }
 
 char tile::Owner() const{
 	if(occupants.size() == 0) return 0;
-	return Occupants()[0].lock()->Faction();
+	return Occupants()[0]->Faction();
 }
 
 void tile::Training(){
@@ -208,12 +216,12 @@ void tile::Training(){
 					<< "there were no occupants to receive it." << std::endl;
 				return;
 			} else {
-				if(!occupants[0].lock()->CanRespec()){
+				if(!occupants[0]->CanRespec()){
 					std::cerr << "Error: training was completed at a building "
 						<< "but the occupant was unique and could not be "
 						<< "retrained. This should not happen." << std::endl;
 				} else {
-					occupants[0].lock()->ChangeSpec(bldg->NowTraining());
+					occupants[0]->ChangeSpec(bldg->NowTraining());
 				}
 				bldg->FinishTraining();
 			}

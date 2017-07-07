@@ -90,7 +90,7 @@ int buildingPrototype::BuildTime() const{
 	return type->BuildTime();
 }
 
-std::shared_ptr<buildingType> buildingPrototype::Type() const{
+const buildingType* buildingPrototype::Type() const{
 	return type;
 }
 

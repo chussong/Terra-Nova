@@ -56,19 +56,19 @@ class uiAggregate {
 };
 
 class unitInfoPanel : public uiAggregate {
-	std::shared_ptr<uiElement> background;
-	std::shared_ptr<uiElement> portrait;
-	std::shared_ptr<uiElement> factionIcon;
-	std::shared_ptr<uiElement> healthIcon;
-	std::shared_ptr<uiElement> attackIcon;
+	std::unique_ptr<uiElement> background;
+	std::unique_ptr<uiElement> portrait;
+	std::unique_ptr<uiElement> factionIcon;
+	std::unique_ptr<uiElement> healthIcon;
+	std::unique_ptr<uiElement> attackIcon;
 
 	public:
 		unitInfoPanel() = delete;
-		unitInfoPanel(SDL_Renderer* ren, std::shared_ptr<person> unit);
+		unitInfoPanel(SDL_Renderer* ren, const person* unit);
 
 		void Render();
 
-		void UpdateHealth(const std::shared_ptr<person> unit);
+		void UpdateHealth(const person* unit);
 };
 
 #endif

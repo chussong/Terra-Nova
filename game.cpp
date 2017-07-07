@@ -568,7 +568,7 @@ std::shared_ptr<person> game::ParseUniqueUnit(std::shared_ptr<map> parentMap,
 		return nullptr;
 	}
 	std::shared_ptr<person> ret(CreatePerson(
-				parentMap->Terrain(row-1, 2*(colm-1)+(row-1)%2), spec, owner ));
+				parentMap.get(), row-1, 2*(colm-1)+(row-1)%2, spec, owner ));
 	ret->ChangeName(name);
 	return ret;
 }
@@ -584,13 +584,14 @@ std::vector<std::shared_ptr<person>> game::ParseGenericUnits(
 		int row = std::stoi(details[0]);
 		int colm = std::stoi(details[1]);
 		int owner = std::stoi(details[2]);
-		units.push_back(CreatePerson(parentMap->Terrain(row-1, 2*(colm-1)+(row-1)%2),
+		units.push_back(CreatePerson(parentMap.get(), row-1, 2*(colm-1)+(row-1)%2,
 					genericType, owner));
 	}
 	return units;
 }
 
-std::shared_ptr<person> game::CreatePerson(const std::shared_ptr<tile> location,
+std::shared_ptr<person> game::CreatePerson(map* theMap, const int row,
+		const int colm,
 		const std::shared_ptr<unitType> spec, const char faction){
 	if(unitTypes.size() < 1){
 		std::cerr << "Error: attempted to create a person but no unit types "
@@ -599,9 +600,8 @@ std::shared_ptr<person> game::CreatePerson(const std::shared_ptr<tile> location,
 	}
 	std::shared_ptr<person> newPerson(std::make_shared<person>(Window()->Renderer(),
 				spec, faction));
-	location->AddOccupant(newPerson);
-	newPerson->SetLocation(location->Row(), location->Colm(), false);
 	people.push_back(newPerson);
+	theMap->AddRoamer(newPerson.get(), row, colm);
 	return newPerson;
 }
 
@@ -631,6 +631,11 @@ std::shared_ptr<map> game::CreateMap(){
 
 void game::NextTurn(){
 	std::cout << "A new turn dawns..." << std::endl;
+	for(auto& m : maps) m->ProcessTurn();
 	for(unsigned int i = 0; i < colonies.size(); ++i) colonies[i]->ProcessTurn();
 	for(auto& u : people) u->ProcessTurn();
+	// we should not have the people process their own turns here, because there
+	// is a nontrivial interaction between different move orders. Instead, we
+	// should have the map analyze who needs to fight and tell them to move if
+	// they're successful.
 }

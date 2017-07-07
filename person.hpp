@@ -93,6 +93,8 @@ class person : public entity {
 	char faction;
 	std::array<int, 2> location;
 	std::unique_ptr<path> myPath;
+	order_t orders = ORDER_PATROL;
+	std::shared_ptr<gfxObject> orderIcon;
 
 	static std::string GenerateGivenName();
 	static std::string GenerateSurname();
@@ -111,6 +113,7 @@ class person : public entity {
 		bool TakeDamage(const int damage); // false = survived
 		void Die();
 		bool Dead() const { return health <= 0; }
+		bool IsUnit() const { return true; }
 
 		void MoveSpriteToTile(const int X, const int Y, const int W, const int H);
 		void Render() const;
@@ -137,11 +140,16 @@ class person : public entity {
 
 		void SetLocation(const int row, const int colm, const bool usesMove);
 		std::array<int, 2> Location() const;
-		path* Path() const { return myPath.get(); }
-		void SetPath(std::unique_ptr<path> newPath);
-		moveCostTable MoveCosts() const {return spec->MoveCosts(); }
 		int Row() const;
 		int Colm() const;
+		path* Path() const { return myPath.get(); }
+		std::array<unsigned int, 2> NextStep();
+		moveCostTable MoveCosts() const {return spec->MoveCosts(); }
+		order_t Orders() const { return orders; }
+		void SetOrders(const order_t newOrders);
+		void OrderMove(std::unique_ptr<path> newPath);
+		void OrderPatrol();
+		void OrderHarvest();
 
 		bool CanRespec() const			{return spec->CanRespec();}
 		char Faction() const			{return faction;}
@@ -153,9 +161,8 @@ class person : public entity {
 		std::string DamageType(const unsigned int num = 0) const;
 
 		bool CanAttack() const { return Attacks().size() > 0; }
-		void Attack(std::shared_ptr<person>& target) const;
-		static void Fight(std::shared_ptr<person> attacker, 
-						std::shared_ptr<person> target);
+		bool Attack(person* target) const;
+		static void Fight(person* attacker, person* target);
 };
 
 #endif

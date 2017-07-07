@@ -52,7 +52,7 @@ class tileType {
 class tile : public entity {
 	std::weak_ptr<tileType> type;
 	std::shared_ptr<building> bldg;
-	std::vector<std::weak_ptr<person>> occupants;
+	std::vector<person*> occupants;
 
 	int row;
 	int colm;
@@ -69,6 +69,8 @@ class tile : public entity {
 			occupants(other.occupants), row(other.row), colm(other.colm),
 			hasColony(other.hasColony) {}
 		tile& operator=(const entity& other) = delete;
+
+		bool IsTile() const { return true; }
 
 		void Render() const;
 		void MoveTo(int x, int y);
@@ -97,10 +99,10 @@ class tile : public entity {
 		void AddBuilding(std::shared_ptr<building> newBldg);
 		void RemoveBuilding();
 
-		bool AddOccupant(std::shared_ptr<person> newOccupant);
-		bool RemoveOccupant(std::shared_ptr<person> removeThis);
-		std::vector<std::weak_ptr<person>> Occupants() const;
-		std::shared_ptr<person> Defender() const;
+		bool AddOccupant(person* newOccupant);
+		bool RemoveOccupant(person* removeThis);
+		std::vector<person*> Occupants() const;
+		person* Defender() const;
 		char Owner() const;
 
 		void Training();

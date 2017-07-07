@@ -77,7 +77,8 @@ class game {
 				const std::shared_ptr<unitType> genericType, 
 				std::vector<std::string> unitDesc);
 
-		std::shared_ptr<person> CreatePerson(const std::shared_ptr<tile> loc,
+		std::shared_ptr<person> CreatePerson(map* theMap, const int row,
+				const int colm,
 				const std::shared_ptr<unitType> spec, const char faction);
 		std::shared_ptr<colony> CreateColony(std::shared_ptr<map> parentMap,
 				const int row, const int colm, const std::string& name, 

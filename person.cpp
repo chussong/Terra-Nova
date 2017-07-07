@@ -11,7 +11,7 @@ std::string person::GenerateSurname(){
 person::person(SDL_Renderer* ren, 
 		const std::shared_ptr<unitType> spec, const char faction): 
 		entity(ren, spec->Name(), 0, 0, true),
-		spec(spec), faction(faction){
+		spec(spec), faction(faction), location({{-1,-1}}) {
 	givenName = GenerateGivenName();
 	surname = GenerateSurname();
 	srand(time(NULL));
@@ -72,6 +72,10 @@ void person::MoveSpriteToTile(const int X, const int Y, const int W, const int H
 void person::Render() const{
 	//std::cout << Dead() << std::endl;
 	if(Dead()) return;
+
+	if(myPath) myPath->RenderStartingFrom(X() + PERSON_WIDTH/2,
+			Y() - PERSON_HEIGHT/2);
+
 	entity::Render();
 	SDL_Rect healthLayout;
 	healthLayout.w = HEALTH_BAR_WIDTH;
@@ -87,13 +91,16 @@ void person::Render() const{
 	healthLayout.w /= MaxHealth();
 	healthBar->RenderTo(ren, healthLayout);
 
-	if(myPath) myPath->RenderStartingFrom(X() + PERSON_WIDTH/2,
-			Y() - PERSON_HEIGHT/2);
+	if(orderIcon){
+		SDL_Rect orderLayout = layout;
+		orderIcon->DefaultLayout(orderLayout);
+		orderLayout.y += layout.h - orderLayout.h;
+		orderIcon->RenderTo(orderLayout);
+	}
 }
 
 void person::ProcessTurn(){
 	movesLeft = MoveSpeed();
-	// should advance along path here and also call path::Advance()
 }
 
 std::string person::Name() const{
@@ -175,6 +182,8 @@ int person::MovesLeft()	const{
 }
 
 void person::SetLocation(const int row, const int colm, const bool usesMove){
+	std::cout << "Setting location of " << Name() << " to (" << row << ","
+		<< colm << ")." << std::endl;
 	location[0] = row;
 	location[1] = colm;
 	if(usesMove) movesLeft--;
@@ -192,8 +201,45 @@ int person::Colm() const{
 	return location[1];
 }
 
-void person::SetPath(std::unique_ptr<path> newPath){
+std::array<unsigned int, 2> person::NextStep(){
+	if(!myPath){
+		std::cerr << "Error: asked for the next step along a path, but the "
+			<< "unit does not have one." << std::endl;
+		return std::array<unsigned int, 2>({{-1u, -1u}});
+	}
+	return myPath->NextStep();
+}
+
+void person::SetOrders(const order_t newOrders){
+	orders = newOrders;
+	std::string orderName = "order_";
+	switch(newOrders){
+		case ORDER_ADVANCE:
+			orderName += "move";
+			break;
+		case ORDER_PATROL:
+			orderName += "patrol";
+			break;
+		case ORDER_HARVEST:
+			orderName += "harvest";
+			break;
+	}
+	orderIcon = gfxManager::RequestSprite(orderName);
+}
+
+void person::OrderMove(std::unique_ptr<path> newPath){
+	SetOrders(ORDER_ADVANCE);
 	if(newPath) myPath = std::move(newPath);
+}
+
+void person::OrderPatrol(){
+	SetOrders(ORDER_PATROL);
+	myPath = nullptr;
+}
+
+void person::OrderHarvest(){
+	SetOrders(ORDER_HARVEST);
+	myPath = nullptr;
 }
 
 std::vector<std::shared_ptr<attackType>> person::Attacks() const{
@@ -220,24 +266,22 @@ std::string person::DamageType(const unsigned int num) const{
 	return 0;
 }
 
-void person::Attack(std::shared_ptr<person>& target) const{
+// return true if target survived
+bool person::Attack(person* target) const{
 	std::random_device dev;
 	std::mt19937 gen(dev());
 	std::uniform_real_distribution<> dist(0,1);
 	for(auto& atk : Attacks()){
 		for(int hit = 0; hit < atk->AttackRate(); ++hit){
 			if(dist(gen) <= atk->Accuracy()){
-				if(target->TakeDamage(atk->Damage())){
-					target.reset();
-					return;
-				}
-			} else {
+				if(target->TakeDamage(atk->Damage())) return true;
 			}
 		}
 	}
+	return false;
 }
 
-void person::Fight(std::shared_ptr<person> attacker, std::shared_ptr<person> target){
+void person::Fight(person* attacker, person* target){
 	if(!attacker){
 		std::cerr << "Error: attempting a fight but there is no attacker." << std::endl;
 		return;
@@ -250,8 +294,8 @@ void person::Fight(std::shared_ptr<person> attacker, std::shared_ptr<person> tar
 		std::cout << "Fighting requires an available movement point." << std::endl;
 		return;
 	}
-	attacker->Attack(target);
-	if(target){
+	bool targetDead = attacker->Attack(target);
+	if(!targetDead){
 		attacker->movesLeft--;
 		target->Attack(attacker);
 	}

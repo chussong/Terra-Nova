@@ -50,6 +50,9 @@ class entity : public std::enable_shared_from_this<entity> {
 		virtual bool InsideQ(const int x, const int y) const;
 
 		bool Clickable() const { return selectable; }
+		virtual bool IsUnit() const { return false; }
+		virtual bool IsTile() const { return false; }
+		virtual bool IsBuildingPrototype() const { return false; }
 };
 
 #endif

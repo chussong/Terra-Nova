@@ -21,6 +21,7 @@ class path {
 		path() = delete;
 		path(std::vector<std::array<unsigned int, 2>> steps): steps(steps) {}
 
+		std::array<unsigned int, 2> NextStep() const;
 		bool Advance(); // return true if you've arrived at your destination
 
 		gfxObject* FetchPathSegment(const std::array<unsigned int, 2>& start,

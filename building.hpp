@@ -53,27 +53,32 @@ class buildingType{
 };
 
 class buildingPrototype : public entity {
-	const std::shared_ptr<buildingType> type;
+	const buildingType* type;
 
 	public:
 		buildingPrototype() = delete;
 		buildingPrototype(SDL_Renderer* ren, const std::string spriteFile,
+				const int x, const int y, const buildingType* type) : 
+			entity(ren, spriteFile, x, y), type(type) {}
+		buildingPrototype(SDL_Renderer* ren, const std::string spriteFile,
 				const int x, const int y,
 				const std::shared_ptr<buildingType> type) : 
-			entity(ren, spriteFile, x, y), type(type) {}
+			entity(ren, spriteFile, x, y), type(type.get()) {}
 		buildingPrototype(const buildingPrototype& other) = delete;
 		buildingPrototype(buildingPrototype&& other) noexcept : 
 			entity(std::move(other)), type(std::move(other.type)) {}
 		buildingPrototype& operator=(const buildingPrototype& other) = delete;
 
+		bool IsBuildingPrototype() const { return true; }
+
 		std::string Name() const;
 		std::array<int, LAST_RESOURCE>	Cost() const;
 		int BuildTime() const;
-		std::shared_ptr<buildingType> Type() const;
+		const buildingType* Type() const;
 };
 
 class building : public entity {
-	const std::shared_ptr<buildingType> type;
+	const buildingType* type;
 	int turnsLeft;
 	//int health = 100;
 	//int upgradeLevel = 1;
@@ -85,9 +90,12 @@ class building : public entity {
 	public:
 		building() = delete;
 		building(SDL_Renderer* ren, const std::string spriteFile,
+				const int x, const int y, const buildingType* type) : 
+			entity(ren, spriteFile, x, y), type(type) {}
+		building(SDL_Renderer* ren, const std::string spriteFile,
 				const int x, const int y,
 				const std::shared_ptr<buildingType> type) : 
-			entity(ren, spriteFile, x, y), type(type) {}
+			entity(ren, spriteFile, x, y), type(type.get()) {}
 		building(const building& other) = delete;
 		building(building&& other) noexcept : 
 			entity(std::move(other)), type(std::move(other.type)),

@@ -104,13 +104,11 @@ int colony::Resource(const resource_t resource) const{
 	return resources[resource];
 }
 
-void colony::AssignWorker(std::shared_ptr<person> worker, 
-		const std::shared_ptr<tile> location){
+void colony::AssignWorker(person* worker, const tile* location){
 	worker->SetLocation(location->Row(), location->Colm(), false);
 }
 
-void colony::EnqueueBuilding(const std::shared_ptr<buildingType> type,
-		const std::shared_ptr<tile> clickedTile){
+void colony::EnqueueBuilding(const buildingType* type, tile* clickedTile){
 	if(!type){
 		std::cerr << "Error: attempted to add a nullptr to building queue." << std::endl;
 		return;
@@ -172,14 +170,14 @@ void colony::EnqueueBuilding(const std::shared_ptr<buildingType> type,
 	}
 }
 
-void colony::EnqueueBuilding(const unsigned int id, std::shared_ptr<tile> dTile){
+void colony::EnqueueBuilding(const unsigned int id, tile* dTile){
 	if(id >= buildingTypes.size()){
 		std::cerr << "Error: asked to enqueue a building type with an id higher \
 			than what we know (" << id << ">" << buildingTypes.size()-1 << ")."
 			<< std::endl;
 		return;
 	}
-	EnqueueBuilding(buildingTypes[id], dTile);
+	EnqueueBuilding(buildingTypes[id].get(), dTile);
 }
 
 void colony::AdvanceQueue(){
@@ -227,11 +225,11 @@ void colony::DrawTiles(std::shared_ptr<gameWindow> win){
 		for(unsigned int j = 0; j < terrain[i].size(); ++j){
 			terrain[i][j]->MoveTo(TileX(i,j), TileY(i));
 			if(terrain[i][j]->HasColony()){
-				win->AddClickable(terrain[i][j]);
+				win->AddClickable(terrain[i][j].get());
 			} else {
-				win->AddObject(terrain[i][j]);
+				win->AddObject(terrain[i][j].get());
 			}
-			for(auto& occ : terrain[i][j]->Occupants()) win->AddClickable(occ.lock());
+			for(auto& occ : terrain[i][j]->Occupants()) win->AddClickable(occ);
 			/*std::cout << "Tile " << i << ", a " << terrain[i]->TileType() << ", "
 				<< "moved to (" << terrain[i]->X() << "," << terrain[i]->Y() << ")."
 				<< std::endl;*/
@@ -261,7 +259,7 @@ void colony::DrawResources(std::shared_ptr<gameWindow> win){
 				RES_PANEL_X + i*RES_PANEL_WIDTH, RES_PANEL_Y);
 		resourcePanels[i]->AddText(std::to_string(resources[i]),
 				RES_PANEL_WIDTH/2, 2*RES_PANEL_HEIGHT/3);
-		win->AddObject(resourcePanels[i]);
+		win->AddObject(resourcePanels[i].get());
 	}
 }
 
@@ -277,17 +275,17 @@ void colony::DrawColonyMisc(std::shared_ptr<gameWindow> win){
 	int gridTopEdge = 350;
 	buildingGrid = std::make_shared<uiElement>(ren, "buildingGrid", 
 			gridLeftEdge, gridTopEdge);
-	win->AddObject(buildingGrid);
+	win->AddObject(buildingGrid.get());
 
-	for(unsigned int i = 0; i < buildingButtons.size(); ++i){
+	for(unsigned int i = 0; i < 9; ++i){
 		if(i >= buildingTypes.size()) break;
-		buildingButtons[i] = std::make_shared<buildingPrototype>(ren, "building",
-				gridLeftEdge + (2*(i%3) + 1)*BUILDING_GRID_PADDING
-					+ (i%3)*BUILDING_WIDTH,
-				gridTopEdge + (2*(i/3) + 1)*BUILDING_GRID_PADDING
-					+ (i/3)*BUILDING_HEIGHT,
-				buildingTypes[i]);
-		win->AddClickable(buildingButtons[i]);
+		
+		win->AddUI(std::make_unique<buildingPrototype>(ren, "building",
+					gridLeftEdge + (2*(i%3) + 1)*BUILDING_GRID_PADDING
+						+ (i%3)*BUILDING_WIDTH,
+					gridTopEdge + (2*(i/3) + 1)*BUILDING_GRID_PADDING
+						+ (i/3)*BUILDING_HEIGHT,
+					buildingTypes[i]));
 	}
 
 	SDL_Color color;
@@ -295,15 +293,15 @@ void colony::DrawColonyMisc(std::shared_ptr<gameWindow> win){
 	color.g = 0;
 	color.b = 0;
 	color.a = 255;
-	leaveColonyButton = std::make_shared<uiElement>(ren, "leavecolony",
-			SCREEN_WIDTH-200, 100);
+	std::unique_ptr<uiElement> leaveColonyButton = 
+		std::make_unique<uiElement>(ren, "leavecolony", SCREEN_WIDTH-200, 100);
 	leaveColonyButton->EnableButton(LEAVE_COLONY);
-	win->AddClickable(leaveColonyButton);
+	win->AddUI(std::move(leaveColonyButton));
 
-	endTurnButton = std::make_shared<uiElement>(ren, "endturn", 
-			SCREEN_WIDTH-200, 200);
+	std::unique_ptr<uiElement> endTurnButton = 
+		std::make_unique<uiElement>(ren, "endturn", SCREEN_WIDTH-200, 200);
 	endTurnButton->EnableButton(END_TURN);
-	win->AddClickable(endTurnButton);
+	win->AddUI(std::move(endTurnButton));
 }
 
 std::string colony::ResourceName(const resource_t resource){

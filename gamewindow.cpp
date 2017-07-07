@@ -1,7 +1,7 @@
 #include "gamewindow.hpp"
 
 gameWindow::gameWindow(const std::string& title, const int x, const int y,
-		const int w, const int h){
+		const int w, const int h): selected(nullptr) {
 	if((SDL_WasInit(SDL_INIT_EVERYTHING) & SDL_INIT_EVERYTHING) == 0){
 		if(!InitSDL()) return;
 	}
@@ -31,14 +31,22 @@ gameWindow::~gameWindow(){
 	SDL_Cleanup(ren, win);
 }
 
+void gameWindow::Clean(){
+	objects.erase(std::remove_if(objects.begin(), objects.end(),
+				[](const entity* e) { return !e; }),
+			objects.end());
+	clickables.erase(std::remove_if(clickables.begin(), clickables.end(),
+				[](const entity* e) { return !e; }),
+			clickables.end());
+}
+
 void gameWindow::Render(){
 	SDL_RenderClear(ren);
-	/*for(unsigned int i = 0; i < background.size(); ++i) background[i]->Render();
-	for(unsigned int i = 0; i < objects.size(); ++i) objects[i]->Render();
-	for(unsigned int i = 0; i < clickables.size(); ++i) clickables[i]->Render();*/
+	Clean();
 	for(auto& thing : background) thing->Render();
 	for(auto& thing : objects	) thing->Render();
 	for(auto& thing : clickables) thing->Render();
+	for(auto& thing : UI        ) thing->Render();
 	for(auto& thing : topLevelUI) thing->Render();
 	SDL_RenderPresent(ren);
 }
@@ -70,15 +78,15 @@ void gameWindow::QuitSDL(){
 	SDL_Quit();
 }
 
-void gameWindow::AddObject(std::string filename, const int x, const int y){
+/*void gameWindow::AddObject(std::string filename, const int x, const int y){
 	objects.push_back(std::make_shared<entity>(ren, filename, x, y));
-}
+}*/
 
 SDL_Renderer* gameWindow::Renderer() const{
 	return ren;
 }
 
-std::shared_ptr<entity> gameWindow::Object(const int num){
+entity* gameWindow::Object(const int num){
 	if(num > static_cast<long>(objects.size()) || num < 0){
 		std::cout << "Error: tried to access uiElement " << num <<
 			", which does not exist." << std::endl;
@@ -87,7 +95,10 @@ std::shared_ptr<entity> gameWindow::Object(const int num){
 	return objects[num];
 }
 
-std::shared_ptr<entity> gameWindow::ClickedObject(const int x, const int y){
+entity* gameWindow::ClickedObject(const int x, const int y){
+	for(unsigned int i = UI.size()-1; i < UI.size(); --i){
+		if(UI[i]->InsideQ(x, y)) return UI[i].get();
+	}
 	for(unsigned int i = clickables.size()-1; i < clickables.size(); --i){
 		if(clickables[i]->InsideQ(x, y)) return clickables[i];
 	}
@@ -100,7 +111,10 @@ std::shared_ptr<entity> gameWindow::ClickedObject(const int x, const int y){
 	return nullptr;
 }
 
-std::shared_ptr<entity> gameWindow::SelectedObject(const int x, const int y){
+entity* gameWindow::SelectedObject(const int x, const int y){
+	for(unsigned int i = UI.size()-1; i < UI.size(); --i){
+		if(UI[i]->InsideQ(x, y)) return UI[i].get();
+	}
 	for(unsigned int i = clickables.size()-1; i < clickables.size(); --i){
 		if(clickables[i]->InsideQ(x, y)) return clickables[i];
 	}
@@ -131,23 +145,34 @@ void gameWindow::AddToBackground(std::shared_ptr<uiElement> newThing){
 void gameWindow::ResetObjects(){
 	objects.clear();
 	clickables.clear();
+	UI.clear();
 	topLevelUI.clear();
-}
-
-void gameWindow::AddObject(std::shared_ptr<entity> newThing){
-	objects.push_back(newThing);
-}
-
-void gameWindow::AddClickable(std::shared_ptr<entity> newThing){
-	clickables.push_back(newThing);
 }
 
 void gameWindow::AddTopLevelUI(std::shared_ptr<uiAggregate> newThing){
 	topLevelUI.push_back(newThing);
 }
 
-signal_t gameWindow::HandleKeyPress(SDL_Keycode key,
-		std::shared_ptr<entity> selected, std::shared_ptr<map> theMap){
+void gameWindow::AddUI(std::unique_ptr<entity> newThing){
+	UI.push_back(std::move(newThing));
+}
+
+void gameWindow::AddClickable(entity* newThing){
+	clickables.push_back(newThing);
+}
+
+void gameWindow::AddClickable(std::shared_ptr<entity> newThing){
+	std::cerr << "Warning: a shared_ptr is being added to the clickable list. "
+		<< "GameWindow will NOT own it, and you'll probably see a crash "
+		<< "momentarily!" << std::endl;
+	clickables.push_back(newThing.get());
+}
+
+void gameWindow::AddObject(entity* newThing){
+	objects.push_back(newThing);
+}
+
+signal_t gameWindow::HandleKeyPress(SDL_Keycode key, std::shared_ptr<map> theMap){
 	switch(key){
 		case SDLK_c:
 		case SDLK_s:
@@ -169,29 +194,33 @@ signal_t gameWindow::HandleKeyPress(SDL_Keycode key,
 			if(theMap) theMap->MoveView(VIEW_DOWN);
 			break;
 		case SDLK_w:
-			if(selected && std::dynamic_pointer_cast<person>(selected) && theMap)
-				MoveUpLeft(std::dynamic_pointer_cast<person>(selected), theMap);
+			if(selected && selected->IsUnit() && theMap)
+				MoveUpLeft(dynamic_cast<person*>(selected), theMap);
 			break;
 		case SDLK_e:
-			if(selected && std::dynamic_pointer_cast<person>(selected) && theMap)
-				MoveUpRight(std::dynamic_pointer_cast<person>(selected), theMap);
+			if(selected && selected->IsUnit() && theMap)
+				MoveUpRight(dynamic_cast<person*>(selected), theMap);
 			break;
 		case SDLK_a:
-			if(selected && std::dynamic_pointer_cast<person>(selected) && theMap)
-				MoveLeft(std::dynamic_pointer_cast<person>(selected), theMap);
+			if(selected && selected->IsUnit() && theMap)
+				MoveLeft(dynamic_cast<person*>(selected), theMap);
 			break;
 		case SDLK_d:
-			if(selected && std::dynamic_pointer_cast<person>(selected) && theMap)
-				MoveRight(std::dynamic_pointer_cast<person>(selected), theMap);
+			if(selected && selected->IsUnit() && theMap)
+				MoveRight(dynamic_cast<person*>(selected), theMap);
 			break;
 		case SDLK_z:
-			if(selected && std::dynamic_pointer_cast<person>(selected) && theMap)
-				MoveDownLeft(std::dynamic_pointer_cast<person>(selected), theMap);
+			if(selected && selected->IsUnit() && theMap)
+				MoveDownLeft(dynamic_cast<person*>(selected), theMap);
 			break;
 		case SDLK_x:
-			if(selected && std::dynamic_pointer_cast<person>(selected) && theMap)
-				MoveDownRight(std::dynamic_pointer_cast<person>(selected), theMap);
+			if(selected && selected->IsUnit() && theMap)
+				MoveDownRight(dynamic_cast<person*>(selected), theMap);
 			break;
+		case SDLK_h:
+			return SIG_ORDER_HARVEST;
+		case SDLK_p:
+			return SIG_ORDER_PATROL;
 		default:
 			break;
 	}
@@ -210,7 +239,7 @@ signal_t gameWindow::ColonyScreen(std::shared_ptr<colony> col){
 					quit = true;
 					break;
 				case SDL_KEYUP:			
-					switch(HandleKeyPress(e.key.keysym.sym, selected, nullptr)){
+					switch(HandleKeyPress(e.key.keysym.sym, nullptr)){
 						case SCREEN_CHANGE:
 							return SCREEN_CHANGE;
 						case NEXT_TURN:
@@ -233,20 +262,19 @@ signal_t gameWindow::ColonyScreen(std::shared_ptr<colony> col){
 							}
 						}
 					}
-					if(e.button.button == SDL_BUTTON_RIGHT && selected){
-						std::shared_ptr<entity> obj =
+					if(selected && e.button.button == SDL_BUTTON_RIGHT){
+						entity* obj =
 							ClickedObject(e.button.x, e.button.y);
-						if(obj && std::dynamic_pointer_cast<person>(selected) &&
-								std::dynamic_pointer_cast<tile>(obj)){
+						if(obj && selected->IsUnit() && obj->IsTile()){
 							col->AssignWorker(
-									std::dynamic_pointer_cast<person>(selected),
-									std::dynamic_pointer_cast<tile>(obj));
+									dynamic_cast<person*>(selected),
+									dynamic_cast<tile*>(obj));
 						}
-						if(obj && std::dynamic_pointer_cast<buildingPrototype>(selected)
-								&& std::dynamic_pointer_cast<tile>(obj)){
+						if(obj && selected->IsBuildingPrototype() 
+								&& obj->IsTile()){
 							col->EnqueueBuilding(
-									std::dynamic_pointer_cast<buildingPrototype>(selected)->Type(),
-									std::dynamic_pointer_cast<tile>(obj));
+									dynamic_cast<buildingPrototype*>(selected)->Type(),
+									dynamic_cast<tile*>(obj));
 						}
 					}
 					break;
@@ -266,28 +294,43 @@ signal_t gameWindow::MapScreen(std::shared_ptr<map> theMap, int centerRow,
 	SDL_Event e;
 	bool quit = false;
 	while(!quit){
+		if(selected && selected->IsUnit() && dynamic_cast<person*>(selected)->Dead()){
+			selected = nullptr;
+		}
 		while(SDL_PollEvent(&e)){
-			if(std::dynamic_pointer_cast<person>(selected) && 
-					std::dynamic_pointer_cast<person>(selected)->Dead()){
-				selected.reset();
-			}
 			switch(e.type){
-				case SDL_QUIT:
+				case SDL_QUIT:{
 					quit = true;
 					break;
-				case SDL_KEYUP:
-					switch(HandleKeyPress(e.key.keysym.sym, selected, theMap)){
-						case SCREEN_CHANGE:
+							  }
+				case SDL_KEYUP:{
+					signal_t keySig = HandleKeyPress(e.key.keysym.sym, theMap);
+					switch(keySig/100){
+						case SCREEN_CHANGE/100:
 							return SCREEN_CHANGE;
-						case NEXT_TURN:
+						case NEXT_TURN/100:
 							return NEXT_TURN;
-						case QUIT:
+						case QUIT/100:
 							quit = true;
+							break;
+						case SIG_GIVE_ORDER/100:
+							if(selected && selected->IsUnit()){
+								switch(keySig%100){
+									case ORDER_PATROL:
+										dynamic_cast<person*>(selected)->OrderPatrol();
+										break;
+									case ORDER_HARVEST:
+										dynamic_cast<person*>(selected)->OrderHarvest();
+										break;
+								}
+							}
 							break;
 						default:
 							break;
 					}
-				case SDL_MOUSEBUTTONDOWN:
+					break;
+							   }
+				case SDL_MOUSEBUTTONDOWN:{
 					if(e.button.button == SDL_BUTTON_LEFT){
 						if(selected){
 							selected->Deselect();
@@ -297,31 +340,35 @@ signal_t gameWindow::MapScreen(std::shared_ptr<map> theMap, int centerRow,
 						if(selected){
 							switch(selected->Select()/100){
 								case NEXT_TURN/100:
+									selected = nullptr;
 									return NEXT_TURN;
 								case SCREEN_CHANGE/100:
+									selected = nullptr;
 									return SCREEN_CHANGE;
 								default:
 									break;
 							}
-							MakeUnitInfoPanel(selected);
+							if(selected->IsUnit()){
+								MakeUnitInfoPanel(dynamic_cast<person*>(selected));
+							}
 						}
 					}
-					if(e.button.button == SDL_BUTTON_RIGHT && selected){
-						std::shared_ptr<entity> obj =
+					if(selected && e.button.button == SDL_BUTTON_RIGHT){
+						entity* obj =
 							ClickedObject(e.button.x, e.button.y);
-						if(obj && std::dynamic_pointer_cast<person>(selected) &&
-								std::dynamic_pointer_cast<tile>(obj)){
+						tile* clickedTile = dynamic_cast<tile*>(obj);
+						if(selected->IsUnit() && clickedTile){
 							/*std::cout << "This character will now attempt to "
 								"construct a path to that tile." << std::endl;*/
-							std::dynamic_pointer_cast<person>(selected)->SetPath(theMap->PathTo(
-									std::dynamic_pointer_cast<person>(selected)->Row(),
-									std::dynamic_pointer_cast<person>(selected)->Colm(),
-									std::dynamic_pointer_cast<tile>(obj)->Row(),
-									std::dynamic_pointer_cast<tile>(obj)->Colm(),
-									std::dynamic_pointer_cast<person>(selected)->MoveCosts()));
+							person* selectedUnit = dynamic_cast<person*>(selected);
+							selectedUnit->OrderMove(theMap->PathTo(
+									selectedUnit->Row(), selectedUnit->Colm(),
+									clickedTile->Row(), clickedTile->Colm(),
+									selectedUnit->MoveCosts()));
 						}
 					}
 					break;
+										 }
 			}
 		}
 		Render();
@@ -339,10 +386,10 @@ void gameWindow::MapScreenCenteredOn(std::shared_ptr<map> theMap, const int cent
 	ResetObjects();
 	AddMapTiles(theMap, centerRow, centerColm);
 
-	std::shared_ptr<uiElement> endTurnButton = std::make_shared<uiElement>(ren,
+	std::unique_ptr<uiElement> endTurnButton = std::make_unique<uiElement>(ren,
 			"endturn", SCREEN_WIDTH-200, 200);
 	endTurnButton->EnableButton(END_TURN);
-	AddClickable(endTurnButton);
+	AddUI(std::move(endTurnButton));
 }
 
 void gameWindow::AddMapTiles(std::shared_ptr<map> theMap, const int centerRow, 
@@ -363,29 +410,29 @@ void gameWindow::AddMapTiles(std::shared_ptr<map> theMap, const int centerRow,
 					<< "," << theMap->Terrain(i,j)->Y() << ")." << std::endl;*/
 			}
 			if(theMap->Terrain(i,j)->HasColony()){
-				AddClickable(theMap->Terrain(i,j));
+				AddClickable(theMap->Terrain(i,j).get());
 			} else {
-				AddObject(theMap->Terrain(i,j));
+				AddObject(theMap->Terrain(i,j).get());
 			}
 			for(auto& occ : theMap->Terrain(i,j)->Occupants()){
-				AddClickable(occ.lock());
+				AddClickable(occ);
 			}
 		}
 	}
 }
 
-void gameWindow::MakeUnitInfoPanel(const std::shared_ptr<entity> source){
-	if(!std::dynamic_pointer_cast<person>(source)) return;
+void gameWindow::MakeUnitInfoPanel(const entity* source){
+	if(!source->IsUnit()) return;
 	AddTopLevelUI(std::make_shared<unitInfoPanel>(ren, 
-				std::dynamic_pointer_cast<person>(source)));
+				dynamic_cast<const person*>(source)));
 }
 
-void gameWindow::UpdateUnitInfoPanel(const std::shared_ptr<entity> source){
-	if(!std::dynamic_pointer_cast<person>(source)) return;
+void gameWindow::UpdateUnitInfoPanel(const entity* source){
+	if(!source->IsUnit()) return;
 	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
 		if(std::dynamic_pointer_cast<unitInfoPanel>(topLevelUI[i])){
 			std::dynamic_pointer_cast<unitInfoPanel>(topLevelUI[i])->UpdateHealth(
-					std::dynamic_pointer_cast<person>(source));
+					dynamic_cast<const person*>(source));
 		}
 	}
 }
@@ -398,70 +445,32 @@ void gameWindow::RemoveUnitInfoPanel(){
 	}
 }
 
-bool gameWindow::MoveOnMap(std::shared_ptr<person> mover, std::shared_ptr<map> theMap,
-		const int newRow, const int newColm){
-	if(!mover){
-		std::cerr << "Error: attempted to move a person on the map but the "
-			<< "person was a nullptr." << std::endl;
-		return false;
-	}
-	tile* startLoc = theMap->Terrain(mover->Row(), mover->Colm()).get();
-	tile* newLoc = theMap->Terrain(newRow, newColm).get();
-	if(!newLoc){
-		std::cerr << "Error: attempted to move a person to an invalid tile."
-			<< std::endl;
-		return false;
-	}
-	if(mover->MovesLeft() < 1){
-		std::cout << "This unit has used all of its moves." << std::endl;
-		return false;
-	}
-	if(newLoc->Occupants().size() == 0 || mover->Faction() == newLoc->Owner()){
-		MoveUnitToTile(mover, startLoc, newLoc);
-	} else if(mover->CanAttack()) {
-		person::Fight(mover, newLoc->Defender());
-		UpdateUnitInfoPanel(mover);
-		if(newLoc->Occupants().size() == 0) MoveUnitToTile(mover, startLoc, newLoc);
-	}
-	return true;
+void gameWindow::MoveUpLeft(person* mover, std::shared_ptr<map> theMap){
+	theMap->MoveUnitTo(mover, mover->Row()-1, mover->Colm()-1);
+	UpdateUnitInfoPanel(mover);
 }
 
-// null origin = place unit on tile, it wasn't anywhere before
-// null destination = remove unit from tile, it's not going to a place
-bool gameWindow::MoveUnitToTile(std::shared_ptr<person> mover, tile* origin, tile* destination){
-	if(destination && !destination->AddOccupant(mover)){
-		std::cout << "That tile is already fully occupied." << std::endl;
-		return false;
-	}
-	if(origin) origin->RemoveOccupant(mover);
-	if(destination){
-		mover->MoveSpriteToTile(destination->X(), destination->Y(),
-				destination->W(), destination->H());
-		mover->SetLocation(destination->Row(), destination->Colm(), origin!=nullptr);
-	}
-	return true;
+void gameWindow::MoveUpRight(person* mover, std::shared_ptr<map> theMap){
+	theMap->MoveUnitTo(mover, mover->Row()-1, mover->Colm()+1);
+	UpdateUnitInfoPanel(mover);
 }
 
-void gameWindow::MoveUpLeft(std::shared_ptr<person> mover, std::shared_ptr<map> theMap){
-	MoveOnMap(mover, theMap, mover->Row()-1, mover->Colm()-1);
+void gameWindow::MoveLeft(person* mover, std::shared_ptr<map> theMap){
+	theMap->MoveUnitTo(mover, mover->Row(), mover->Colm()-2);
+	UpdateUnitInfoPanel(mover);
 }
 
-void gameWindow::MoveUpRight(std::shared_ptr<person> mover, std::shared_ptr<map> theMap){
-	MoveOnMap(mover, theMap, mover->Row()-1, mover->Colm()+1);
+void gameWindow::MoveRight(person* mover, std::shared_ptr<map> theMap){
+	theMap->MoveUnitTo(mover, mover->Row(), mover->Colm()+2);
+	UpdateUnitInfoPanel(mover);
 }
 
-void gameWindow::MoveLeft(std::shared_ptr<person> mover, std::shared_ptr<map> theMap){
-	MoveOnMap(mover, theMap, mover->Row(), mover->Colm()-2);
+void gameWindow::MoveDownLeft(person* mover, std::shared_ptr<map> theMap){
+	theMap->MoveUnitTo(mover, mover->Row()+1, mover->Colm()-1);
+	UpdateUnitInfoPanel(mover);
 }
 
-void gameWindow::MoveRight(std::shared_ptr<person> mover, std::shared_ptr<map> theMap){
-	MoveOnMap(mover, theMap, mover->Row(), mover->Colm()+2);
-}
-
-void gameWindow::MoveDownLeft(std::shared_ptr<person> mover, std::shared_ptr<map> theMap){
-	MoveOnMap(mover, theMap, mover->Row()+1, mover->Colm()-1);
-}
-
-void gameWindow::MoveDownRight(std::shared_ptr<person> mover, std::shared_ptr<map> theMap){
-	MoveOnMap(mover, theMap, mover->Row()+1, mover->Colm()+1);
+void gameWindow::MoveDownRight(person* mover, std::shared_ptr<map> theMap){
+	theMap->MoveUnitTo(mover, mover->Row()+1, mover->Colm()+1);
+	UpdateUnitInfoPanel(mover);
 }

@@ -90,8 +90,23 @@ void path::PathSpriteFromTo(SDL_Rect& layout, const int startX,
 	}*/
 }
 
+std::array<unsigned int, 2> path::NextStep() const{
+	if(steps.size() == 0){
+		std::cerr << "Error: attempted to fetch the next step of a path which "
+			<< "does not contain any steps." << std::endl;
+		return std::array<unsigned int, 2>({{-1u,-1u}});
+	}
+	if(steps.size() == 1){
+		std::cerr << "Error: attempted to fetch the next step of a path which "
+			<< "should have been deleted due to containing exactly one step."
+			<< std::endl;
+		return std::array<unsigned int, 2>({{-1u,-1u}});
+	}
+	return steps[1];
+}
+
 bool path::Advance(){
 	steps.erase(steps.begin());
 	sprites.erase(sprites.begin());
-	return steps.size() == 0;
+	return steps.size() == 1;
 }

@@ -107,20 +107,20 @@ void uiElement::MoveTo(SDL_Rect newLayout){
 	MoveTo(newLayout.x, newLayout.y);
 }
 
-unitInfoPanel::unitInfoPanel(SDL_Renderer* ren, std::shared_ptr<person> unit){
+unitInfoPanel::unitInfoPanel(SDL_Renderer* ren, const person* unit){
 	int panelX = SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH;
 	int panelY = SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT;
-	background = std::make_shared<uiElement>(ren,
+	background = std::make_unique<uiElement>(ren,
 			"unit_info_panel",
 			panelX, panelY);
-	portrait = std::make_shared<uiElement>(ren,
+	portrait = std::make_unique<uiElement>(ren,
 			unit->Spec()->Name() + "_portrait",
 			panelX + PORTRAIT_X, panelY + PORTRAIT_Y);
-	factionIcon = std::make_shared<uiElement>(ren,
+	factionIcon = std::make_unique<uiElement>(ren,
 			"factioncolor_p" + std::to_string(unit->Faction()),
 			panelX + FACTIONCOLOR_X, panelY + FACTIONCOLOR_Y);
 	factionIcon->AddText(unit->Name(), UNIT_NAME_X, UNIT_NAME_Y);
-	healthIcon = std::make_shared<uiElement>(ren,
+	healthIcon = std::make_unique<uiElement>(ren,
 			"healthicon_" + unit->Species(),
 			panelX + HEALTHICON_X, panelY + HEALTHICON_Y);
 	healthIcon->AddText(
@@ -129,7 +129,7 @@ unitInfoPanel::unitInfoPanel(SDL_Renderer* ren, std::shared_ptr<person> unit){
 	if(unit->Spec()->Attack(0)){
 		std::string attackName = unit->Spec()->Attack(0)->Name();
 		std::replace(attackName.begin(), attackName.end(), ' ', '_');
-		attackIcon = std::make_shared<uiElement>(ren,
+		attackIcon = std::make_unique<uiElement>(ren,
 				attackName + "_icon",
 				panelX + WEAPONICON_X, panelY + WEAPONICON_Y);
 		attackIcon->AddText(std::to_string(
@@ -139,7 +139,7 @@ unitInfoPanel::unitInfoPanel(SDL_Renderer* ren, std::shared_ptr<person> unit){
 				+ unit->DamageType(),
 				UNIT_ATTACK_X, UNIT_ATTACK_Y);
 	} else {
-		attackIcon = std::make_shared<uiElement>(ren,
+		attackIcon = std::make_unique<uiElement>(ren,
 				"null_attack_icon",
 				panelX + WEAPONICON_X, panelY + WEAPONICON_Y);
 		attackIcon->AddText("Unarmed", UNIT_ATTACK_X, UNIT_ATTACK_Y);
@@ -155,7 +155,7 @@ void unitInfoPanel::Render(){
 	attackIcon->Render();
 }
 
-void unitInfoPanel::UpdateHealth(const std::shared_ptr<person> unit){
+void unitInfoPanel::UpdateHealth(const person* unit){
 	healthIcon->SetText(
 			std::to_string(unit->Health()) + "/" + std::to_string(unit->MaxHealth()));
 }

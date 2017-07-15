@@ -11,7 +11,7 @@ std::string person::GenerateSurname(){
 person::person(SDL_Renderer* ren, 
 		const std::shared_ptr<unitType> spec, const char faction): 
 		entity(ren, spec->Name(), 0, 0, true),
-		spec(spec), faction(faction), location({{-1,-1}}) {
+		spec(spec), faction(faction), location({{-1u,-1u}}) {
 	givenName = GenerateGivenName();
 	surname = GenerateSurname();
 	srand(time(NULL));
@@ -21,6 +21,8 @@ person::person(SDL_Renderer* ren,
 
 	healthBackground = gfxManager::RequestSprite("healthbar_background");
 	healthBar = gfxManager::RequestSprite("healthbar_p" + std::to_string(faction));
+
+	SetOrders(ORDER_PATROL);
 }
 
 void person::ChangeName(const std::string givenName, const std::string surname){
@@ -181,15 +183,16 @@ int person::MovesLeft()	const{
 	return movesLeft;
 }
 
-void person::SetLocation(const int row, const int colm, const bool usesMove){
-	std::cout << "Setting location of " << Name() << " to (" << row << ","
-		<< colm << ")." << std::endl;
+void person::SetLocation(const unsigned int row, const unsigned int colm, 
+		const bool usesMove){
+	/*std::cout << "Setting location of " << Name() << " to (" << row << ","
+		<< colm << ")." << std::endl;*/
 	location[0] = row;
 	location[1] = colm;
 	if(usesMove) movesLeft--;
 }
 
-std::array<int, 2> person::Location() const{
+std::array<unsigned int, 2> person::Location() const{
 	return location;
 }
 
@@ -208,6 +211,16 @@ std::array<unsigned int, 2> person::NextStep(){
 		return std::array<unsigned int, 2>({{-1u, -1u}});
 	}
 	return myPath->NextStep();
+}
+
+bool person::AdvancePath(){
+	if(!myPath) return true;
+	bool arrived(myPath->Advance());
+	if(arrived){
+		SetOrders(ORDER_PATROL);
+		myPath.reset();
+	}
+	return arrived;
 }
 
 void person::SetOrders(const order_t newOrders){
@@ -266,7 +279,7 @@ std::string person::DamageType(const unsigned int num) const{
 	return 0;
 }
 
-// return true if target survived
+// return true if target was killed
 bool person::Attack(person* target) const{
 	std::random_device dev;
 	std::mt19937 gen(dev());

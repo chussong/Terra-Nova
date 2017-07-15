@@ -38,6 +38,8 @@ void game::Begin(){
 			terraNova->Terrain(aurora->Row(), aurora->Column()+4),
 			unitTypes[1], 2);*/
 
+	StartTurn();
+
 	bool quit = false;
 	screentype_t nextScreen = COLONY_SCREEN;
 	while(!quit){
@@ -601,7 +603,7 @@ std::shared_ptr<person> game::CreatePerson(map* theMap, const int row,
 	std::shared_ptr<person> newPerson(std::make_shared<person>(Window()->Renderer(),
 				spec, faction));
 	people.push_back(newPerson);
-	theMap->AddRoamer(newPerson.get(), row, colm);
+	theMap->AddRoamer(newPerson, row, colm);
 	return newPerson;
 }
 
@@ -630,12 +632,25 @@ std::shared_ptr<map> game::CreateMap(){
 }
 
 void game::NextTurn(){
+	EndTurn();
 	std::cout << "A new turn dawns..." << std::endl;
-	for(auto& m : maps) m->ProcessTurn();
+	StartTurn();
+}
+
+void game::StartTurn(){
+	for(auto& m : maps) m->StartTurn();
 	for(unsigned int i = 0; i < colonies.size(); ++i) colonies[i]->ProcessTurn();
-	for(auto& u : people) u->ProcessTurn();
-	// we should not have the people process their own turns here, because there
-	// is a nontrivial interaction between different move orders. Instead, we
-	// should have the map analyze who needs to fight and tell them to move if
-	// they're successful.
+	for(auto& u : people) u->ProcessTurn(); // does this actually do anything?
+	ClearDeadPeople(); // after everyone else has cleared their pointers
+}
+
+void game::EndTurn(){
+	for(auto& m : maps) m->EndTurn();
+}
+
+void game::ClearDeadPeople(){
+	people.erase(
+			std::remove_if(people.begin(), people.end(),
+				[](std::shared_ptr<person>& p){return p->Dead();}),
+			people.end());
 }

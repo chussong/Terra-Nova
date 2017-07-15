@@ -34,13 +34,18 @@ void map::DrawTiles(const int centerColm, const int centerRow,
 }
 */
 
-void map::Clean(){
+void map::StartTurn(){
 	CleanExpired(colonies);
-	roamers.erase(std::remove_if(roamers.begin(), roamers.end(),
-				[](const person* p) { return !p || p->Dead(); }),
-			roamers.end());
+	roamers = CheckAndLock(weakRoamers);
+	ForAllTiles(&tile::StartTurn);
+
+	ProcessMovement();
 }
 
+void map::EndTurn(){
+	roamers.clear();
+	ForAllTiles(&tile::EndTurn);
+}
 
 void map::InitTerrain(std::vector<std::shared_ptr<tileType>> types){
 	for(unsigned int row = 0; row < terrain.size(); ++row){
@@ -184,18 +189,191 @@ std::vector<std::array<unsigned int, 2>> map::BuildPathVector(
 
 // end of path construction
 
-void map::ProcessTurn(){
-	//std::cout << "Processing turns for (" << roamers.size() << "/";
+// movement execution
+
+// method 2:
+void map::ProcessMovement(){
+	std::vector<MoveData> moverData = FindMoverData(roamers);
+
+	// 1: Identify anyone who wants to move into a space where no one else
+	//    (a) already is, or (b) also wants to move. Move them and mark 'done'.
+	// 2: Identify anyone who wants to move into a space with a stationary unit.
+	//    If ally, bounce, if enemy, fight.
+	// 3: Identify anyone who wants to move into a space that someone else wants
+	//    to move into. If ally, determine winner randomly, bounce other; if 
+	//    enemy, fight.
+	// 4: Repeat 1-3 in order until nothing changes.
+	bool somethingChanged;
+	do{
+		somethingChanged = false;
+		somethingChanged = somethingChanged || UncontestedMoves(moverData);
+		somethingChanged = somethingChanged || AssaultMoves(moverData);
+		somethingChanged = somethingChanged || ClashMoves(moverData);
+	}while(somethingChanged);
+
+	// 5: Identify anyone who wants to move into a space occupied by someone who
+	//    also wants to move. At this point, (I think) IF AND ONLY IF THERE IS A
+	//    CYCLE, they succeed.
+
+	// I'm leaving this unimplemented for now which should make it move obvious
+	// that the system isn't done yet
+
+	for(auto& md : moverData){
+		if(md.status != MS_FINISHED){
+			std::cerr << "Error: movement of " << roamers[md.id]->Name() << " ("
+				<< md.id << "), located at (" << roamers[md.id]->Row() << ","
+				<< roamers[md.id]->Colm() << "), could not be resolved." 
+				<< std::endl;
+			md.status = MS_FINISHED;
+		}
+	}
+}
+
+bool map::UncontestedMoves(std::vector<MoveData>& moverData){
+	bool somethingChanged = false;
+	for(auto& md1 : moverData){
+		if(md1.status != MS_UNCHECKED) continue;
+		person* defender = Terrain(md1.destination)->Defender();
+		if(!defender){
+			// no defender, can move unless someone else also wants to
+			for(auto& md2 : moverData){
+				if(md2.destination == md1.destination && md2.id != md1.id){
+					if(roamers[md1.id]->Faction() == roamers[md2.id]->Faction()){
+						md1.status = MS_FRIENDCLASH;
+						if(md2.status == MS_UNCHECKED) md2.status = MS_FRIENDCLASH;
+					} else {
+						md1.status = MS_FOECLASH;
+						md2.status = MS_FOECLASH;
+					}
+					break;
+				}
+			}
+			if(md1.status == MS_UNCHECKED){
+				MoveUnitTo(roamers[md1.id], md1.destination);
+				roamers[md1.id]->AdvancePath();
+				md1.status = MS_FINISHED;
+				somethingChanged = true;
+			}
+		} else {
+			// if defender isn't moving, bounce if friendly, assault if enemy.
+			// This could be ill-advised: if ally is being attacked, we want to
+			// interpret this bounce as a support in the impending combat.
+			if(!defender->Path()){
+				if(roamers[md1.id]->Faction() == defender->Faction()){
+					md1.status = MS_BOUNCE;
+				} else {
+					md1.status = MS_ASSAULT;
+				}
+			} else {
+				md1.status = MS_TARGETMOVING;
+			}
+		}
+	}
+	return somethingChanged;
+}
+
+bool map::AssaultMoves(std::vector<MoveData>& moverData){
+	bool somethingChanged = false;
+	for(auto& md : moverData){
+		if(md.status == MS_ASSAULT){
+			// this should actually allow multiple participants in the fight
+			person* defender = Terrain(md.destination)->Defender();
+			if(defender) person::Fight(roamers[md.id], defender);
+			if(defender->Dead() && !roamers[md.id]->Dead()){
+				MoveUnitTo(roamers[md.id], md.destination);
+				roamers[md.id]->AdvancePath();
+			}
+			md.status = MS_FINISHED;
+			somethingChanged = true;
+		}
+	}
+	return somethingChanged;
+}
+
+bool map::ClashMoves(std::vector<MoveData>& moverData){
+	bool somethingChanged = false;
+	for(auto& md : moverData){
+		if(md.status == MS_FRIENDCLASH){
+			std::vector<MoveData*> clashers;
+			for(auto& md2 : moverData){
+				if(md2.status == MS_FRIENDCLASH
+						&& md2.destination == md.destination){
+					clashers.push_back(&md2);
+				}
+			}
+			std::random_device rd;
+			std::mt19937 rng(rd());
+			std::uniform_int_distribution<int> rando(0, clashers.size());
+			int win = rando(rng);
+			MoveUnitTo(roamers[clashers[win]->id], clashers[win]->destination);
+			roamers[clashers[win]->id]->AdvancePath();
+			for(auto& cl : clashers) cl->status = MS_FINISHED;
+			somethingChanged = true;
+			continue;
+		}
+		if(md.status == MS_FOECLASH){
+			// this should allow for multiple clashers who want to fight
+			MoveData* foe;
+			for(auto& md2 : moverData){
+				if(md2.status == MS_FOECLASH 
+						&& md2.destination == md.destination && md2.id != md.id){
+					foe = &md2;
+					break;
+				}
+			}
+			if(!foe){
+				std::cerr << "Error: roamer with ID " << md.id << " thought it "
+					<< "had a foe clash but its opponent could not be found."
+					<< std::endl;
+				md.status = MS_FINISHED;
+				somethingChanged = true;
+				continue;
+			}
+			person::Fight(roamers[md.id], roamers[foe->id]);
+			if(roamers[foe->id]->Dead() && !roamers[md.id]->Dead()){
+				MoveUnitTo(roamers[md.id], md.destination);
+				roamers[md.id]->AdvancePath();
+			}
+			if(roamers[md.id]->Dead() && !roamers[foe->id]->Dead()){
+				MoveUnitTo(roamers[foe->id], foe->destination);
+				roamers[foe->id]->AdvancePath();
+			}
+			md.status = MS_FINISHED;
+			foe->status = MS_FINISHED;
+			somethingChanged = true;
+			continue;
+		}
+	}
+	return somethingChanged;
+}
+
+/*void map::ProcessMovement(){
 	Clean();
-	//std::cout << roamers.size() << ") tracked roamers." << std::endl;
+	// We actually need to find everyone who wants to advance and everyone
+	// who wants to patrol, check for conflicts, do fights, THEN move them.
+	// Outline:
+	// 1: find all the tiles anyone wants to move into
+	// 2: find any pairs advancing at each other and give them ORDER_CLASH
+	// 3: any unit in one of the target tiles gets orders = ORDER_DEFEND
+	//    unless it already has ORDER_CLASH or ORDER_HARVEST
+	// 4: Do fights: attacker and defender, plus check each tile adjacent to
+	//    each for OPPOSING patrollers, adding them to the fight, even if the
+	//    defender did not get ORDER_DEFEND. For a clash, any patrollers must
+	//    be adjacent to BOTH attacker and defender; additional units advancing
+	//    into the target space can also join, whichever side they're on. Thus,
+	//    a defender can use ORDER_PATROL to weakly defend each adjacent tile,
+	//    or ORDER_ADVANCE into a friendly tile to defend it strongly.
+	// 5: With fights concluded, move everyone with ORDER_ADVANCE and 
+	//    ORDER_CLASH as necessary. Ones which did not participate in a fight
+	//    can be fired upon by patrollers adjacent to their initial space.
+	std::vector<MoveData> moverData = FindMoverData(roamers);
+	MoverConflicts conflicts = FindConflicts(moverData);
 	for(auto& r : roamers){
-		// We actually need to find everyone who wants to advance and everyone
-		// who wants to patrol, check for conflicts, do fights, THEN move them.
 		if(r->Orders() == ORDER_ADVANCE){
 			if(!r->Path()){
 				std::cerr << "Error: a unit (" << r->Name() << ") attempted to "
 					<< "move as ordered but did not have a path." << std::endl;
-				return;
+				continue;
 			}
 			std::array<unsigned int, 2> nextStep = r->NextStep();
 			std::cout << "Move " << r->Name() << " to (" << nextStep[0] << "," 
@@ -204,7 +382,37 @@ void map::ProcessTurn(){
 			if(r->Path()->Advance()) r->OrderPatrol();
 		}
 	}
+}*/
+
+std::vector<map::MoveData> map::FindMoverData(const std::vector<person*>& roamers){
+	std::vector<MoveData> ret;
+	for(auto i = 0u; i < roamers.size(); ++i){
+		if(roamers[i]->Orders() == ORDER_ADVANCE){
+			MoveData newMoveData;
+			newMoveData.id = i;
+			newMoveData.origin = roamers[i]->Location();
+			newMoveData.destination = roamers[i]->NextStep();
+			newMoveData.status = MS_UNCHECKED;
+			ret.push_back(newMoveData);
+		}
+	}
+	return ret;
 }
+
+/*MoverConflicts map::FindConflicts(const std::vector<MoveData>& moverData){
+	MoverConflicts ret;
+	std::vector<std::array<int,2>> preliminaryConflicts;
+	// check for everyone who might be bumping into each other
+	for(auto& md1 : moverData){
+		for(auto& md2 : moverData){
+			if(md1.destination == md2.origin){
+				preliminaryConflicts.emplace_back(md1.id, md2.id);
+			}
+		}
+	}
+}*/
+
+// end of movement execution
 
 void map::AddColony(const std::shared_ptr<colony> col, int row, int colm){
 	colonies.emplace_back(col);
@@ -223,7 +431,7 @@ const std::shared_ptr<colony> map::Colony(const int num) const{
 	return colonies[num].lock();
 }
 
-void map::AddRoamer(person* newRoamer, const int row, const int colm){
+void map::AddRoamer(std::shared_ptr<person> newRoamer, const int row, const int colm){
 	if(!newRoamer){
 		std::cerr << "Error: told to add a roamer to a map, but it was a "
 			<< "nullptr." << std::endl;
@@ -235,12 +443,18 @@ void map::AddRoamer(person* newRoamer, const int row, const int colm){
 			<< std::endl;
 		return;
 	}
-	roamers.push_back(newRoamer);
-	MoveUnitTo(newRoamer, row, colm);
+	MoveUnitTo(newRoamer.get(), row, colm);
+	weakRoamers.push_back(newRoamer);
 }
 
 std::shared_ptr<tile> map::Terrain(const int row, const int column) const{
-	if(OutOfBounds(row, column)) return nullptr;
+	if(OutOfBounds(row, column)){
+		if(row != -1 || column != -1){
+			std::cout << "Warning: someone requested the out-of-bounds tile at "
+				"(" << row << "," << column << ")." << std::endl;
+		}
+		return nullptr;
+	}
 	if((row + column)%2 != 0){
 		std::cerr << "Error: someone is trying to access the non-existent "
 			<< "tile at row " << row << ", column " << column << "." << std::endl;
@@ -252,6 +466,10 @@ std::shared_ptr<tile> map::Terrain(const int row, const int column) const{
 			<< std::endl;
 	}
 	return terrain[row][column];
+}
+
+std::shared_ptr<tile> map::Terrain(const std::array<unsigned int,2> coords) const{
+	return Terrain(coords[0], coords[1]);
 }
 
 std::vector<std::vector<std::shared_ptr<tile>>> map::SurroundingTerrain(
@@ -366,15 +584,15 @@ bool map::MoveUnitTo(person* mover, const int row, const int colm){
 		return false;
 	}*/
 
-	// if there's an enemy there, fight it
-	if(destination->Occupants().size() != 0 
+	// if there's an enemy there, fight it (DEPRECATED)
+	/*if(destination->Occupants().size() != 0 
 			&& mover->Faction() != destination->Owner()){
 		person::Fight(mover, destination->Defender());
 		if(destination->Occupants().size() > 0) return true; //enemy lived=>stay
-	}
+	}*/
 	
 	// do the actual moving
-	if(!destination->AddOccupant(mover)){
+	if(!destination->AddOccupant(mover->shared_from_base<person>())){
 		std::cout << "That tile is already fully occupied." << std::endl;
 		return false;
 	}
@@ -383,6 +601,10 @@ bool map::MoveUnitTo(person* mover, const int row, const int colm){
 			destination->W(), destination->H());
 	mover->SetLocation(destination->Row(), destination->Colm(), origin!=nullptr);
 	return true;
+}
+
+bool map::MoveUnitTo(person* mover, const std::array<unsigned int,2>& coords){
+	return MoveUnitTo(mover, coords[0], coords[1]);
 }
 
 std::string map::TerrainName(const unsigned int row, const unsigned int col){

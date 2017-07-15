@@ -20,6 +20,18 @@ void tile::Render() const{
 	}
 }
 
+void tile::StartTurn(){
+	occupants = CheckAndLock(weakOccupants);
+	/*if(occupants.size() > 0){
+		std::cout << "The tile at (" << row << "," << colm << ") has "
+			<< occupants.size() << " occupants." << std::endl;
+	}*/
+}
+
+void tile::EndTurn(){
+	occupants.clear();
+}
+
 void tile::MoveTo(int x, int y){
 	//std::cout << "A tile has been moved to (" << x << "," << y << ")." << std::endl;
 	entity::MoveTo(x,y);
@@ -141,17 +153,17 @@ void tile::RemoveBuilding(){
 	bldg.reset();
 }
 
-bool tile::AddOccupant(person* newOccupant){
+bool tile::AddOccupant(std::shared_ptr<person> newOccupant){
 	if(!newOccupant){
 		std::cerr << "Error: attempted to add a blank occupant to a tile."
 			<< std::endl;
 		return false;
 	}
-	if((bldg && bldg->MaxOccupants() <= occupants.size()) ||
-			(!bldg && occupants.size() > 0)) return false;
+	if((bldg && bldg->MaxOccupants() <= NumberOfOccupants()) ||
+			(!bldg && NumberOfOccupants() > 0)) return false;
 
 	for(auto& oldOccupant : occupants){
-		if(oldOccupant == newOccupant){
+		if(oldOccupant == newOccupant.get()){
 			std::cerr << "Error: attempted to add an occupant to a tile who was"
 				<< " already occupying it." << std::endl;
 			return false;
@@ -166,13 +178,16 @@ bool tile::AddOccupant(person* newOccupant){
 			bldg->StartTraining(bldg->CanTrain()[0]);
 		}
 	}
-	occupants.push_back(newOccupant);
+	weakOccupants.push_back(newOccupant);
+	occupants.push_back(newOccupant.get());
 	/*newOccupant->MoveTo(MAPDISP_ORIGIN_X + layout.x + (TILE_WIDTH - PERSON_WIDTH)/2,
 			MAPDISP_ORIGIN_Y + layout.y + (4*TILE_HEIGHT/3 - PERSON_HEIGHT)/2);*/
 	return true;
 }
 
 bool tile::RemoveOccupant(person* removeThis){
+	/*std::cout << "Removing an occupant from the tile at (" << row << "," << colm
+		<< "), which has " << occupants.size() << " occupants." << std::endl;*/
 	if(!removeThis){
 		std::cerr << "Error: attempted to remove a blank occupant from a tile."
 			<< std::endl;
@@ -182,6 +197,7 @@ bool tile::RemoveOccupant(person* removeThis){
 	for(unsigned int i = occupants.size()-1; i <= occupants.size(); --i){
 		if(occupants[i] == removeThis){
 			occupants.erase(occupants.begin()+i);
+			weakOccupants.erase(weakOccupants.begin()+i);
 			if(bldg && occupants.empty()) bldg->FinishTraining();
 			return true;
 		}
@@ -196,14 +212,20 @@ std::vector<person*> tile::Occupants() const{
 	return occupants;
 }
 
+unsigned int tile::NumberOfOccupants() const{
+	unsigned int ret = 0u;
+	for(auto& occ : occupants) if(!occ->Dead()) ++ret;
+	return ret;
+}
+
 // eventually we want this to return the strongest occupant, not the first one
 person* tile::Defender() const{
-	if(Occupants().size() == 0) return nullptr;
+	if(NumberOfOccupants() == 0) return nullptr;
 	return Occupants()[0];
 }
 
 char tile::Owner() const{
-	if(occupants.size() == 0) return 0;
+	if(NumberOfOccupants() == 0) return 0;
 	return Occupants()[0]->Faction();
 }
 

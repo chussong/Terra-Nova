@@ -7,11 +7,6 @@
 class gfxObject;
 class entity : public std::enable_shared_from_this<entity> {
 	protected:
-		template <typename Derived>
-		std::shared_ptr<Derived> shared_from_base(){
-			return std::static_pointer_cast<Derived>(shared_from_this());
-		}
-
 		std::shared_ptr<gfxObject> sprite;
 		std::shared_ptr<gfxObject> selectedSprite;
 		SDL_Renderer* ren;
@@ -21,6 +16,11 @@ class entity : public std::enable_shared_from_this<entity> {
 		bool selected = false;
 
 	public:
+		template <typename Derived>
+		std::shared_ptr<Derived> shared_from_base(){
+			return std::static_pointer_cast<Derived>(shared_from_this());
+		}
+
 		entity() = delete;
 		entity(SDL_Renderer* ren, const std::string& spriteFile, const int x,
 				const int y, const bool selectable = false);

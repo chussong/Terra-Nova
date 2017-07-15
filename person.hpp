@@ -91,7 +91,7 @@ class person : public entity {
 	std::vector<std::string> inventory;
 
 	char faction;
-	std::array<int, 2> location;
+	std::array<unsigned int, 2> location;
 	std::unique_ptr<path> myPath;
 	order_t orders = ORDER_PATROL;
 	std::shared_ptr<gfxObject> orderIcon;
@@ -138,12 +138,14 @@ class person : public entity {
 		int							MoveSpeed()	const;
 		int							MovesLeft()	const;
 
-		void SetLocation(const int row, const int colm, const bool usesMove);
-		std::array<int, 2> Location() const;
+		void SetLocation(const unsigned int row, const unsigned int colm, 
+				const bool usesMove);
+		std::array<unsigned int, 2> Location() const;
 		int Row() const;
 		int Colm() const;
 		path* Path() const { return myPath.get(); }
 		std::array<unsigned int, 2> NextStep();
+		bool AdvancePath();
 		moveCostTable MoveCosts() const {return spec->MoveCosts(); }
 		order_t Orders() const { return orders; }
 		void SetOrders(const order_t newOrders);

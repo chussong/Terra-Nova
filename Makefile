@@ -27,7 +27,7 @@ person.o: person.cpp entity.hpp gamevars.hpp path.hpp
 colony.o: colony.cpp person.hpp templates.hpp building.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-map.o: map.cpp colony.hpp templates.hpp gamewindow.hpp gamevars.hpp
+map.o: map.cpp map.hpp colony.hpp templates.hpp gamewindow.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 game.o: game.cpp person.hpp colony.hpp map.hpp building.hpp gamevars.hpp

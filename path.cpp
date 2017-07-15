@@ -63,7 +63,7 @@ void path::RenderStartingFrom(const int spriteX, const int spriteY){
 // startX and startY are the SDL coordinates of the center of the starting tile
 void path::PathSpriteFromTo(SDL_Rect& layout, const int startX, 
 		const int startY, const int startRow, const int startColm, 
-		const int endRow, const int endColm, const bool firstSegment){
+		const int endRow, const int endColm, const bool){
 	int endX = startX + (endColm - startColm)*TILE_WIDTH/2;
 	int endY = startY + (endRow - startRow)*TILE_HEIGHT;
 	layout.x = std::min(startX, endX) - 1*TILE_WIDTH/4;

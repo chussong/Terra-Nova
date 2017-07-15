@@ -17,6 +17,17 @@ class tile;
 class path;
 
 class map {
+	enum MoveStatus { MS_UNCHECKED, MS_CLEAR, MS_BOUNCE, MS_ASSAULT, 
+		MS_ASSAULTED, MS_FRIENDCLASH, MS_FOECLASH, MS_TARGETMOVING, 
+		MS_FINISHED };
+
+	struct MoveData {
+		unsigned int id;
+		std::array<unsigned int,2> origin;
+		std::array<unsigned int,2> destination;
+		MoveStatus status;
+	};
+
 	SDL_Renderer* ren;
 
 	int width;
@@ -27,9 +38,8 @@ class map {
 	 * odd entries and even rows have only even entries.*/
 	std::vector<std::vector<std::shared_ptr<tile>>> terrain;
 	std::vector<std::weak_ptr<colony>> colonies;
+	std::vector<std::weak_ptr<person>> weakRoamers;
 	std::vector<person*> roamers;
-
-	void Clean();
 
 	void InitTerrain(std::vector<std::shared_ptr<tileType>> types);
 
@@ -52,20 +62,40 @@ class map {
 			const std::vector<std::vector<unsigned int>>& distMap, 
 			const unsigned int destRow, const unsigned int destColm);
 
+	// movement processing functions
+	void ProcessMovement();
+	bool UncontestedMoves(std::vector<MoveData>& moverData);
+	bool AssaultMoves(std::vector<MoveData>& moverData);
+	bool ClashMoves(std::vector<MoveData>& moverData);
+
+	static std::vector<MoveData> FindMoverData(const std::vector<person*>& roamers);
+
+	template<typename T> inline void ForAllTiles(T (tile::*MemberFunction)()){
+		for(auto row = 0u; row < NumberOfRows(); ++row){
+			for(auto colm = row % 2; colm < NumberOfColumns(); colm+=2){
+				/*std::cout << "Applying function to tile at (" << row << ","
+					<< colm << ")." << std::endl;*/
+				(Terrain(row, colm).get()->*MemberFunction)();
+			}
+		}
+	}
+
 	public:
 		map() = delete;
 		map(SDL_Renderer* ren, std::vector<std::shared_ptr<tileType>> types);
 		map(SDL_Renderer* ren, std::vector<std::vector<std::shared_ptr<tile>>> tiles):
 			ren(ren), terrain(tiles) {}
 
-		void ProcessTurn();
+		void StartTurn();
+		void EndTurn();
 
 		void AddColony(const std::shared_ptr<colony> colony, int row, int colm);
 		std::shared_ptr<colony> Colony(const int num);
 		const std::shared_ptr<colony> Colony(const int num) const;
-		void AddRoamer(person* newRoamer, const int row, const int colm);
+		void AddRoamer(std::shared_ptr<person> newRoamer, const int row, const int colm);
 
 		std::shared_ptr<tile> Terrain(const int row, const int column) const;
+		std::shared_ptr<tile> Terrain(const std::array<unsigned int,2> coords) const;
 		std::vector<std::vector<std::shared_ptr<tile>>> SurroundingTerrain(
 				const int row, const int colm);
 		unsigned int NumberOfRows() const;
@@ -75,6 +105,7 @@ class map {
 
 		void MoveView(direction_t dir);
 		bool MoveUnitTo(person* mover, const int row, const int colm);
+		bool MoveUnitTo(person* mover, const std::array<unsigned int,2>& coords);
 
 		std::string TerrainName(const unsigned int x, const unsigned int y);
 

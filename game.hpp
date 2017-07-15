@@ -35,6 +35,11 @@ class game {
 
 	std::shared_ptr<gameWindow> win;
 
+	void ClearDeadPeople();
+
+	void StartTurn();
+	void EndTurn();
+
 	public:
 		game();
 

@@ -20,6 +20,23 @@ class matrix {
 		// we can enforce squareness in the constructor and resizing function
 };*/
 
+// if an element is expired, remove it; if not, lock and add to returned vector
+template<class T>
+std::vector<T*> CheckAndLock(std::vector<std::weak_ptr<T>>& in){
+	std::vector<T*> ret;
+	auto it = in.begin();
+	while(it != in.end()){
+		std::shared_ptr<T> locked(it->lock());
+		if(locked){
+			ret.push_back(locked.get());
+			++it;
+		} else {
+			it = in.erase(it);
+		}
+	}
+	return ret;
+}
+
 // beware: this is NOT case sensitive!
 template<class T>
 std::shared_ptr<T> FindByName(std::vector<std::shared_ptr<T>> vec,

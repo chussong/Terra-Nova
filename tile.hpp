@@ -19,6 +19,7 @@ class tileType {
 	const std::string name;
 	const std::array<int, LAST_RESOURCE> yield;
 
+	// this should be a regular pointer to a vector of building types
 	std::vector<std::weak_ptr<buildingType>> allowedBuildings;
 	bool cold = false;
 	bool wooded = false;
@@ -52,6 +53,7 @@ class tileType {
 class tile : public entity {
 	std::weak_ptr<tileType> type;
 	std::shared_ptr<building> bldg;
+	std::vector<std::weak_ptr<person>> weakOccupants;
 	std::vector<person*> occupants;
 
 	int row;
@@ -71,6 +73,9 @@ class tile : public entity {
 		tile& operator=(const entity& other) = delete;
 
 		bool IsTile() const { return true; }
+
+		void StartTurn();
+		void EndTurn();
 
 		void Render() const;
 		void MoveTo(int x, int y);
@@ -99,9 +104,10 @@ class tile : public entity {
 		void AddBuilding(std::shared_ptr<building> newBldg);
 		void RemoveBuilding();
 
-		bool AddOccupant(person* newOccupant);
+		bool AddOccupant(std::shared_ptr<person> newOccupant);
 		bool RemoveOccupant(person* removeThis);
 		std::vector<person*> Occupants() const;
+		unsigned int NumberOfOccupants() const;
 		person* Defender() const;
 		char Owner() const;
 

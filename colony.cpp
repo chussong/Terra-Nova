@@ -9,7 +9,7 @@ colony::colony(SDL_Renderer* ren,
 
 	resources.fill(0);
 	resourceCap.fill(RESCAP);
-	resPerTurn.fill(0);
+	//resPerTurn.fill(0);
 	powerSupply = 0;
 	powerDemand = 0;
 }
@@ -33,8 +33,8 @@ int colony::AddResource(const resource_t resource, int amount){
 		resources[resource] += amount;
 		amount = 0;
 	}
-	if(resourcePanels[resource])
-		resourcePanels[resource]->SetText(std::to_string(resources[resource]));
+	//if(resourcePanels[resource])
+		//resourcePanels[resource]->SetText(std::to_string(resources[resource]));
 	return amount;
 }
 
@@ -53,7 +53,7 @@ std::array<int, LAST_RESOURCE> colony::AddResources(
 			resources[i] += income[i];
 			leftovers[i] = 0;
 		}
-		resourcePanels[i]->SetText(std::to_string(resources[i]));
+		//resourcePanels[i]->SetText(std::to_string(resources[i]));
 	}
 	return leftovers;
 }
@@ -67,11 +67,11 @@ int colony::TakeResource(const resource_t resource, int amount){
 	} else {
 		resources[resource] -= amount;
 	}
-	resourcePanels[resource]->SetText(std::to_string(resources[resource]));
+	//resourcePanels[resource]->SetText(std::to_string(resources[resource]));
 	return amount;
 }
 
-void colony::SetResourceIncome(const resource_t resource, int amount){
+/*void colony::SetResourceIncome(const resource_t resource, int amount){
 	if(amount < 0) return;
 	if(resource < 0 || resource >= LAST_RESOURCE) return;
 	resPerTurn[resource] = amount;
@@ -80,7 +80,7 @@ void colony::SetResourceIncome(const resource_t resource, int amount){
 void colony::AddResourceIncome(const resource_t resource, int amount){
 	if(resource < 0 || resource >= LAST_RESOURCE) return;
 	resPerTurn[resource] += amount;
-}
+}*/
 
 std::string colony::Name() const{
 	return name;
@@ -94,14 +94,18 @@ int colony::Column() const{
 	return terrain[2][2]->Colm();
 }
 
-std::shared_ptr<tileType> colony::Terrain(const unsigned int row, const unsigned int colm) const{
+std::shared_ptr<tile> colony::Terrain(const unsigned int row, const unsigned int colm) const{
 	if(row < terrain.size() || colm < terrain[row].size())
-		return terrain[row][colm]->TileType();
+		return terrain[row][colm];
 	return nullptr;
 }
 
-int colony::Resource(const resource_t resource) const{
+const int& colony::Resource(const resource_t resource) const{
 	return resources[resource];
+}
+
+const int& colony::Resource(const int resource) const{
+	return Resource(static_cast<resource_t>(resource));
 }
 
 void colony::AssignWorker(person* worker, const tile* location){
@@ -193,6 +197,7 @@ void colony::AdvanceQueue(){
 }
 
 void colony::ProcessTurn(){
+	//std::cout << "Colony processing turn..." << std::endl;
 	for(auto& row : terrain){
 		for(auto& space : row){
 			if(space->Owner() != Owner()) continue;
@@ -201,107 +206,6 @@ void colony::ProcessTurn(){
 		}
 	}
 	AdvanceQueue();
-}
-
-void colony::MakeColonyScreen(std::shared_ptr<gameWindow> win) {
-	if(!win){
-		std::cerr << "Error: attempted to draw a colony to a nonexistent window."
-			<< std::endl;
-		return;
-	}
-	if(!colonyBackground) colonyBackground = 
-		std::make_shared<uiElement>(ren, COLONY_BACKGROUND, 0, 0);
-
-	win->ResetBackground(colonyBackground);
-	win->ResetObjects();
-	DrawTiles(win);
-	DrawResources(win);
-	//DrawColonists(win);
-	DrawColonyMisc(win);
-}
-
-void colony::DrawTiles(std::shared_ptr<gameWindow> win){
-	for(unsigned int i = 0; i < terrain.size(); ++i){
-		for(unsigned int j = 0; j < terrain[i].size(); ++j){
-			terrain[i][j]->MoveTo(TileX(i,j), TileY(i));
-			if(terrain[i][j]->HasColony()){
-				win->AddClickable(terrain[i][j].get());
-			} else {
-				win->AddObject(terrain[i][j].get());
-			}
-			for(auto& occ : terrain[i][j]->Occupants()) win->AddClickable(occ);
-			/*std::cout << "Tile " << i << ", a " << terrain[i]->TileType() << ", "
-				<< "moved to (" << terrain[i]->X() << "," << terrain[i]->Y() << ")."
-				<< std::endl;*/
-		}
-	}
-}
-
-int colony::TileX(const unsigned int row, const unsigned int colm){
-	int ret = 0;
-	ret -= (terrain.size()-1)/2 * TILE_WIDTH;
-	ret += std::abs((int)row - ((int)terrain.size()-1)/2) * TILE_WIDTH/2;
-	ret += colm * TILE_WIDTH;
-	return ret;
-}
-
-int colony::TileY(const unsigned int row){
-	int ret = 0;
-	ret -= (static_cast<int>(terrain.size()) - 1)/2 * TILE_HEIGHT;
-	ret += row * TILE_HEIGHT;
-	return ret;
-}
-
-void colony::DrawResources(std::shared_ptr<gameWindow> win){
-	for(unsigned int i = 0; i < resourcePanels.size(); ++i){
-		resourcePanels[i] = std::make_shared<uiElement>(ren,
-				ResourceName(static_cast<resource_t>(i)) + "_panel", 
-				RES_PANEL_X + i*RES_PANEL_WIDTH, RES_PANEL_Y);
-		resourcePanels[i]->AddText(std::to_string(resources[i]),
-				RES_PANEL_WIDTH/2, 2*RES_PANEL_HEIGHT/3);
-		win->AddObject(resourcePanels[i].get());
-	}
-}
-
-/*void colony::DrawColonists(std::shared_ptr<gameWindow> win){
-	for(unsigned int i = 0; i < inhabitants.size(); ++i){
-		win->AddClickable(inhabitants[i].lock());
-	}
-}*/
-
-void colony::DrawColonyMisc(std::shared_ptr<gameWindow> win){
-	int gridLeftEdge = SCREEN_WIDTH - 50 - 
-		BUILDING_GRID_COLUMNS*(BUILDING_WIDTH + 2*BUILDING_GRID_PADDING);
-	int gridTopEdge = 350;
-	buildingGrid = std::make_shared<uiElement>(ren, "buildingGrid", 
-			gridLeftEdge, gridTopEdge);
-	win->AddObject(buildingGrid.get());
-
-	for(unsigned int i = 0; i < 9; ++i){
-		if(i >= buildingTypes.size()) break;
-		
-		win->AddUI(std::make_unique<buildingPrototype>(ren, "building",
-					gridLeftEdge + (2*(i%3) + 1)*BUILDING_GRID_PADDING
-						+ (i%3)*BUILDING_WIDTH,
-					gridTopEdge + (2*(i/3) + 1)*BUILDING_GRID_PADDING
-						+ (i/3)*BUILDING_HEIGHT,
-					buildingTypes[i]));
-	}
-
-	SDL_Color color;
-	color.r = 0;
-	color.g = 0;
-	color.b = 0;
-	color.a = 255;
-	std::unique_ptr<uiElement> leaveColonyButton = 
-		std::make_unique<uiElement>(ren, "leavecolony", SCREEN_WIDTH-200, 100);
-	leaveColonyButton->EnableButton(LEAVE_COLONY);
-	win->AddUI(std::move(leaveColonyButton));
-
-	std::unique_ptr<uiElement> endTurnButton = 
-		std::make_unique<uiElement>(ren, "endturn", SCREEN_WIDTH-200, 200);
-	endTurnButton->EnableButton(END_TURN);
-	win->AddUI(std::move(endTurnButton));
 }
 
 std::string colony::ResourceName(const resource_t resource){

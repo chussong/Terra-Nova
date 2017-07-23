@@ -21,12 +21,13 @@ class gfxObject {
 
 	public:
 		static TTF_Font* defaultFont;
+		static SDL_Color SDLifyTextColor(const textcolor_t color);
 
 		gfxObject() = delete;
-		explicit gfxObject(SDL_Renderer* ren, const std::string& filename,
-				SDL_Rect& layout);
-		explicit gfxObject(SDL_Renderer* ren, const std::string& text,
-				SDL_Rect& layout, const SDL_Color color, 
+		explicit gfxObject(SDL_Renderer* ren, const std::string filename,
+				SDL_Rect layout);
+		explicit gfxObject(SDL_Renderer* ren, const std::string text,
+				SDL_Rect layout, const SDL_Color color, 
 				TTF_Font* font = defaultFont);
 		~gfxObject();
 
@@ -36,7 +37,7 @@ class gfxObject {
 
 		void RenderTo(SDL_Renderer* ren, const SDL_Rect& layout) const; // deprecated
 		void RenderTo(const SDL_Rect& layout) const;
-		void DefaultLayout(SDL_Rect& layout) const;
+		void MakeDefaultSize(SDL_Rect& layout) const;
 };
 
 class gfxManager {

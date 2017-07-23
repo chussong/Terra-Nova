@@ -60,6 +60,7 @@ class tile : public entity {
 	int colm;
 
 	bool hasColony = false;
+	//std::function<void(colony*)> EnterColony
 
 	public:
 		tile() = delete;
@@ -84,7 +85,9 @@ class tile : public entity {
 		void Resize(SDL_Rect newLayout);
 
 		bool InsideQ(const int x, const int y) const;
+		// deprecate Select() when possible
 		int Select();
+		bool Click();
 		std::shared_ptr<tileType> TileType() const;
 		std::string Name() const { return TileType()->Name(); }
 		void SetTileType(const std::shared_ptr<tileType> newType);

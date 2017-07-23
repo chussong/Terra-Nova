@@ -33,7 +33,7 @@ map.o: map.cpp map.hpp colony.hpp templates.hpp gamewindow.hpp gamevars.hpp
 game.o: game.cpp person.hpp colony.hpp map.hpp building.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-gamewindow.o: gamewindow.cpp map.hpp gamevars.hpp
+gamewindow.o: gamewindow.cpp map.hpp gamevars.hpp ui.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 gfxobject.o: gfxobject.cpp gfxobject.hpp entity.hpp gamevars.hpp

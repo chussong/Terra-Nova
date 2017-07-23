@@ -77,9 +77,21 @@ bool tile::InsideQ(const int x, const int y) const {
 	return true;
 }
 
+// should be deprecated
 int tile::Select() {
 	if(hasColony) return SCREEN_CHANGE;
 	return NOTHING;
+}
+
+bool tile::Click() {
+	//if(HasColony()){
+		//EnterColony(col);
+		//^^^ this will be a gameWindow function that makes a colony screen out
+		//of the colony that you pass it. It will need to be stored as a
+		//std::function at the tile level
+	//}
+
+	return false;
 }
 
 std::shared_ptr<tileType> tile::TileType() const{
@@ -104,6 +116,7 @@ std::array<int, LAST_RESOURCE> tile::Income() const{
 	if(!hasHarvester) return inc;
 
 	inc = type.lock()->Yield();
+	//std::cout << "Yield[0]: " << type.lock()->Yield()[0] << std::endl;
 	if(bldg){
 		for(unsigned int i = 0; i < inc.size(); ++i) 
 			inc[i] += bldg->BonusResources()[i];

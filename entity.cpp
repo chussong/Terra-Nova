@@ -11,13 +11,14 @@ entity::entity(SDL_Renderer* ren, const std::string& spriteFile,
 
 void entity::ChangeSprite(const std::string& spriteName){
 	sprite = gfxManager::RequestSprite(spriteName);
-	sprite->DefaultLayout(layout);
+	sprite->MakeDefaultSize(layout);
 	if(selectable){
 		selectedSprite = gfxManager::RequestSprite(spriteName + "_selected");
 	}
 }
 
 void entity::Render() const{
+	if(!visible) return;
 	if(selected){
 		selectedSprite->RenderTo(ren, layout);
 	} else {

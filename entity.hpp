@@ -12,6 +12,7 @@ class entity : public std::enable_shared_from_this<entity> {
 		SDL_Renderer* ren;
 
 		SDL_Rect layout;
+		bool visible = true;
 		bool selectable = false;
 		bool selected = false;
 
@@ -28,10 +29,15 @@ class entity : public std::enable_shared_from_this<entity> {
 		entity(entity&& other) noexcept = default;
 		entity& operator=(const entity& other) = delete;
 
+		// Click() represents a thing something does when you click on it which
+		// does not result in the selection of the object; if Click() returns
+		// true, then no selection is attempted.
 		virtual void ChangeSprite(const std::string& spriteName);
 		virtual void Render() const;
 		virtual int Select();
 		virtual void Deselect();
+		virtual bool Click() { return false; }
+		void SetVisible(const bool newVal) { visible = newVal; }
 
 
 		virtual void MoveTo(int x, int y);
@@ -53,6 +59,7 @@ class entity : public std::enable_shared_from_this<entity> {
 		virtual bool IsUnit() const { return false; }
 		virtual bool IsTile() const { return false; }
 		virtual bool IsBuildingPrototype() const { return false; }
+		virtual bool IsButton() const { return false; }
 };
 
 #endif

@@ -62,6 +62,8 @@ void map::InitTerrain(std::vector<std::shared_ptr<tileType>> types){
 std::vector<std::array<unsigned int, 2>> map::ShortestPath(const unsigned int startRow, 
 		const unsigned int startColm, const unsigned int destRow,
 		const unsigned int destColm, const moveCostTable& moveCosts){
+	if(startRow == destRow && startColm == destColm)
+		return std::vector<std::array<unsigned int, 2>>();
 	if(tile::MoveCost(*Terrain(destRow, destColm), moveCosts) == -1u)
 		return std::vector<std::array<unsigned int, 2>>();
 	std::vector<std::vector<unsigned int>> distMap;
@@ -203,6 +205,8 @@ void map::ProcessMovement(){
 	//    to move into. If ally, determine winner randomly, bounce other; if 
 	//    enemy, fight.
 	// 4: Repeat 1-3 in order until nothing changes.
+	// Note that due to short circuiting, the below code always does #1 until
+	// things stop changing, then #2 until things stop changing, etc.
 	bool somethingChanged;
 	do{
 		somethingChanged = false;

@@ -5,8 +5,25 @@ SDL_Renderer* gfxManager::ren;
 std::vector<std::string> gfxManager::loadedSpriteNames;
 std::vector<std::shared_ptr<gfxObject>> gfxManager::loadedSprites;
 
-gfxObject::gfxObject(SDL_Renderer* ren, const std::string& filename,
-		SDL_Rect& layout){
+SDL_Color gfxObject::SDLifyTextColor(const textcolor_t color){
+	SDL_Color colorCode;
+	switch(color){
+		case BLACK: 	colorCode.r = 0;
+						colorCode.g = 0;
+						colorCode.b = 0;
+						colorCode.a = 255;
+						break;
+		default:		colorCode.r = 0;
+						colorCode.g = 0;
+						colorCode.b = 0;
+						colorCode.a = 255;
+						break;
+	}
+	return colorCode;
+}
+
+gfxObject::gfxObject(SDL_Renderer* ren, const std::string filename,
+		SDL_Rect layout){
 	// if(IMG not initialized) print error
 	image = IMG_LoadTexture(ren, filename.c_str());
 	if(image == nullptr) LogSDLError(std::cout, "LoadTexture");
@@ -16,8 +33,8 @@ gfxObject::gfxObject(SDL_Renderer* ren, const std::string& filename,
 	if(layout.h >= SCREEN_HEIGHT) layout.h = SCREEN_HEIGHT - 1;
 }
 
-gfxObject::gfxObject(SDL_Renderer* ren, const std::string& text,
-		SDL_Rect& layout, const SDL_Color color, TTF_Font* font){
+gfxObject::gfxObject(SDL_Renderer* ren, const std::string text,
+		SDL_Rect layout, const SDL_Color color, TTF_Font* font){
 	if(font == nullptr) font = defaultFont;
 /*	std::cout << "Writing \"" << text << "\" at (" << layout.x << "," <<
 		layout.y << ") using the font at " << font << "." << std::endl;*/
@@ -67,7 +84,7 @@ void gfxObject::RenderTo(const SDL_Rect& layout) const{
 		<< ")." << std::endl;*/
 }
 
-void gfxObject::DefaultLayout(SDL_Rect& layout) const{
+void gfxObject::MakeDefaultSize(SDL_Rect& layout) const{
 	SDL_QueryTexture(image, NULL, NULL, &layout.w, &layout.h);
 }
 

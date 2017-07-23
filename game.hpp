@@ -7,6 +7,7 @@
 #include <map>
 #include <iostream>
 #include <fstream>
+#include <functional>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
@@ -18,6 +19,7 @@
 #include "building.hpp"
 #include "map.hpp"
 #include "gamewindow.hpp"
+#include "ui.hpp"
 
 class person;
 class colony;
@@ -39,6 +41,7 @@ class game {
 
 	void StartTurn();
 	void EndTurn();
+	std::unique_ptr<Button> EndTurnButton(SDL_Renderer* ren);
 
 	public:
 		game();

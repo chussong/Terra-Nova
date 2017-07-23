@@ -37,8 +37,8 @@ void uiElement::AddText(const std::string& text, const int x, const int y,
 void uiElement::SetText(const std::string& text, TTF_Font* font, 
 		const textcolor_t color){
 	if(font == nullptr) font = gfxObject::defaultFont;
-	SDL_Color colorCode;
-	switch(color){
+	SDL_Color colorCode = gfxObject::SDLifyTextColor(color);
+	/*switch(color){
 		case BLACK: 	colorCode.r = 0;
 						colorCode.g = 0;
 						colorCode.b = 0;
@@ -49,17 +49,56 @@ void uiElement::SetText(const std::string& text, TTF_Font* font,
 						colorCode.b = 0;
 						colorCode.a = 255;
 						break;
-	}
-	textLayout.x += textLayout.w/2;
-	textLayout.y += textLayout.h/2;
+	}*/
 /*	std::cout << "Text \"" << text << "\" set at position (" << textLayout.x 
 		<< "," << textLayout.y << ")." << std::endl;*/
 	textSprite = std::make_unique<gfxObject>(ren, text, textLayout, colorCode, font);
 	if(!textSprite) std::cout << "Error constructing textSprite!" << std::endl;
+	textSprite->MakeDefaultSize(textLayout);
+	textLayout.x -= textLayout.w/2;
+	textLayout.y -= textLayout.h/2;
 }
-	
 
-void uiElement::EnableButton(const button_t type){
+// WARNING: you have to make sure the source outlives this UI element!
+void uiElement::AddDynamicText(const int& source, const int x, const int y, 
+		TTF_Font* font, const textcolor_t color){
+	dynamicTextLayout.x = layout.x + x;
+	dynamicTextLayout.y = layout.y + y;
+	dynamicTextLayout.w = 0;
+	dynamicTextLayout.h = 0;
+	SetDynamicText(source, font, color);
+}
+
+// WARNING: you have to make sure the source outlives this UI element!
+void uiElement::SetDynamicText(const int& source, TTF_Font* font,
+		const textcolor_t color){
+	if(font == nullptr) font = gfxObject::defaultFont;
+	dynamicTextSource = &source;
+	dynamicTextCached = source;
+	dynamicTextFont = font;
+	dynamicTextColor = gfxObject::SDLifyTextColor(color);
+	dynamicTextSprite = std::make_unique<gfxObject>(ren, std::to_string(source),
+			dynamicTextLayout, dynamicTextColor, font);
+	dynamicTextSprite->MakeDefaultSize(dynamicTextLayout);
+	dynamicTextLayout.x -= dynamicTextLayout.w/2;
+	dynamicTextLayout.y -= dynamicTextLayout.h/2;
+}
+
+void uiElement::UpdateDynamicText() const{
+	if(*dynamicTextSource != dynamicTextCached){
+		dynamicTextCached = *dynamicTextSource;
+		dynamicTextSprite = std::make_unique<gfxObject>(ren, 
+				std::to_string(dynamicTextCached), dynamicTextLayout,
+				dynamicTextColor, dynamicTextFont);
+		dynamicTextLayout.x += dynamicTextLayout.w/2;
+		dynamicTextLayout.y += dynamicTextLayout.h/2;
+		dynamicTextSprite->MakeDefaultSize(dynamicTextLayout);
+		dynamicTextLayout.x -= dynamicTextLayout.w/2;
+		dynamicTextLayout.y -= dynamicTextLayout.h/2;
+	}
+}
+
+/*void uiElement::EnableButton(const button_t type){
 	button = true;
 	this->type = type;
 }
@@ -82,15 +121,20 @@ int uiElement::Select(){
 		}
 	}
 	return static_cast<int>(ERROR);
-}
+}*/
 
 void uiElement::Render() const {
+	if(!visible) return;
 	sprite->RenderTo(ren, layout);
 	if(textSprite){
 		textSprite->RenderTo(ren, textLayout);
 //		std::cout << "Rendering an object with text." << std::endl;
 	} else {
 //		std::cout << "Rendering an object without text." << std::endl;
+	}
+	if(dynamicTextSprite){
+		UpdateDynamicText();
+		dynamicTextSprite->RenderTo(ren, dynamicTextLayout);
 	}
 }
 
@@ -107,7 +151,9 @@ void uiElement::MoveTo(SDL_Rect newLayout){
 	MoveTo(newLayout.x, newLayout.y);
 }
 
-unitInfoPanel::unitInfoPanel(SDL_Renderer* ren, const person* unit){
+UnitInfoPanel::UnitInfoPanel(SDL_Renderer* ren, const person* unit):
+	UIAggregate(ren, SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH, 
+			SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT) {
 	int panelX = SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH;
 	int panelY = SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT;
 	background = std::make_unique<uiElement>(ren,
@@ -147,7 +193,7 @@ unitInfoPanel::unitInfoPanel(SDL_Renderer* ren, const person* unit){
 }
 
 
-void unitInfoPanel::Render(){
+void UnitInfoPanel::Render() const{
 	background->Render();
 	portrait->Render();
 	factionIcon->Render();
@@ -155,7 +201,30 @@ void unitInfoPanel::Render(){
 	attackIcon->Render();
 }
 
-void unitInfoPanel::UpdateHealth(const person* unit){
+void UnitInfoPanel::UpdateHealth(const person* unit){
 	healthIcon->SetText(
 			std::to_string(unit->Health()) + "/" + std::to_string(unit->MaxHealth()));
+}
+
+UnitOrderPanel::UnitOrderPanel(SDL_Renderer* ren, const person* unit):
+	UIAggregate(ren, 0, SCREEN_HEIGHT - UNIT_ORDER_PANEL_HEIGHT),
+	background(ren, "unit_order_panel", x, y) {
+	UpdatePanel(unit);
+}
+
+void UnitOrderPanel::Render() const{
+	background.Render();
+	for(auto& button : buttons) button.Render();
+}
+
+void UnitOrderPanel::UpdatePanel(const person* unit){
+	if(!unit){
+		buttons.clear();
+	} else {
+		for(auto order : unit->AvailableOrders()){
+			int buttonX = x + 5 + (ORDER_BUTTON_WIDTH+5)*buttons.size()%3;
+			int buttonY = y + 5 + (ORDER_BUTTON_HEIGHT+5)*buttons.size()/3;
+			buttons.emplace_back(ren, order.name, buttonX, buttonY, order.func);
+		}
+	}
 }

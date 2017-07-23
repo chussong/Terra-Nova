@@ -41,7 +41,7 @@ class colony {
 
 	std::array<int, LAST_RESOURCE> resources;
 	std::array<int, LAST_RESOURCE> resourceCap;
-	std::array<int, LAST_RESOURCE> resPerTurn;
+	//std::array<int, LAST_RESOURCE> resPerTurn;
 	int powerSupply;
 	int powerDemand;
 
@@ -49,9 +49,9 @@ class colony {
 
 	std::vector<std::shared_ptr<building>> buildQueue;
 
-	std::array<std::shared_ptr<uiElement>, LAST_RESOURCE> resourcePanels;
+	//std::array<std::shared_ptr<uiElement>, LAST_RESOURCE> resourcePanels;
 	std::shared_ptr<uiElement> buildingGrid;
-	std::shared_ptr<uiElement> endTurnButton;
+	//std::shared_ptr<uiElement> endTurnButton;
 
 	public:
 		colony() = delete;
@@ -61,6 +61,11 @@ class colony {
 
 		void SetBuildingTypes(
 				const std::vector<std::shared_ptr<buildingType>> buildingTypes);
+		//const std::vector<std::shared_ptr<buildingType>>& BuildingTypes() const
+			//{ return buildingTypes; }
+		unsigned int NumberOfBuildingTypes() const { return buildingTypes.size(); }
+		const std::shared_ptr<buildingType>& BuildingType(const int i) const
+			{ return buildingTypes[i]; }
 
 		void ChangeName(const std::string name);
 		int Owner() const { return faction; }
@@ -69,15 +74,19 @@ class colony {
 		std::array<int, LAST_RESOURCE> AddResources(
 				const std::array<int, LAST_RESOURCE>& income);
 		int  TakeResource(const resource_t resource, int amount);
-		void SetResourceIncome(const resource_t resource, int amount);
-		void AddResourceIncome(const resource_t resource, int amount);
+		//void SetResourceIncome(const resource_t resource, int amount);
+		//void AddResourceIncome(const resource_t resource, int amount);
 		void AddBuilding(const std::string building);
 
 		std::string Name() const;
 		int Column() const;
 		int Row() const;
-		std::shared_ptr<tileType> Terrain(const unsigned int row, const unsigned int colm) const;
-		int Resource(const resource_t resource) const;
+		std::shared_ptr<tile> Terrain(const unsigned int row, const unsigned int colm) const;
+		unsigned int TerrainRows() const { return terrain.size(); }
+		unsigned int RowWidth(unsigned int row) const { return terrain[row].size(); }
+		const int& Resource(const resource_t resource) const;
+		const int& Resource(const int resource) const;
+		unsigned int NumberOfResources() const { return resources.size(); }
 		std::string ResAsString(const int res) const;
 
 		void AssignWorker(person* worker, const tile* location);
@@ -88,14 +97,6 @@ class colony {
 
 		void ProcessTurn();
 
-		void MakeColonyScreen(std::shared_ptr<gameWindow> win);
-		void DrawTiles(std::shared_ptr<gameWindow> win);
-		int  TileX(const unsigned int row, const unsigned int colm);
-		int  TileY(const unsigned int row);
-		void DrawResources(std::shared_ptr<gameWindow> win);
-		//void DrawColonists(std::shared_ptr<gameWindow> win);
-		void DrawColonyMisc(std::shared_ptr<gameWindow> win);
-		
 		static std::string ResourceName(const resource_t resource);
 };
 

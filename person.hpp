@@ -7,6 +7,7 @@
 #include <ctime>
 #include <memory>
 #include <random>
+#include <functional>
 #include "gamevars.hpp"
 #include "entity.hpp"
 #include "path.hpp"
@@ -17,6 +18,16 @@ struct moveCostTable {
 	int wooded = 1;
 	int hilly = 1;
 	int cold = 1;
+};
+
+class person;
+struct Order {
+	std::string name;
+	std::function<void()> func;
+
+	Order(const std::string& name, std::function<void()> func): 
+		name(name), func(func){}
+	//Order(const char* name, void (*func)()): name(std::string(name)), func(func){}
 };
 
 class attackType {
@@ -95,6 +106,7 @@ class person : public entity {
 	std::unique_ptr<path> myPath;
 	order_t orders = ORDER_PATROL;
 	std::shared_ptr<gfxObject> orderIcon;
+	std::vector<Order> availableOrders;
 
 	static std::string GenerateGivenName();
 	static std::string GenerateSurname();
@@ -152,6 +164,7 @@ class person : public entity {
 		void OrderMove(std::unique_ptr<path> newPath);
 		void OrderPatrol();
 		void OrderHarvest();
+		const std::vector<Order>& AvailableOrders() const { return availableOrders; }
 
 		bool CanRespec() const			{return spec->CanRespec();}
 		char Faction() const			{return faction;}

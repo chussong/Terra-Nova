@@ -11,9 +11,10 @@ game::game(){
 	}
 	catch(const readError &e){
 		// instead of complaining, should generate the def files from hard-coded versions
-		std::cout << e.what() << std::endl;
+		std::cerr << e.what() << std::endl;
 		throw;
 	}
+	win->AddEndTurnButton(EndTurnButton(win->Renderer()));
 }
 
 void game::Begin(){
@@ -458,7 +459,7 @@ void game::ParseFeatures(std::shared_ptr<map> parentMap,
 			for(unsigned int k = 0; k < colonyDesc.size(); ++k){
 				colonyDesc[k] = boost::trim_copy(desc[i+1+k]);
 			}
-			colonies.push_back(ParseColony(parentMap, colonyDesc));
+			ParseColony(parentMap, colonyDesc);
 			i = j+1;
 			continue;
 		}
@@ -631,6 +632,14 @@ std::shared_ptr<map> game::CreateMap(){
 	return newMap;
 }
 
+std::unique_ptr<Button> game::EndTurnButton(SDL_Renderer* ren) {
+	/*auto endTurnFunc = std::bind(&game::NextTurn, this);
+	endTurnFunc();
+	return std::make_unique<Button>(ren, "end_turn", 0, 0, endTurnFunc);*/
+	return std::make_unique<Button>(ren, "end_turn", 0, 0,
+			std::function<void()>(std::bind(&game::NextTurn, this)));
+}
+
 void game::NextTurn(){
 	EndTurn();
 	std::cout << "A new turn dawns..." << std::endl;
@@ -639,8 +648,9 @@ void game::NextTurn(){
 
 void game::StartTurn(){
 	for(auto& m : maps) m->StartTurn();
+	//std::cout << "Processing turns in " << colonies.size() << " colonies." << std::endl;
 	for(unsigned int i = 0; i < colonies.size(); ++i) colonies[i]->ProcessTurn();
-	for(auto& u : people) u->ProcessTurn(); // does this actually do anything?
+	//for(auto& u : people) u->ProcessTurn(); // does this actually do anything?
 	ClearDeadPeople(); // after everyone else has cleared their pointers
 }
 

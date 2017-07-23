@@ -81,6 +81,11 @@ constexpr int UNIT_HEALTH_Y = 25;
 constexpr int UNIT_ATTACK_X = 145;
 constexpr int UNIT_ATTACK_Y = 25;
 
+constexpr int UNIT_ORDER_PANEL_WIDTH = 160;
+constexpr int UNIT_ORDER_PANEL_HEIGHT = 160;
+constexpr int ORDER_BUTTON_WIDTH = 45;
+constexpr int ORDER_BUTTON_HEIGHT = 45;
+
 // misc UI
 
 enum button_t { END_TURN = 0, BUILDING = 1, LEAVE_COLONY = 2 };

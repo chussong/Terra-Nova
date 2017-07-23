@@ -22,6 +22,8 @@ person::person(SDL_Renderer* ren,
 	healthBackground = gfxManager::RequestSprite("healthbar_background");
 	healthBar = gfxManager::RequestSprite("healthbar_p" + std::to_string(faction));
 
+	availableOrders.emplace_back("patrol", std::bind(&person::OrderPatrol, this));
+	availableOrders.emplace_back("harvest", std::bind(&person::OrderHarvest, this));
 	SetOrders(ORDER_PATROL);
 }
 
@@ -60,6 +62,7 @@ bool person::TakeDamage(const int damage){
 void person::Die(){
 	std::cout << Name() << " belonging to player " << (int)faction << " has died!" 
 		<< std::endl;
+	visible = false;
 }
 
 void person::AddItem(const std::string item){
@@ -67,12 +70,13 @@ void person::AddItem(const std::string item){
 }
 
 void person::MoveSpriteToTile(const int X, const int Y, const int W, const int H){
-	MoveTo((MAPDISP_ORIGIN_X + X + W - layout.w)/2, 
-			(MAPDISP_ORIGIN_Y + Y + H - layout.w)/2);
+	MoveTo((MAPDISP_ORIGIN_X + X + (W - layout.w)/2), 
+			(MAPDISP_ORIGIN_Y + Y + (H - layout.w)/2));
 }
 
 void person::Render() const{
 	//std::cout << Dead() << std::endl;
+	if(!visible) return;
 	if(Dead()) return;
 
 	if(myPath) myPath->RenderStartingFrom(X() + PERSON_WIDTH/2,
@@ -95,7 +99,7 @@ void person::Render() const{
 
 	if(orderIcon){
 		SDL_Rect orderLayout = layout;
-		orderIcon->DefaultLayout(orderLayout);
+		orderIcon->MakeDefaultSize(orderLayout);
 		orderLayout.y += layout.h - orderLayout.h;
 		orderIcon->RenderTo(orderLayout);
 	}
@@ -241,8 +245,13 @@ void person::SetOrders(const order_t newOrders){
 }
 
 void person::OrderMove(std::unique_ptr<path> newPath){
-	SetOrders(ORDER_ADVANCE);
-	if(newPath) myPath = std::move(newPath);
+	if(newPath){
+		SetOrders(ORDER_ADVANCE);
+		myPath = std::move(newPath);
+	} else {
+		// empty path means it's an order to move to the place you already are
+		OrderPatrol();
+	}
 }
 
 void person::OrderPatrol(){

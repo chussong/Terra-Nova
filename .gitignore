@@ -1,0 +1,11 @@
+# Compiled object files
+*.o
+
+# Vim swap files
+*.swp
+
+# executable
+TerraNova
+
+# no idea what the hell this is
+sdltest/*

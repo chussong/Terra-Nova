@@ -20,8 +20,9 @@
 class map;
 class colony;
 class uiElement;
-class uiAggregate;
+class UIAggregate;
 class tile;
+class game;
 
 class gameWindow : public std::enable_shared_from_this<gameWindow> {
 	protected:
@@ -29,14 +30,28 @@ class gameWindow : public std::enable_shared_from_this<gameWindow> {
 		SDL_Renderer* ren;
 
 		// gameWindow owns the pure UI stuff; the others are pointers to
-		// objects owned by someone else, e.g. the map
-		std::vector<std::shared_ptr<uiAggregate>> topLevelUI;
+		// objects owned by someone else, e.g. map owns tiles, game owns units
+		std::vector<std::shared_ptr<UIAggregate>> topLevelUI;
 		std::vector<std::unique_ptr<entity>> UI;
 		std::vector<entity*> clickables;
 		std::vector<entity*> objects;
-		std::vector<std::shared_ptr<uiElement>> background;
+		std::vector<std::unique_ptr<uiElement>> background;
 
 		entity* selected;
+
+		// colony screen -----------------------------------------------------
+		void DrawTiles(const colony* col);
+		int  ColonyTileX(const colony* col, const unsigned int row, 
+				const unsigned int colm);
+		int  ColonyTileY(const colony* col, const unsigned int row);
+		void DrawResources(const colony* col);
+		//void DrawColonists(const colony* col);
+		void DrawColonyMisc(const colony* col);
+		void LeaveColony() { std::cout << "Leaving colony." << std::endl;
+			leaveColony = true; }
+		bool leaveColony;
+
+		std::unique_ptr<Button> endTurnButton;
 
 	public:
 		gameWindow() = delete;
@@ -48,6 +63,7 @@ class gameWindow : public std::enable_shared_from_this<gameWindow> {
 //		gameWindow(gameWindow&& other);
 		gameWindow& operator=(const gameWindow other) = delete;
 
+		void AddEndTurnButton(std::unique_ptr<Button> newButton);
 		void Clean();
 		void Render();
 		//void AddObject(std::string filename, const int x = 0, const int y = 0);
@@ -59,10 +75,10 @@ class gameWindow : public std::enable_shared_from_this<gameWindow> {
 		std::array<int, 4> Layout() const;
 		bool Ready() const;
 
-		void ResetBackground(std::shared_ptr<uiElement> newThing);
-		void AddToBackground(std::shared_ptr<uiElement> newThing);
+		void ResetBackground(std::unique_ptr<uiElement> newThing);
+		void AddToBackground(std::unique_ptr<uiElement> newThing);
 		void ResetObjects();
-		void AddTopLevelUI(std::shared_ptr<uiAggregate> newThing);
+		void AddTopLevelUI(std::shared_ptr<UIAggregate> newThing);
 		void AddUI(std::unique_ptr<entity> newThing);
 		void AddClickable(entity* newThing);
 		void AddClickable(std::shared_ptr<entity> newThing);
@@ -73,7 +89,14 @@ class gameWindow : public std::enable_shared_from_this<gameWindow> {
 
 		signal_t HandleKeyPress(SDL_Keycode key, std::shared_ptr<map> theMap);
 
+		// colony management screen -------------------------------------------
+
 		signal_t ColonyScreen(std::shared_ptr<colony> col);
+
+		void MakeColonyScreen(const colony* col);
+		
+		// map screen ---------------------------------------------------------
+
 		signal_t MapScreen(std::shared_ptr<map> theMap, int centerRow,
 				int centerColm);
 

@@ -5,19 +5,18 @@
 #include <vector>
 #include <algorithm>
 #include "gamevars.hpp"
-#include "entity.hpp"
-#include "person.hpp"
+#include "gfxobject.hpp"
+#include "unit.hpp"
 
-class person;
-class uiElement : public entity {
-	std::unique_ptr<gfxObject> textSprite = nullptr;
+class UIElement : public GFXObject {
+	std::unique_ptr<Sprite> textSprite = nullptr;
 	SDL_Rect textLayout;
 
 	int const* dynamicTextSource;
 	TTF_Font* dynamicTextFont;
 	SDL_Color dynamicTextColor;
 	void UpdateDynamicText() const;
-	mutable std::unique_ptr<gfxObject> dynamicTextSprite = nullptr;
+	mutable std::unique_ptr<Sprite> dynamicTextSprite = nullptr;
 	mutable int dynamicTextCached;
 	mutable SDL_Rect dynamicTextLayout;
 
@@ -26,21 +25,21 @@ class uiElement : public entity {
 	//button_t type = END_TURN;
 
 	// probably this should be moved to Button; it represents things like which
-	// type of building it is, not things like how many resources are displayed
+	// type of Building it is, not things like how many resources are displayed
 	std::vector<int> values;
 
 	public:
-		uiElement() = delete;
-		uiElement(SDL_Renderer* ren, const std::string spriteFile,
+		UIElement() = delete;
+		UIElement(SDL_Renderer* ren, const std::string spriteFile,
 				const int x, const int y) : 
-			entity(ren, spriteFile, x, y) {}
-		uiElement(const uiElement& other) = delete;
-		uiElement(uiElement&& other) noexcept : 
-			entity(std::move(other)), textSprite(std::move(other.textSprite)),
+			GFXObject(ren, spriteFile, x, y) {}
+		UIElement(const UIElement& other) = delete;
+		UIElement(UIElement&& other) noexcept : 
+			GFXObject(std::move(other)), textSprite(std::move(other.textSprite)),
 			textLayout(std::move(other.textLayout)),
 			values(std::move(other.values)){}
-//		uiElement(uiElement&& other) noexcept = default;
-		uiElement& operator=(const uiElement& other) = delete;
+//		UIElement(UIElement&& other) noexcept = default;
+		UIElement& operator=(const UIElement& other) = delete;
 
 		void AddValue(const int val);
 		void SetValue(const unsigned int entry, const int newVal);
@@ -67,13 +66,13 @@ class uiElement : public entity {
 		void MoveTo(SDL_Rect newLayout);
 };
 
-class Button : public uiElement {
+class Button : public UIElement {
 	std::function<void()> onClick;
 
 	public:
 		Button(SDL_Renderer* ren, const std::string spriteFile, const int x,
 				const int y, std::function<void()> onClick): 
-			uiElement(ren, spriteFile, x, y), onClick(onClick) {}
+			UIElement(ren, spriteFile, x, y), onClick(onClick) {}
 
 		bool IsButton() const { return true; }
 		bool Click() { if(!onClick) std::cerr << "Error! Button contains an "
@@ -94,30 +93,30 @@ class UIAggregate {
 };
 
 class UnitInfoPanel : public UIAggregate {
-	std::unique_ptr<uiElement> background;
-	std::unique_ptr<uiElement> portrait;
-	std::unique_ptr<uiElement> factionIcon;
-	std::unique_ptr<uiElement> healthIcon;
-	std::unique_ptr<uiElement> attackIcon;
+	std::unique_ptr<UIElement> background;
+	std::unique_ptr<UIElement> portrait;
+	std::unique_ptr<UIElement> factionIcon;
+	std::unique_ptr<UIElement> healthIcon;
+	std::unique_ptr<UIElement> attackIcon;
 
 	public:
-		UnitInfoPanel(SDL_Renderer* ren, const person* unit);
+		UnitInfoPanel(SDL_Renderer* ren, const Unit* Unit);
 
 		void Render() const;
 
-		void UpdateHealth(const person* unit);
+		void UpdateHealth(const Unit* Unit);
 };
 
 class UnitOrderPanel : public UIAggregate {
-	uiElement background;
+	UIElement background;
 	std::vector<Button> buttons;
 
 	public:
-		UnitOrderPanel(SDL_Renderer* ren, const person* unit);
+		UnitOrderPanel(SDL_Renderer* ren, const Unit* Unit);
 
 		void Render() const;
 
-		void UpdatePanel(const person* unit);
+		void UpdatePanel(const Unit* Unit);
 };
 
 #endif

@@ -1,6 +1,6 @@
 #include "path.hpp"
 
-void path::SpritifyPath(){
+void Path::SpritifyPath(){
 	/*std::cout << "Path:";
 	for(auto& step : steps) std::cout << "(" << step[0] << "," << step[1] << "), ";
 	std::cout << "\b\b " << std::endl;*/
@@ -13,7 +13,7 @@ void path::SpritifyPath(){
 }
 
 // this should properly use a spritesheet system instead of all these names
-gfxObject* path::FetchPathSegment(const std::array<unsigned int, 2>& start,
+Sprite* Path::FetchPathSegment(const std::array<unsigned int, 2>& start,
 		const std::array<unsigned int, 2>& end, const bool endOfPath){
 	std::string name = "path_";
 	if(endOfPath){
@@ -30,10 +30,10 @@ gfxObject* path::FetchPathSegment(const std::array<unsigned int, 2>& start,
 		if(end[0] == start[0]) name += "left";
 		if(end[0] > start[0]) name += "downleft";
 	}
-	return gfxManager::RequestSprite(name).get();
+	return GFXManager::RequestSprite(name).get();
 }
 
-void path::RenderStartingFrom(const int spriteX, const int spriteY){
+void Path::RenderStartingFrom(const int spriteX, const int spriteY){
 	if(steps.size() == 0) return;
 	if(sprites.size() != steps.size()-1) SpritifyPath();
 	/*SDL_Rect spriteLayout(StartingSpriteLayout(spriteX, spriteY));
@@ -60,8 +60,8 @@ void path::RenderStartingFrom(const int spriteX, const int spriteY){
 	}
 }
 
-// startX and startY are the SDL coordinates of the center of the starting tile
-void path::PathSpriteFromTo(SDL_Rect& layout, const int startX, 
+// startX and startY are the SDL coordinates of the center of the starting Tile
+void Path::PathSpriteFromTo(SDL_Rect& layout, const int startX, 
 		const int startY, const int startRow, const int startColm, 
 		const int endRow, const int endColm, const bool){
 	int endX = startX + (endColm - startColm)*TILE_WIDTH/2;
@@ -90,14 +90,14 @@ void path::PathSpriteFromTo(SDL_Rect& layout, const int startX,
 	}*/
 }
 
-std::array<unsigned int, 2> path::NextStep() const{
+std::array<unsigned int, 2> Path::NextStep() const{
 	if(steps.size() == 0){
-		std::cerr << "Error: attempted to fetch the next step of a path which "
+		std::cerr << "Error: attempted to fetch the next step of a Path which "
 			<< "does not contain any steps." << std::endl;
 		return std::array<unsigned int, 2>({{-1u,-1u}});
 	}
 	if(steps.size() == 1){
-		std::cerr << "Error: attempted to fetch the next step of a path which "
+		std::cerr << "Error: attempted to fetch the next step of a Path which "
 			<< "should have been deleted due to containing exactly one step."
 			<< std::endl;
 		return std::array<unsigned int, 2>({{-1u,-1u}});
@@ -105,7 +105,7 @@ std::array<unsigned int, 2> path::NextStep() const{
 	return steps[1];
 }
 
-bool path::Advance(){
+bool Path::Advance(){
 	steps.erase(steps.begin());
 	sprites.erase(sprites.begin());
 	return steps.size() == 1;

@@ -1,10 +1,10 @@
 #include "tile.hpp"
 
-tile::tile(std::shared_ptr<tileType> type, SDL_Renderer* ren,
-		const int row, const int colm): entity(ren, type->Path(), 0, 0),
+Tile::Tile(std::shared_ptr<TileType> type, SDL_Renderer* ren,
+		const int row, const int colm): GFXObject(ren, type->Path(), 0, 0),
 		type(type), row(row), colm(colm) {}
 
-void tile::Render() const{
+void Tile::Render() const{
 	SDL_Rect renderLayout = layout;
 	renderLayout.x += MAPDISP_ORIGIN_X;
 	renderLayout.y += MAPDISP_ORIGIN_Y;
@@ -20,21 +20,21 @@ void tile::Render() const{
 	}
 }
 
-void tile::StartTurn(){
+void Tile::StartTurn(){
 	occupants = CheckAndLock(weakOccupants);
 	/*if(occupants.size() > 0){
-		std::cout << "The tile at (" << row << "," << colm << ") has "
+		std::cout << "The Tile at (" << row << "," << colm << ") has "
 			<< occupants.size() << " occupants." << std::endl;
 	}*/
 }
 
-void tile::EndTurn(){
+void Tile::EndTurn(){
 	occupants.clear();
 }
 
-void tile::MoveTo(int x, int y){
-	//std::cout << "A tile has been moved to (" << x << "," << y << ")." << std::endl;
-	entity::MoveTo(x,y);
+void Tile::MoveTo(int x, int y){
+	//std::cout << "A Tile has been moved to (" << x << "," << y << ")." << std::endl;
+	GFXObject::MoveTo(x,y);
 	if(bldg) bldg->MoveTo(MAPDISP_ORIGIN_X + x + (TILE_WIDTH - BUILDING_WIDTH)/2,
 			MAPDISP_ORIGIN_Y + y + (4*TILE_HEIGHT/3 - BUILDING_HEIGHT)/2);
 	for(auto& occ : occupants){
@@ -44,26 +44,26 @@ void tile::MoveTo(int x, int y){
 }
 
 // this takes an entire SDL_Rect but only uses the positions, not the sizes
-void tile::MoveTo(SDL_Rect newLayout){
+void Tile::MoveTo(SDL_Rect newLayout){
 	MoveTo(newLayout.x, newLayout.y);
 }
 
-void tile::Resize(int w, int h){
+void Tile::Resize(int w, int h){
 	if(bldg) bldg->Resize(bldg->W()*w/this->W(), bldg->H()*h/this->H());
 	for(auto& occ : occupants){
 		occ->Resize(occ->W()*w/this->W(), occ->H()*h/this->H());
 	}
-	entity::Resize(w,h);
+	GFXObject::Resize(w,h);
 }
 
 // this takes an entire SDL_Rect but only uses the sizes, not the positions
-void tile::Resize(SDL_Rect newLayout){
+void Tile::Resize(SDL_Rect newLayout){
 	Resize(newLayout.w, newLayout.h);
 }
 
-bool tile::InsideQ(const int x, const int y) const {
+bool Tile::InsideQ(const int x, const int y) const {
 	/*std::cout << "Testing to see if a click at (" << x << "," << y << ") is "
-		<< "inside of a tile at (" << layout.x << "," << layout.y << ")." << std::endl;*/
+		<< "inside of a Tile at (" << layout.x << "," << layout.y << ")." << std::endl;*/
 	int relX = x - layout.x - MAPDISP_ORIGIN_X;
 	int relY = y - layout.y - MAPDISP_ORIGIN_Y;
 	if(relX < 0 || relY < 0 || relX > layout.w || relY > layout.h ||
@@ -78,32 +78,32 @@ bool tile::InsideQ(const int x, const int y) const {
 }
 
 // should be deprecated
-int tile::Select() {
+int Tile::Select() {
 	if(hasColony) return SCREEN_CHANGE;
 	return NOTHING;
 }
 
-bool tile::Click() {
+bool Tile::Click() {
 	//if(HasColony()){
 		//EnterColony(col);
-		//^^^ this will be a gameWindow function that makes a colony screen out
-		//of the colony that you pass it. It will need to be stored as a
-		//std::function at the tile level
+		//^^^ this will be a GameWindow function that makes a Colony screen out
+		//of the Colony that you pass it. It will need to be stored as a
+		//std::function at the Tile level
 	//}
 
 	return false;
 }
 
-std::shared_ptr<tileType> tile::TileType() const{
+std::shared_ptr<TileType> Tile::Type() const{
 	return type.lock();
 }
 
-void tile::SetTileType(const std::shared_ptr<tileType> newType){
+void Tile::SetTileType(const std::shared_ptr<TileType> newType){
 	ChangeSprite(newType->Path());
 	type = newType;
 }
 
-std::array<int, LAST_RESOURCE> tile::Income() const{
+std::array<int, LAST_RESOURCE> Tile::Income() const{
 	std::array<int, LAST_RESOURCE> inc = {{0}};
 
 	if(bldg && !bldg->CanHarvest()) return inc;
@@ -124,11 +124,11 @@ std::array<int, LAST_RESOURCE> tile::Income() const{
 	return inc;
 }
 
-bool tile::HasColony() const{
+bool Tile::HasColony() const{
 	return hasColony;
 }
 
-void tile::SetHasColony(const bool val){
+void Tile::SetHasColony(const bool val){
 	if(val == true){
 		RemoveBuilding();
 		//selectable = true;
@@ -141,20 +141,20 @@ void tile::SetHasColony(const bool val){
 	hasColony = val;
 }
 
-void tile::SetLocation(const int row, const int colm){
+void Tile::SetLocation(const int row, const int colm){
 	this->row = row;
 	this->colm = colm;
 }
 
-int tile::Row() const{
+int Tile::Row() const{
 	return row;
 }
 
-int tile::Colm() const{
+int Tile::Colm() const{
 	return colm;
 }
 
-void tile::AddBuilding(std::shared_ptr<building> newBldg){
+void Tile::AddBuilding(std::shared_ptr<Building> newBldg){
 	bldg = newBldg;
 	SDL_Rect bldgLayout = layout;
 	bldgLayout.x += MAPDISP_ORIGIN_X + (TILE_WIDTH - BUILDING_WIDTH)/2;
@@ -162,13 +162,13 @@ void tile::AddBuilding(std::shared_ptr<building> newBldg){
 	bldg->MoveTo(bldgLayout);
 }
 
-void tile::RemoveBuilding(){
+void Tile::RemoveBuilding(){
 	bldg.reset();
 }
 
-bool tile::AddOccupant(std::shared_ptr<person> newOccupant){
+bool Tile::AddOccupant(std::shared_ptr<Unit> newOccupant){
 	if(!newOccupant){
-		std::cerr << "Error: attempted to add a blank occupant to a tile."
+		std::cerr << "Error: attempted to add a blank occupant to a Tile."
 			<< std::endl;
 		return false;
 	}
@@ -177,7 +177,7 @@ bool tile::AddOccupant(std::shared_ptr<person> newOccupant){
 
 	for(auto& oldOccupant : occupants){
 		if(oldOccupant == newOccupant.get()){
-			std::cerr << "Error: attempted to add an occupant to a tile who was"
+			std::cerr << "Error: attempted to add an occupant to a Tile who was"
 				<< " already occupying it." << std::endl;
 			return false;
 		}
@@ -198,11 +198,11 @@ bool tile::AddOccupant(std::shared_ptr<person> newOccupant){
 	return true;
 }
 
-bool tile::RemoveOccupant(person* removeThis){
-	/*std::cout << "Removing an occupant from the tile at (" << row << "," << colm
+bool Tile::RemoveOccupant(Unit* removeThis){
+	/*std::cout << "Removing an occupant from the Tile at (" << row << "," << colm
 		<< "), which has " << occupants.size() << " occupants." << std::endl;*/
 	if(!removeThis){
-		std::cerr << "Error: attempted to remove a blank occupant from a tile."
+		std::cerr << "Error: attempted to remove a blank occupant from a Tile."
 			<< std::endl;
 		return false;
 	}
@@ -215,44 +215,44 @@ bool tile::RemoveOccupant(person* removeThis){
 			return true;
 		}
 	}
-	std::cerr << "Error: attempted to remove an occupant from the tile at ("
+	std::cerr << "Error: attempted to remove an occupant from the Tile at ("
 		<< row << "," << colm << "), but they were not found among its " 
 		<< occupants.size() << " occupant(s)." << std::endl;
 	return false;
 }
 
-std::vector<person*> tile::Occupants() const{
+std::vector<Unit*> Tile::Occupants() const{
 	return occupants;
 }
 
-unsigned int tile::NumberOfOccupants() const{
+unsigned int Tile::NumberOfOccupants() const{
 	unsigned int ret = 0u;
 	for(auto& occ : occupants) if(!occ->Dead()) ++ret;
 	return ret;
 }
 
 // eventually we want this to return the strongest occupant, not the first one
-person* tile::Defender() const{
+Unit* Tile::Defender() const{
 	if(NumberOfOccupants() == 0) return nullptr;
 	return Occupants()[0];
 }
 
-char tile::Owner() const{
+char Tile::Owner() const{
 	if(NumberOfOccupants() == 0) return 0;
 	return Occupants()[0]->Faction();
 }
 
-void tile::Training(){
+void Tile::Training(){
 	if(bldg && bldg->NowTraining()){
 		bldg->TrainingTurn();
 		if(bldg->TurnsToTrain() == 0){
 			if(occupants.empty()){
-				std::cerr << "Error: training was completed at a building but "
+				std::cerr << "Error: training was completed at a Building but "
 					<< "there were no occupants to receive it." << std::endl;
 				return;
 			} else {
 				if(!occupants[0]->CanRespec()){
-					std::cerr << "Error: training was completed at a building "
+					std::cerr << "Error: training was completed at a Building "
 						<< "but the occupant was unique and could not be "
 						<< "retrained. This should not happen." << std::endl;
 				} else {
@@ -264,8 +264,8 @@ void tile::Training(){
 	}
 }
 
-unsigned int tile::MoveCost(const tile& destination,
-		const moveCostTable moveCosts){
+unsigned int Tile::MoveCost(const Tile& destination,
+		const MoveCostTable moveCosts){
 	//std::cout << destination.Name() << " move cost:";
 	unsigned int cost = moveCosts.base;
 	if(destination.Wooded()){

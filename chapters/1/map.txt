@@ -25,7 +25,7 @@ Colony{
 	owner = 1
 }
 
-% generic unit type contains a list of places that unit goes, along with who owns them
+% generic Unit type contains a list of places that Unit goes, along with who owns them
 Units:
 Colonist{
 	5,4,1

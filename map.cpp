@@ -1,6 +1,6 @@
 #include "map.hpp"
 
-map::map(SDL_Renderer* ren, std::vector<std::shared_ptr<tileType>> types):
+Map::Map(SDL_Renderer* ren, std::vector<std::shared_ptr<TileType>> types):
 	ren(ren){
 	height = DEFAULT_HEIGHT;
 	width = DEFAULT_WIDTH;
@@ -11,10 +11,10 @@ map::map(SDL_Renderer* ren, std::vector<std::shared_ptr<tileType>> types):
 }
 	
 /*
-void map::ViewCenteredOn(const int centerColm, const int centerRow, 
-		std::shared_ptr<gameWindow> win){
+void Map::ViewCenteredOn(const int centerColm, const int centerRow, 
+		std::shared_ptr<GameWindow> win){
 	if(!win){
-		std::cerr << "Error: attempted to draw a map to a nonexistent window."
+		std::cerr << "Error: attempted to draw a Map to a nonexistent window."
 			<< std::endl;
 		return;
 	}
@@ -22,8 +22,8 @@ void map::ViewCenteredOn(const int centerColm, const int centerRow,
 	DrawTiles(centerColm, centerRow, win);
 }
 
-void map::DrawTiles(const int centerColm, const int centerRow, 
-		std::shared_ptr<gameWindow> win){
+void Map::DrawTiles(const int centerColm, const int centerRow, 
+		std::shared_ptr<GameWindow> win){
 	for(unsigned int i = 0; i < terrain.size(); ++i){
 		for(unsigned int j = 0; j < terrain[i].size(); ++j){
 			terrain[i][j]->MoveTo(SCREEN_WIDTH/2 + (j-centerColm)*TILE_WIDTH/2,
@@ -34,37 +34,37 @@ void map::DrawTiles(const int centerColm, const int centerRow,
 }
 */
 
-void map::StartTurn(){
-	CleanExpired(colonies);
+void Map::StartTurn(){
+	//CleanExpired(colonies);
 	roamers = CheckAndLock(weakRoamers);
-	ForAllTiles(&tile::StartTurn);
+	ForAllTiles(&Tile::StartTurn);
 
 	ProcessMovement();
 }
 
-void map::EndTurn(){
+void Map::EndTurn(){
 	roamers.clear();
-	ForAllTiles(&tile::EndTurn);
+	ForAllTiles(&Tile::EndTurn);
 }
 
-void map::InitTerrain(std::vector<std::shared_ptr<tileType>> types){
+void Map::InitTerrain(std::vector<std::shared_ptr<TileType>> types){
 	for(unsigned int row = 0; row < terrain.size(); ++row){
 		for(unsigned int col = row%2; col < terrain[row].size(); col+=2){
 			if(col % 2 == 0) terrain[row][col] = 
-				std::make_shared<tile>(FindByName(types, "plains"), ren, row, col);
+				std::make_shared<Tile>(FindByName(types, "plains"), ren, row, col);
 			if(col % 2 == 1) terrain[row][col] = 
-				std::make_shared<tile>(FindByName(types, "mountain"), ren, row, col);
+				std::make_shared<Tile>(FindByName(types, "mountain"), ren, row, col);
 		}
 	}
 }
 
-// path construction; this is pure Dijkstra with no heuristics
-std::vector<std::array<unsigned int, 2>> map::ShortestPath(const unsigned int startRow, 
+// Path construction; this is pure Dijkstra with no heuristics
+std::vector<std::array<unsigned int, 2>> Map::ShortestPath(const unsigned int startRow, 
 		const unsigned int startColm, const unsigned int destRow,
-		const unsigned int destColm, const moveCostTable& moveCosts){
+		const unsigned int destColm, const MoveCostTable& moveCosts){
 	if(startRow == destRow && startColm == destColm)
 		return std::vector<std::array<unsigned int, 2>>();
-	if(tile::MoveCost(*Terrain(destRow, destColm), moveCosts) == -1u)
+	if(Tile::MoveCost(*Terrain(destRow, destColm), moveCosts) == -1u)
 		return std::vector<std::array<unsigned int, 2>>();
 	std::vector<std::vector<unsigned int>> distMap;
 	std::vector<std::vector<bool>> closed;
@@ -103,34 +103,34 @@ std::vector<std::array<unsigned int, 2>> map::ShortestPath(const unsigned int st
 	return ret;
 }
 
-void map::UpdateNode(std::vector<std::vector<unsigned int>>& distMap,
+void Map::UpdateNode(std::vector<std::vector<unsigned int>>& distMap,
 		const unsigned int nodeRow, const unsigned int nodeColm, 
-		const unsigned int nodeValue, const moveCostTable& moveCosts){
+		const unsigned int nodeValue, const MoveCostTable& moveCosts){
 	//distMap[nodeRow][nodeColm] = nodeValue;
 	std::array<unsigned int, 6> adjacentEdges(ForSurrounding(
-				std::function<std::shared_ptr<tile>(int,int)>(
+				std::function<std::shared_ptr<Tile>(int,int)>(
 					[this](int i, int j){return this->Terrain(i,j);}
 				),
 				nodeRow, nodeColm, 
-				std::function<unsigned int(std::shared_ptr<tile>)>(
-					[moveCosts](std::shared_ptr<tile> tl) 
-					{if(!tl) return -1u; return tile::MoveCost(*tl, moveCosts);}
+				std::function<unsigned int(std::shared_ptr<Tile>)>(
+					[moveCosts](std::shared_ptr<Tile> tl) 
+					{if(!tl) return -1u; return Tile::MoveCost(*tl, moveCosts);}
 				)));
 	for(auto i = 0; i < 6; ++i){
 		if(OutOfBounds(nodeRow + hexAdj[i][0], nodeColm + hexAdj[i][1])
 				|| adjacentEdges[i] == -1u) continue;
-		// (map dist from here) -> dist. from start or skip if we've already been
+		// (Map dist from here) -> dist. from start or skip if we've already been
 		adjacentEdges[i] = std::min(adjacentEdges[i] + nodeValue,
 				distMap[nodeRow + hexAdj[i][0]][nodeColm + hexAdj[i][1]]);
 	}
 	SetSurrounding(distMap, nodeRow, nodeColm, adjacentEdges);
 }
 
-// check all adjacent tiles
-// if an adjacent tile is closed, run this on it and return output
+// check all adjacent Tiles
+// if an adjacent Tile is closed, run this on it and return output
 // if it's open, return its {row, colm, dist}
-// return lowest dist of the 6 (directly) checked tiles
-std::array<unsigned int, 3> map::FindNextLowestOpen(
+// return lowest dist of the 6 (directly) checked Tiles
+std::array<unsigned int, 3> Map::FindNextLowestOpen(
 		const std::vector<std::vector<unsigned int>>& distMap,
 		const std::vector<std::vector<bool>>& closedNodes,
 		std::vector<std::vector<bool>>& checkedNodes,
@@ -162,7 +162,7 @@ std::array<unsigned int, 3> map::FindNextLowestOpen(
 			{return a[2] < b[2];});
 }
 
-std::vector<std::array<unsigned int, 2>> map::BuildPathVector(
+std::vector<std::array<unsigned int, 2>> Map::BuildPathVector(
 		const std::vector<std::vector<unsigned int>>& distMap, 
 		const unsigned int destRow, const unsigned int destColm){
 
@@ -189,17 +189,17 @@ std::vector<std::array<unsigned int, 2>> map::BuildPathVector(
 	return bestPath;
 }
 
-// end of path construction
+// end of Path construction
 
 // movement execution
 
 // method 2:
-void map::ProcessMovement(){
+void Map::ProcessMovement(){
 	std::vector<MoveData> moverData = FindMoverData(roamers);
 
 	// 1: Identify anyone who wants to move into a space where no one else
 	//    (a) already is, or (b) also wants to move. Move them and mark 'done'.
-	// 2: Identify anyone who wants to move into a space with a stationary unit.
+	// 2: Identify anyone who wants to move into a space with a stationary Unit.
 	//    If ally, bounce, if enemy, fight.
 	// 3: Identify anyone who wants to move into a space that someone else wants
 	//    to move into. If ally, determine winner randomly, bounce other; if 
@@ -233,11 +233,11 @@ void map::ProcessMovement(){
 	}
 }
 
-bool map::UncontestedMoves(std::vector<MoveData>& moverData){
+bool Map::UncontestedMoves(std::vector<MoveData>& moverData){
 	bool somethingChanged = false;
 	for(auto& md1 : moverData){
 		if(md1.status != MS_UNCHECKED) continue;
-		person* defender = Terrain(md1.destination)->Defender();
+		Unit* defender = Terrain(md1.destination)->Defender();
 		if(!defender){
 			// no defender, can move unless someone else also wants to
 			for(auto& md2 : moverData){
@@ -262,7 +262,7 @@ bool map::UncontestedMoves(std::vector<MoveData>& moverData){
 			// if defender isn't moving, bounce if friendly, assault if enemy.
 			// This could be ill-advised: if ally is being attacked, we want to
 			// interpret this bounce as a support in the impending combat.
-			if(!defender->Path()){
+			if(!defender->CurrentPath()){
 				if(roamers[md1.id]->Faction() == defender->Faction()){
 					md1.status = MS_BOUNCE;
 				} else {
@@ -276,13 +276,13 @@ bool map::UncontestedMoves(std::vector<MoveData>& moverData){
 	return somethingChanged;
 }
 
-bool map::AssaultMoves(std::vector<MoveData>& moverData){
+bool Map::AssaultMoves(std::vector<MoveData>& moverData){
 	bool somethingChanged = false;
 	for(auto& md : moverData){
 		if(md.status == MS_ASSAULT){
 			// this should actually allow multiple participants in the fight
-			person* defender = Terrain(md.destination)->Defender();
-			if(defender) person::Fight(roamers[md.id], defender);
+			Unit* defender = Terrain(md.destination)->Defender();
+			if(defender) Unit::Fight(roamers[md.id], defender);
 			if(defender->Dead() && !roamers[md.id]->Dead()){
 				MoveUnitTo(roamers[md.id], md.destination);
 				roamers[md.id]->AdvancePath();
@@ -294,7 +294,7 @@ bool map::AssaultMoves(std::vector<MoveData>& moverData){
 	return somethingChanged;
 }
 
-bool map::ClashMoves(std::vector<MoveData>& moverData){
+bool Map::ClashMoves(std::vector<MoveData>& moverData){
 	bool somethingChanged = false;
 	for(auto& md : moverData){
 		if(md.status == MS_FRIENDCLASH){
@@ -333,7 +333,7 @@ bool map::ClashMoves(std::vector<MoveData>& moverData){
 				somethingChanged = true;
 				continue;
 			}
-			person::Fight(roamers[md.id], roamers[foe->id]);
+			Unit::Fight(roamers[md.id], roamers[foe->id]);
 			if(roamers[foe->id]->Dead() && !roamers[md.id]->Dead()){
 				MoveUnitTo(roamers[md.id], md.destination);
 				roamers[md.id]->AdvancePath();
@@ -351,22 +351,22 @@ bool map::ClashMoves(std::vector<MoveData>& moverData){
 	return somethingChanged;
 }
 
-/*void map::ProcessMovement(){
+/*void Map::ProcessMovement(){
 	Clean();
 	// We actually need to find everyone who wants to advance and everyone
 	// who wants to patrol, check for conflicts, do fights, THEN move them.
 	// Outline:
-	// 1: find all the tiles anyone wants to move into
+	// 1: find all the Tiles anyone wants to move into
 	// 2: find any pairs advancing at each other and give them ORDER_CLASH
-	// 3: any unit in one of the target tiles gets orders = ORDER_DEFEND
+	// 3: any Unit in one of the target Tiles gets orders = ORDER_DEFEND
 	//    unless it already has ORDER_CLASH or ORDER_HARVEST
-	// 4: Do fights: attacker and defender, plus check each tile adjacent to
+	// 4: Do fights: attacker and defender, plus check each Tile adjacent to
 	//    each for OPPOSING patrollers, adding them to the fight, even if the
 	//    defender did not get ORDER_DEFEND. For a clash, any patrollers must
-	//    be adjacent to BOTH attacker and defender; additional units advancing
+	//    be adjacent to BOTH attacker and defender; additional Units advancing
 	//    into the target space can also join, whichever side they're on. Thus,
-	//    a defender can use ORDER_PATROL to weakly defend each adjacent tile,
-	//    or ORDER_ADVANCE into a friendly tile to defend it strongly.
+	//    a defender can use ORDER_PATROL to weakly defend each adjacent Tile,
+	//    or ORDER_ADVANCE into a friendly Tile to defend it strongly.
 	// 5: With fights concluded, move everyone with ORDER_ADVANCE and 
 	//    ORDER_CLASH as necessary. Ones which did not participate in a fight
 	//    can be fired upon by patrollers adjacent to their initial space.
@@ -375,8 +375,8 @@ bool map::ClashMoves(std::vector<MoveData>& moverData){
 	for(auto& r : roamers){
 		if(r->Orders() == ORDER_ADVANCE){
 			if(!r->Path()){
-				std::cerr << "Error: a unit (" << r->Name() << ") attempted to "
-					<< "move as ordered but did not have a path." << std::endl;
+				std::cerr << "Error: a Unit (" << r->Name() << ") attempted to "
+					<< "move as ordered but did not have a Path." << std::endl;
 				continue;
 			}
 			std::array<unsigned int, 2> nextStep = r->NextStep();
@@ -388,7 +388,7 @@ bool map::ClashMoves(std::vector<MoveData>& moverData){
 	}
 }*/
 
-std::vector<map::MoveData> map::FindMoverData(const std::vector<person*>& roamers){
+std::vector<Map::MoveData> Map::FindMoverData(const std::vector<Unit*>& roamers){
 	std::vector<MoveData> ret;
 	for(auto i = 0u; i < roamers.size(); ++i){
 		if(roamers[i]->Orders() == ORDER_ADVANCE){
@@ -403,7 +403,7 @@ std::vector<map::MoveData> map::FindMoverData(const std::vector<person*>& roamer
 	return ret;
 }
 
-/*MoverConflicts map::FindConflicts(const std::vector<MoveData>& moverData){
+/*MoverConflicts Map::FindConflicts(const std::vector<MoveData>& moverData){
 	MoverConflicts ret;
 	std::vector<std::array<int,2>> preliminaryConflicts;
 	// check for everyone who might be bumping into each other
@@ -418,31 +418,31 @@ std::vector<map::MoveData> map::FindMoverData(const std::vector<person*>& roamer
 
 // end of movement execution
 
-void map::AddColony(const std::shared_ptr<colony> col, int row, int colm){
+/*void Map::AddColony(const std::shared_ptr<Colony> col, int row, int colm){
 	colonies.emplace_back(col);
 	Terrain(row, colm)->SetHasColony(true);
 }
 
-std::shared_ptr<colony> map::Colony(const int num){
+std::shared_ptr<Colony> Map::Colony(const int num){
 	if(num < 0 || static_cast<unsigned int>(num) >= colonies.size())
 		return nullptr;
 	return colonies[num].lock();
 }
 
-const std::shared_ptr<colony> map::Colony(const int num) const{
+const std::shared_ptr<Colony> Map::Colony(const int num) const{
 	if(num < 0 || static_cast<unsigned int>(num) >= colonies.size())
 		return nullptr;
 	return colonies[num].lock();
-}
+}*/
 
-void map::AddRoamer(std::shared_ptr<person> newRoamer, const int row, const int colm){
+void Map::AddRoamer(std::shared_ptr<Unit> newRoamer, const int row, const int colm){
 	if(!newRoamer){
-		std::cerr << "Error: told to add a roamer to a map, but it was a "
+		std::cerr << "Error: told to add a roamer to a Map, but it was a "
 			<< "nullptr." << std::endl;
 		return;
 	}
 	if(OutOfBounds(row, colm)){
-		std::cerr << "Error: told to add a roamer to a map, but the given "
+		std::cerr << "Error: told to add a roamer to a Map, but the given "
 			<< "coordinates (" << row << "," << colm << ") are out of bounds."
 			<< std::endl;
 		return;
@@ -451,34 +451,34 @@ void map::AddRoamer(std::shared_ptr<person> newRoamer, const int row, const int 
 	weakRoamers.push_back(newRoamer);
 }
 
-std::shared_ptr<tile> map::Terrain(const int row, const int column) const{
+std::shared_ptr<Tile> Map::Terrain(const int row, const int column) const{
 	if(OutOfBounds(row, column)){
 		if(row != -1 || column != -1){
-			std::cout << "Warning: someone requested the out-of-bounds tile at "
+			std::cout << "Warning: someone requested the out-of-bounds Tile at "
 				"(" << row << "," << column << ")." << std::endl;
 		}
 		return nullptr;
 	}
 	if((row + column)%2 != 0){
 		std::cerr << "Error: someone is trying to access the non-existent "
-			<< "tile at row " << row << ", column " << column << "." << std::endl;
+			<< "Tile at row " << row << ", column " << column << "." << std::endl;
 		return nullptr;
 	}
 	if(!terrain[row][column]){
-		std::cerr << "Error: someone is trying to access the valid tile at row "
+		std::cerr << "Error: someone is trying to access the valid Tile at row "
 			<< row << ", column " << column << ", but there's nothing there."
 			<< std::endl;
 	}
 	return terrain[row][column];
 }
 
-std::shared_ptr<tile> map::Terrain(const std::array<unsigned int,2> coords) const{
+std::shared_ptr<Tile> Map::Terrain(const std::array<unsigned int,2> coords) const{
 	return Terrain(coords[0], coords[1]);
 }
 
-std::vector<std::vector<std::shared_ptr<tile>>> map::SurroundingTerrain(
+std::vector<std::vector<std::shared_ptr<Tile>>> Map::SurroundingTerrain(
 		const int row, const int colm){
-	std::vector<std::vector<std::shared_ptr<tile>>> ret;
+	std::vector<std::vector<std::shared_ptr<Tile>>> ret;
 	ret.resize(5);
 	for(unsigned int i = 0; i < ret.size(); ++i){
 		ret[i].resize(ret.size() -
@@ -491,34 +491,34 @@ std::vector<std::vector<std::shared_ptr<tile>>> map::SurroundingTerrain(
 	return ret;
 }
 
-unsigned int map::NumberOfRows() const{
+unsigned int Map::NumberOfRows() const{
 	if(terrain.size() < 1){
-		std::cerr << "Error: asked for number of rows on a map, but the map "
+		std::cerr << "Error: asked for number of rows on a Map, but the Map "
 			<< "has not been initialized." << std::endl;
 		return 0;
 	}
 	return terrain.size();
 }
 
-unsigned int map::NumberOfColumns() const{
+unsigned int Map::NumberOfColumns() const{
 	if(terrain.size() < 1){
-		std::cerr << "Error: asked for number of columns on a map, but the map "
+		std::cerr << "Error: asked for number of columns on a Map, but the Map "
 			<< "has not been initialized." << std::endl;
 		return 0;
 	}
 	return terrain[0].size();
 }
 
-bool map::OutOfBounds(const unsigned int row, const unsigned int colm) const{
+bool Map::OutOfBounds(const unsigned int row, const unsigned int colm) const{
 	return row >= NumberOfRows() || colm >= NumberOfColumns();
 }
 
-bool map::OutOfBounds(const int row, const int colm) const{
+bool Map::OutOfBounds(const int row, const int colm) const{
 	return OutOfBounds(static_cast<unsigned int>(row), static_cast<unsigned int>(colm));
 }
 
 /*
-std::vector<std::vector<std::shared_ptr<tile>>> map::SurroundingTerrain(
+std::vector<std::vector<std::shared_ptr<Tile>>> Map::SurroundingTerrain(
 		int centerColm, int centerRow, int widthToDisplay, int heightToDisplay){
 
 	leftEdge = std::max(centerColm - widthToDisplay, 0);
@@ -526,7 +526,7 @@ std::vector<std::vector<std::shared_ptr<tile>>> map::SurroundingTerrain(
 	bottomEdge = std::max(centerRow - heightToDisplay/2, 0);
 	bottomEdge = std::min(bottomEdge, height - heightToDisplay);
 
-	std::vector<std::vector<std::shared_ptr<tile>>> sur;
+	std::vector<std::vector<std::shared_ptr<Tile>>> sur;
 	sur.resize(heightToDisplay);
 	for(unsigned int i = 0; i < sur.size(); ++i){
 		sur[i].resize(2*widthToDisplay);
@@ -538,7 +538,7 @@ std::vector<std::vector<std::shared_ptr<tile>>> map::SurroundingTerrain(
 }
 */
 
-void map::MoveView(direction_t dir){
+void Map::MoveView(direction_t dir){
 	int xShift=0, yShift=0;
 	switch(dir){
 		case VIEW_DOWN:
@@ -562,42 +562,42 @@ void map::MoveView(direction_t dir){
 	}
 }
 
-// null origin = place unit on tile, it wasn't anywhere before
-// null destination = remove unit from tile, it's not going to a place
-// return true if the unit was moved, false if not
-bool map::MoveUnitTo(person* mover, const int row, const int colm){
+// null origin = place Unit on Tile, it wasn't anywhere before
+// null destination = remove Unit from Tile, it's not going to a place
+// return true if the Unit was moved, false if not
+bool Map::MoveUnitTo(Unit* mover, const int row, const int colm){
 	if(!mover){
-		std::cerr << "Error: a map was told to move a person, but was given a "
+		std::cerr << "Error: a Map was told to move a Unit, but was given a "
 			<< "nullptr." << std::endl;
 		return false;
 	}
 	if(OutOfBounds(row, colm)){
-		std::cerr << "Error: a map was told to move a person, but the given "
+		std::cerr << "Error: a Map was told to move a Unit, but the given "
 			<< "destination was out of bounds." << std::endl;
 		return false;
 	}
-	tile* origin = Terrain(mover->Row(), mover->Colm()).get();
-	tile* destination = Terrain(row, colm).get();
+	Tile* origin = Terrain(mover->Row(), mover->Colm()).get();
+	Tile* destination = Terrain(row, colm).get();
 	if(!destination){
-		std::cerr << "Error: a map was told to move a person, but the "
-			<< "destination tile returned a nullptr." << std::endl;
+		std::cerr << "Error: a Map was told to move a Unit, but the "
+			<< "destination Tile returned a nullptr." << std::endl;
 		return false;
 	}
 	/*if(mover->MovesLeft() < 1){
-		std::cout << "This unit has used all of its moves." << std::endl;
+		std::cout << "This Unit has used all of its moves." << std::endl;
 		return false;
 	}*/
 
 	// if there's an enemy there, fight it (DEPRECATED)
 	/*if(destination->Occupants().size() != 0 
 			&& mover->Faction() != destination->Owner()){
-		person::Fight(mover, destination->Defender());
+		Unit::Fight(mover, destination->Defender());
 		if(destination->Occupants().size() > 0) return true; //enemy lived=>stay
 	}*/
 	
 	// do the actual moving
-	if(!destination->AddOccupant(mover->shared_from_base<person>())){
-		std::cout << "That tile is already fully occupied." << std::endl;
+	if(!destination->AddOccupant(mover->shared_from_base<Unit>())){
+		std::cout << "That Tile is already fully occupied." << std::endl;
 		return false;
 	}
 	if(origin) origin->RemoveOccupant(mover);
@@ -607,19 +607,19 @@ bool map::MoveUnitTo(person* mover, const int row, const int colm){
 	return true;
 }
 
-bool map::MoveUnitTo(person* mover, const std::array<unsigned int,2>& coords){
+bool Map::MoveUnitTo(Unit* mover, const std::array<unsigned int,2>& coords){
 	return MoveUnitTo(mover, coords[0], coords[1]);
 }
 
-std::string map::TerrainName(const unsigned int row, const unsigned int col){
+std::string Map::TerrainName(const unsigned int row, const unsigned int col){
 	if(row < terrain.size() && col < terrain[row].size())
 		return Terrain(row, col)->Name();
 	return "OUTSIDE_OF_MAP";
 }
 
-std::unique_ptr<path> map::PathTo(const int startRow, const int startColm, 
-		const int destRow, const int destColm, const moveCostTable& moveCosts){
+std::unique_ptr<Path> Map::PathTo(const int startRow, const int startColm, 
+		const int destRow, const int destColm, const MoveCostTable& moveCosts){
 	std::vector<std::array<unsigned int, 2>> steps(ShortestPath(startRow, startColm,
 				destRow, destColm, moveCosts));
-	return steps.size() == 0 ? nullptr : std::make_unique<path>(steps);
+	return steps.size() == 0 ? nullptr : std::make_unique<Path>(steps);
 }

@@ -13,42 +13,36 @@
 
 #include "templates.hpp"
 #include "exceptions.hpp"
-#include "person.hpp"
+#include "unit.hpp"
 #include "building.hpp"
 #include "colony.hpp"
-#include "building.hpp"
 #include "map.hpp"
 #include "gamewindow.hpp"
-#include "ui.hpp"
 
-class person;
-class colony;
-class gameWindow;
-class map;
-class game {
-	std::vector<std::shared_ptr<buildingType>> buildingTypes;
-	std::vector<std::shared_ptr<attackType>> attackTypes;
-	std::vector<std::shared_ptr<unitType>> unitTypes;
+class Game {
+	std::vector<std::shared_ptr<BuildingType>> buildingTypes;
+	std::vector<std::shared_ptr<AttackType>> attackTypes;
+	std::vector<std::shared_ptr<UnitType>> unitTypes;
 
-	std::vector<std::shared_ptr<tileType>> tileTypes;
-	std::vector<std::shared_ptr<map>> maps;
-	std::vector<std::shared_ptr<person>> people;
-	std::vector<std::shared_ptr<colony>> colonies;
+	std::vector<std::shared_ptr<TileType>> tileTypes;
+	std::vector<std::shared_ptr<Map>> maps;
+	std::vector<std::shared_ptr<Unit>> units;
+	std::vector<std::shared_ptr<Colony>> colonies;
 
-	std::shared_ptr<gameWindow> win;
+	std::shared_ptr<GameWindow> win;
 
-	void ClearDeadPeople();
+	void ClearDeadUnits();
 
 	void StartTurn();
 	void EndTurn();
 	std::unique_ptr<Button> EndTurnButton(SDL_Renderer* ren);
 
 	public:
-		game();
+		Game();
 
 		void Begin();
-		screentype_t ThrowToColonyScreen(std::shared_ptr<colony> col);
-		screentype_t ThrowToMapScreen(std::shared_ptr<map> theMap,
+		screentype_t ThrowToColonyScreen(std::shared_ptr<Colony> col);
+		screentype_t ThrowToMapScreen(std::shared_ptr<Map> theMap,
 				int centerRow, int centerColm);
 
 		bool Tick();	// false means quit, true means continue ticking
@@ -57,43 +51,43 @@ class game {
 		void ReadAttackTypes(); // read exported file listing attack types
 		void ReadUnitTypes();
 		void ReadBuildingTypes();
-		std::vector<std::shared_ptr<buildingType>> BuildingTypes();
+		const std::vector<std::shared_ptr<BuildingType>>& BuildingTypes() const;
 
 		void ReadTileTypes();
-		void ReadMap(const std::string& mapName);
+		void ReadMap(const std::string& MapName);
 		std::vector<std::string> ExtractMapSection(
 				const std::vector<std::string>& lines, const unsigned int i);
 		std::string ParseDescLine(const std::string& line, const std::string& key);
 
-		std::map<char, std::shared_ptr<tileType>> ParseTerrainDictionary(
+		std::map<char, std::shared_ptr<TileType>> ParseTerrainDictionary(
 				const std::vector<std::string> desc);
-		std::vector<std::vector<std::shared_ptr<tile>>> ParseMap(
-				const std::map<char, std::shared_ptr<tileType>> tileDict, 
+		std::vector<std::vector<std::shared_ptr<Tile>>> ParseMap(
+				const std::map<char, std::shared_ptr<TileType>> TileDict, 
 				std::vector<std::string> desc);
 
-		void ParseFeatures(std::shared_ptr<map> parentMap, 
+		void ParseFeatures(std::shared_ptr<Map> parentMap, 
 				const std::vector<std::string> desc);
-		std::shared_ptr<colony> ParseColony(std::shared_ptr<map> parentMap,
+		std::shared_ptr<Colony> ParseColony(std::shared_ptr<Map> parentMap,
 				const std::vector<std::string>& desc);
 
-		void ParseUnits(std::shared_ptr<map> parentMap,
+		void ParseUnits(std::shared_ptr<Map> parentMap,
 				const std::vector<std::string>& desc);
-		std::shared_ptr<person> ParseUniqueUnit(std::shared_ptr<map> parentMap,
-				const std::vector<std::string>& unitDesc);
-		std::vector<std::shared_ptr<person>> ParseGenericUnits(
-				std::shared_ptr<map> parentMap, 
-				const std::shared_ptr<unitType> genericType, 
-				std::vector<std::string> unitDesc);
+		std::shared_ptr<Unit> ParseUniqueUnit(std::shared_ptr<Map> parentMap,
+				const std::vector<std::string>& UnitDesc);
+		std::vector<std::shared_ptr<Unit>> ParseGenericUnits(
+				std::shared_ptr<Map> parentMap, 
+				const std::shared_ptr<UnitType> genericType, 
+				std::vector<std::string> UnitDesc);
 
-		std::shared_ptr<person> CreatePerson(map* theMap, const int row,
+		std::shared_ptr<Unit> CreatePerson(Map* theMap, const int row,
 				const int colm,
-				const std::shared_ptr<unitType> spec, const char faction);
-		std::shared_ptr<colony> CreateColony(std::shared_ptr<map> parentMap,
+				const std::shared_ptr<UnitType> spec, const char faction);
+		std::shared_ptr<Colony> CreateColony(std::shared_ptr<Map> parentMap,
 				const int row, const int colm, const std::string& name, 
 				const int faction);
-		std::shared_ptr<map> CreateMap();
+		std::shared_ptr<Map> CreateMap();
 
-		std::shared_ptr<gameWindow> Window() { return win; }
+		std::shared_ptr<GameWindow> Window() { return win; }
 
 		void NextTurn();
 };

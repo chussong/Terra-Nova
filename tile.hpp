@@ -7,28 +7,24 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
-#include "entity.hpp"
+#include "gfxobject.hpp"
 #include "building.hpp"
-#include "person.hpp"
+#include "unit.hpp"
 
-class person;
-class building;
-class buildingType;
-
-class tileType {
+class TileType {
 	const std::string name;
 	const std::array<int, LAST_RESOURCE> yield;
 
-	// this should be a regular pointer to a vector of building types
-	std::vector<std::weak_ptr<buildingType>> allowedBuildings;
+	// this should be a regular pointer to a vector of Building types
+	std::vector<std::weak_ptr<BuildingType>> allowedBuildings;
 	bool cold = false;
 	bool wooded = false;
 	bool aquatic = false;
 	bool hilly = false;
 
 	public:
-		tileType() = delete;
-		tileType(const std::string name, const std::array<int, LAST_RESOURCE>& yield):
+		TileType() = delete;
+		TileType(const std::string name, const std::array<int, LAST_RESOURCE>& yield):
 			name(name), yield(yield) {}
 
 		std::string Name() const 							{ return name; }
@@ -36,7 +32,7 @@ class tileType {
 		std::array<int, LAST_RESOURCE> Yield() const 		{ return yield; }
 		
 		bool AllowedToBuild(const std::string name) const	{ return !name.empty(); }
-		void AddAllowedBuilding(const std::shared_ptr<buildingType> newBldg)
+		void AddAllowedBuilding(const std::shared_ptr<BuildingType> newBldg)
 			{ allowedBuildings.push_back(newBldg); }
 
 		bool Cold() const		{ return cold; }
@@ -50,28 +46,28 @@ class tileType {
 
 };
 
-class tile : public entity {
-	std::weak_ptr<tileType> type;
-	std::shared_ptr<building> bldg;
-	std::vector<std::weak_ptr<person>> weakOccupants;
-	std::vector<person*> occupants;
+class Tile : public GFXObject {
+	std::weak_ptr<TileType> type;
+	std::shared_ptr<Building> bldg;
+	std::vector<std::weak_ptr<Unit>> weakOccupants;
+	std::vector<Unit*> occupants;
 
 	int row;
 	int colm;
 
 	bool hasColony = false;
-	//std::function<void(colony*)> EnterColony
+	//std::function<void(Colony*)> EnterColony
 
 	public:
-		tile() = delete;
-		tile(std::shared_ptr<tileType> type, SDL_Renderer* ren,
+		Tile() = delete;
+		Tile(std::shared_ptr<TileType> type, SDL_Renderer* ren,
 				const int row, const int colm);
-		tile(const entity& other) = delete;
-		tile(tile&& other) noexcept : 
-			entity(std::move(other)), type(other.type), bldg(other.bldg),
+		Tile(const GFXObject& other) = delete;
+		Tile(Tile&& other) noexcept : 
+			GFXObject(std::move(other)), type(other.type), bldg(other.bldg),
 			occupants(other.occupants), row(other.row), colm(other.colm),
 			hasColony(other.hasColony) {}
-		tile& operator=(const entity& other) = delete;
+		Tile& operator=(const GFXObject& other) = delete;
 
 		bool IsTile() const { return true; }
 
@@ -88,14 +84,14 @@ class tile : public entity {
 		// deprecate Select() when possible
 		int Select();
 		bool Click();
-		std::shared_ptr<tileType> TileType() const;
-		std::string Name() const { return TileType()->Name(); }
-		void SetTileType(const std::shared_ptr<tileType> newType);
+		std::shared_ptr<TileType> Type() const;
+		std::string Name() const { return Type()->Name(); }
+		void SetTileType(const std::shared_ptr<TileType> newType);
 		std::array<int, LAST_RESOURCE> Income() const;
-		bool Cold() const		{ return TileType()->Cold(); }
-		bool Wooded() const		{ return TileType()->Wooded(); }
-		bool Aquatic() const	{ return TileType()->Aquatic(); }
-		bool Hilly() const		{ return TileType()->Hilly(); }
+		bool Cold() const		{ return Type()->Cold(); }
+		bool Wooded() const		{ return Type()->Wooded(); }
+		bool Aquatic() const	{ return Type()->Aquatic(); }
+		bool Hilly() const		{ return Type()->Hilly(); }
 
 		bool HasColony() const;
 		void SetHasColony(const bool val);
@@ -104,20 +100,20 @@ class tile : public entity {
 		int Row() const;
 		int Colm() const;
 
-		void AddBuilding(std::shared_ptr<building> newBldg);
+		void AddBuilding(std::shared_ptr<Building> newBldg);
 		void RemoveBuilding();
 
-		bool AddOccupant(std::shared_ptr<person> newOccupant);
-		bool RemoveOccupant(person* removeThis);
-		std::vector<person*> Occupants() const;
+		bool AddOccupant(std::shared_ptr<Unit> newOccupant);
+		bool RemoveOccupant(Unit* removeThis);
+		std::vector<Unit*> Occupants() const;
 		unsigned int NumberOfOccupants() const;
-		person* Defender() const;
+		Unit* Defender() const;
 		char Owner() const;
 
 		void Training();
 
-		static unsigned int MoveCost(const tile& destination,
-			const moveCostTable moveCosts);
+		static unsigned int MoveCost(const Tile& destination,
+			const MoveCostTable moveCosts);
 };
 
 #endif

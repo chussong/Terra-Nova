@@ -1,16 +1,16 @@
-#include "person.hpp"
+#include "unit.hpp"
 
-std::string person::GenerateGivenName(){
+std::string Unit::GenerateGivenName(){
 	return std::string("Urist");
 }
 
-std::string person::GenerateSurname(){
+std::string Unit::GenerateSurname(){
 	return std::string("McColonist");
 }
 
-person::person(SDL_Renderer* ren, 
-		const std::shared_ptr<unitType> spec, const char faction): 
-		entity(ren, spec->Name(), 0, 0, true),
+Unit::Unit(SDL_Renderer* ren, 
+		const std::shared_ptr<UnitType> spec, const char faction): 
+		GFXObject(ren, spec->Name(), 0, 0, true),
 		spec(spec), faction(faction), location({{-1u,-1u}}) {
 	givenName = GenerateGivenName();
 	surname = GenerateSurname();
@@ -19,36 +19,36 @@ person::person(SDL_Renderer* ren,
 	health = MaxHealth();
 	movesLeft = MoveSpeed()+1;
 
-	healthBackground = gfxManager::RequestSprite("healthbar_background");
-	healthBar = gfxManager::RequestSprite("healthbar_p" + std::to_string(faction));
+	healthBackground = GFXManager::RequestSprite("healthbar_background");
+	healthBar = GFXManager::RequestSprite("healthbar_p" + std::to_string(faction));
 
-	availableOrders.emplace_back("patrol", std::bind(&person::OrderPatrol, this));
-	availableOrders.emplace_back("harvest", std::bind(&person::OrderHarvest, this));
+	availableOrders.emplace_back("patrol", std::bind(&Unit::OrderPatrol, this));
+	availableOrders.emplace_back("harvest", std::bind(&Unit::OrderHarvest, this));
 	SetOrders(ORDER_PATROL);
 }
 
-void person::ChangeName(const std::string givenName, const std::string surname){
+void Unit::ChangeName(const std::string givenName, const std::string surname){
 	this->givenName = givenName;
 	this->surname = surname;
 }
 
-void person::ChangeName(const std::string fullName){
+void Unit::ChangeName(const std::string fullName){
 	givenName = fullName.substr(0, fullName.find(' '));
 	surname = fullName.substr(fullName.find(' ') + 1);
 }
 
-void person::ChangeGender(const std::string gender){
+void Unit::ChangeGender(const std::string gender){
 	if(gender == "female") female = true;
 	if(gender == "male") female = false;
 }
 
-void person::ChangeSpec(const std::shared_ptr<unitType> spec){
+void Unit::ChangeSpec(const std::shared_ptr<UnitType> spec){
 	this->spec = spec;
-	sprite = gfxManager::RequestSprite(spec->Name());
-	selectedSprite = gfxManager::RequestSprite(spec->Name() + "_selected");
+	sprite = GFXManager::RequestSprite(spec->Name());
+	selectedSprite = GFXManager::RequestSprite(spec->Name() + "_selected");
 }
 
-bool person::TakeDamage(const int damage){
+bool Unit::TakeDamage(const int damage){
 	if(damage >= health){
 		health = 0;
 		Die();
@@ -59,22 +59,22 @@ bool person::TakeDamage(const int damage){
 	return false;
 }
 
-void person::Die(){
+void Unit::Die(){
 	std::cout << Name() << " belonging to player " << (int)faction << " has died!" 
 		<< std::endl;
 	visible = false;
 }
 
-void person::AddItem(const std::string item){
+void Unit::AddItem(const std::string item){
 	inventory.push_back(item);
 }
 
-void person::MoveSpriteToTile(const int X, const int Y, const int W, const int H){
+void Unit::MoveSpriteToTile(const int X, const int Y, const int W, const int H){
 	MoveTo((MAPDISP_ORIGIN_X + X + (W - layout.w)/2), 
 			(MAPDISP_ORIGIN_Y + Y + (H - layout.w)/2));
 }
 
-void person::Render() const{
+void Unit::Render() const{
 	//std::cout << Dead() << std::endl;
 	if(!visible) return;
 	if(Dead()) return;
@@ -82,7 +82,7 @@ void person::Render() const{
 	if(myPath) myPath->RenderStartingFrom(X() + PERSON_WIDTH/2,
 			Y() - PERSON_HEIGHT/2);
 
-	entity::Render();
+	GFXObject::Render();
 	SDL_Rect healthLayout;
 	healthLayout.w = HEALTH_BAR_WIDTH;
 	healthLayout.h = HEALTH_BAR_HEIGHT;
@@ -105,89 +105,89 @@ void person::Render() const{
 	}
 }
 
-void person::ProcessTurn(){
+void Unit::ProcessTurn(){
 	movesLeft = MoveSpeed();
 }
 
-std::string person::Name() const{
+std::string Unit::Name() const{
 	std::string name(givenName);
 	name.append(" ");
 	name.append(surname);
 	return name;
 }
 
-std::string person::GivenName() const{
+std::string Unit::GivenName() const{
 	return givenName;
 }
 
-std::string person::Surname() const{
+std::string Unit::Surname() const{
 	return surname;
 }
 
-std::string person::Species() const{
+std::string Unit::Species() const{
 	return "human";
 }
 
-std::string person::Gender() const{
+std::string Unit::Gender() const{
 	if(female) return std::string("female");
 	return std::string("male");
 }
 
-std::string person::NomPronoun() const{
+std::string Unit::NomPronoun() const{
 	if(female) return std::string("she");
 	return std::string("he");
 }
 
-std::string person::NomPronCap() const{
+std::string Unit::NomPronCap() const{
 	if(female) return std::string("She");
 	return std::string("He");
 }
 
-std::string person::AccPronoun() const{
+std::string Unit::AccPronoun() const{
 	if(female) return std::string("her");
 	return std::string("him");
 }
 
-std::string person::AccPronCap() const{
+std::string Unit::AccPronCap() const{
 	if(female) return std::string("Her");
 	return std::string("Him");
 }
 
-std::string person::PosPronoun() const{
+std::string Unit::PosPronoun() const{
 	if(female) return std::string("her");
 	return std::string("his");
 }
 
-std::string person::PosPronCap() const{
+std::string Unit::PosPronCap() const{
 	if(female) return std::string("Her");
 	return std::string("His");
 }
 
-std::shared_ptr<unitType> person::Spec() const{
+std::shared_ptr<UnitType> Unit::Spec() const{
 	return spec;
 }
 
-int person::MaxHealth() const{
+int Unit::MaxHealth() const{
 	return spec->MaxHealth();
 }
 
-int person::Health() const{
+int Unit::Health() const{
 	return health;
 }
 
-std::vector<std::string> person::Inventory() const{
+std::vector<std::string> Unit::Inventory() const{
 	return inventory;
 }
 
-int person::MoveSpeed()	const{
+int Unit::MoveSpeed()	const{
 	return spec->MoveSpeed();
 }
 
-int person::MovesLeft()	const{
+int Unit::MovesLeft()	const{
 	return movesLeft;
 }
 
-void person::SetLocation(const unsigned int row, const unsigned int colm, 
+void Unit::SetLocation(const unsigned int row, const unsigned int colm, 
 		const bool usesMove){
 	/*std::cout << "Setting location of " << Name() << " to (" << row << ","
 		<< colm << ")." << std::endl;*/
@@ -196,28 +196,28 @@ void person::SetLocation(const unsigned int row, const unsigned int colm,
 	if(usesMove) movesLeft--;
 }
 
-std::array<unsigned int, 2> person::Location() const{
+std::array<unsigned int, 2> Unit::Location() const{
 	return location;
 }
 
-int person::Row() const{
+int Unit::Row() const{
 	return location[0];
 }
 
-int person::Colm() const{
+int Unit::Colm() const{
 	return location[1];
 }
 
-std::array<unsigned int, 2> person::NextStep(){
+std::array<unsigned int, 2> Unit::NextStep(){
 	if(!myPath){
-		std::cerr << "Error: asked for the next step along a path, but the "
-			<< "unit does not have one." << std::endl;
+		std::cerr << "Error: asked for the next step along a Path, but the "
+			<< "Unit does not have one." << std::endl;
 		return std::array<unsigned int, 2>({{-1u, -1u}});
 	}
 	return myPath->NextStep();
 }
 
-bool person::AdvancePath(){
+bool Unit::AdvancePath(){
 	if(!myPath) return true;
 	bool arrived(myPath->Advance());
 	if(arrived){
@@ -227,7 +227,7 @@ bool person::AdvancePath(){
 	return arrived;
 }
 
-void person::SetOrders(const order_t newOrders){
+void Unit::SetOrders(const order_t newOrders){
 	orders = newOrders;
 	std::string orderName = "order_";
 	switch(newOrders){
@@ -241,55 +241,55 @@ void person::SetOrders(const order_t newOrders){
 			orderName += "harvest";
 			break;
 	}
-	orderIcon = gfxManager::RequestSprite(orderName);
+	orderIcon = GFXManager::RequestSprite(orderName);
 }
 
-void person::OrderMove(std::unique_ptr<path> newPath){
+void Unit::OrderMove(std::unique_ptr<Path> newPath){
 	if(newPath){
 		SetOrders(ORDER_ADVANCE);
 		myPath = std::move(newPath);
 	} else {
-		// empty path means it's an order to move to the place you already are
+		// empty Path means it's an order to move to the place you already are
 		OrderPatrol();
 	}
 }
 
-void person::OrderPatrol(){
+void Unit::OrderPatrol(){
 	SetOrders(ORDER_PATROL);
 	myPath = nullptr;
 }
 
-void person::OrderHarvest(){
+void Unit::OrderHarvest(){
 	SetOrders(ORDER_HARVEST);
 	myPath = nullptr;
 }
 
-std::vector<std::shared_ptr<attackType>> person::Attacks() const{
+std::vector<std::shared_ptr<AttackType>> Unit::Attacks() const{
 	return spec->Attacks();
 }
 
-int person::Damage(const unsigned int num) const{
+int Unit::Damage(const unsigned int num) const{
 	if(num < Attacks().size()) return Attacks()[num]->Damage();
 	return 0;
 }
 
-float person::Accuracy(const unsigned int num) const{
+float Unit::Accuracy(const unsigned int num) const{
 	if(num < Attacks().size()) return Attacks()[num]->Accuracy();
 	return 0;
 }
 
-int person::AttackRate(const unsigned int num) const{
+int Unit::AttackRate(const unsigned int num) const{
 	if(num < Attacks().size()) return Attacks()[num]->AttackRate();
 	return 0;
 }
 
-std::string person::DamageType(const unsigned int num) const{
+std::string Unit::DamageType(const unsigned int num) const{
 	if(num < Attacks().size()) return Attacks()[num]->DamageType();
 	return 0;
 }
 
 // return true if target was killed
-bool person::Attack(person* target) const{
+bool Unit::Attack(Unit* target) const{
 	std::random_device dev;
 	std::mt19937 gen(dev());
 	std::uniform_real_distribution<> dist(0,1);
@@ -303,7 +303,7 @@ bool person::Attack(person* target) const{
 	return false;
 }
 
-void person::Fight(person* attacker, person* target){
+void Unit::Fight(Unit* attacker, Unit* target){
 	if(!attacker){
 		std::cerr << "Error: attempting a fight but there is no attacker." << std::endl;
 		return;
@@ -312,10 +312,10 @@ void person::Fight(person* attacker, person* target){
 		std::cerr << "Error: attempting a fight but there is no target." << std::endl;
 		return;
 	}
-	if(attacker->MovesLeft() < 1){
+	/*if(attacker->MovesLeft() < 1){
 		std::cout << "Fighting requires an available movement point." << std::endl;
 		return;
-	}
+	}*/
 	bool targetDead = attacker->Attack(target);
 	if(!targetDead){
 		attacker->movesLeft--;

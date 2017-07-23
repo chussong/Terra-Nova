@@ -5,7 +5,7 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 
-// game state and communication
+// Game state and communication
 
 enum order_t { ORDER_PATROL = 1, ORDER_ADVANCE = 2, ORDER_HARVEST = 3 };
 
@@ -23,19 +23,19 @@ constexpr int SCREEN_HEIGHT = 768;
 constexpr auto DEFAULT_FONT = "/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf";
 constexpr int DEFAULT_FONT_SIZE = 20;
 
-// tiles and terrain
+// Tiles and terrain
 
 constexpr int TILE_WIDTH = 87;
 constexpr int TILE_HEIGHT = 75;\
 
-// from the map
+// from the Map
 
 enum direction_t { VIEW_RIGHT = 0, VIEW_UP = 1, VIEW_LEFT = 2, VIEW_DOWN = 3 };
 
 constexpr int DEFAULT_WIDTH = 100;
 constexpr int DEFAULT_HEIGHT = 100;
 
-// colony screen-related
+// Colony screen-related
 
 enum resource_t { FOOD = 0, CARBON = 1, SILICON = 2, IRON = 3,
 	LAST_RESOURCE = 4 };

@@ -3,28 +3,33 @@
 
 #include <memory>
 #include "gamevars.hpp"
-#include "person.hpp"
+#include "gfxobject.hpp"
+#include "unit.hpp"
 
 constexpr std::array<int, LAST_RESOURCE> defaultCost{};
 
-class unitType;
-class tileType;
-class buildingType{
+class BuildingType{
 	const int id;
 	const std::string name;
 	const std::array<int, LAST_RESOURCE> cost;
 	const int buildTime;
 
-	std::vector<std::weak_ptr<tileType>> allowedTerrain; // empty means all terrain allowed
+	//std::vector<std::weak_ptr<TileType>> allowedTerrain; // empty means all terrain allowed
+	// instead of allowedTerrain, use these
+	bool coldAllowed = false;
+	bool woodedAllowed = false;
+	bool aquaticAllowed = false;
+	bool hillyAllowed = false;
+
 	bool canHarvest = true;
-	bool automatic = false;	// i.e. automatically harvests resources on its tile
+	bool automatic = false;	// i.e. automatically harvests resources on its Tile
 	unsigned int maxOccupants = 1;
 	std::array<int, LAST_RESOURCE> bonusResources = {{0}};
-	std::vector<std::shared_ptr<unitType>> canTrain;
+	std::vector<std::shared_ptr<UnitType>> canTrain;
 	
 	public:
-		buildingType() = delete;
-		buildingType(const int id,
+		BuildingType() = delete;
+		BuildingType(const int id,
 				const std::string name, 
 				const std::array<int, LAST_RESOURCE> cost,
 				const int buildTime)
@@ -35,8 +40,13 @@ class buildingType{
 		std::array<int, LAST_RESOURCE>	Cost()		const;
 		int								BuildTime() const;
 
-		void SetAllowedTerrain(const std::vector<std::shared_ptr<tileType>>& val);
-		std::vector<std::shared_ptr<tileType>> AllowedTerrain() const;
+		//void SetAllowedTerrain(const std::vector<std::shared_ptr<TileType>>& val);
+		//std::vector<std::shared_ptr<TileType>> AllowedTerrain() const;
+
+		bool ColdAllowed()    const { return coldAllowed; }
+		bool WoodedAllowed()  const { return woodedAllowed; }
+		bool AquaticAllowed() const { return aquaticAllowed; }
+		bool HillyAllowed()   const { return hillyAllowed; }
 
 		void SetCanHarvest(const bool val);
 		bool CanHarvest() const;
@@ -46,61 +56,61 @@ class buildingType{
 		unsigned int MaxOccupants() const;
 		void SetBonusResources(const std::array<int, LAST_RESOURCE>& val);
 		std::array<int, LAST_RESOURCE> BonusResources() const;
-		void SetCanTrain(const std::vector<std::shared_ptr<unitType>>& val);
-		void SetCanTrain(const std::shared_ptr<unitType> val);
-		std::vector<std::shared_ptr<unitType>> CanTrain() const;
+		void SetCanTrain(const std::vector<std::shared_ptr<UnitType>>& val);
+		void SetCanTrain(const std::shared_ptr<UnitType> val);
+		std::vector<std::shared_ptr<UnitType>> CanTrain() const;
 
 };
 
-class buildingPrototype : public entity {
-	const buildingType* type;
+class BuildingPrototype : public GFXObject {
+	const BuildingType* type;
 
 	public:
-		buildingPrototype() = delete;
-		buildingPrototype(SDL_Renderer* ren, const std::string spriteFile,
-				const int x, const int y, const buildingType* type) : 
-			entity(ren, spriteFile, x, y), type(type) {}
-		buildingPrototype(SDL_Renderer* ren, const std::string spriteFile,
+		BuildingPrototype() = delete;
+		BuildingPrototype(SDL_Renderer* ren, const std::string spriteFile,
+				const int x, const int y, const BuildingType* type) : 
+			GFXObject(ren, spriteFile, x, y), type(type) {}
+		BuildingPrototype(SDL_Renderer* ren, const std::string spriteFile,
 				const int x, const int y,
-				const std::shared_ptr<buildingType> type) : 
-			entity(ren, spriteFile, x, y), type(type.get()) {}
-		buildingPrototype(const buildingPrototype& other) = delete;
-		buildingPrototype(buildingPrototype&& other) noexcept : 
-			entity(std::move(other)), type(std::move(other.type)) {}
-		buildingPrototype& operator=(const buildingPrototype& other) = delete;
+				const std::shared_ptr<BuildingType> type) : 
+			GFXObject(ren, spriteFile, x, y), type(type.get()) {}
+		BuildingPrototype(const BuildingPrototype& other) = delete;
+		BuildingPrototype(BuildingPrototype&& other) noexcept : 
+			GFXObject(std::move(other)), type(std::move(other.type)) {}
+		BuildingPrototype& operator=(const BuildingPrototype& other) = delete;
 
 		bool IsBuildingPrototype() const { return true; }
 
 		std::string Name() const;
 		std::array<int, LAST_RESOURCE>	Cost() const;
 		int BuildTime() const;
-		const buildingType* Type() const;
+		const BuildingType* Type() const;
 };
 
-class building : public entity {
-	const buildingType* type;
+class Building : public GFXObject {
+	const BuildingType* type;
 	int turnsLeft;
 	//int health = 100;
 	//int upgradeLevel = 1;
-	//std::vector<std::shared_ptr<person>> occupants;
+	//std::vector<std::shared_ptr<Unit>> occupants;
 	
-	std::shared_ptr<unitType> nowTraining;
+	std::shared_ptr<UnitType> nowTraining;
 	int turnsToTrain;
 
 	public:
-		building() = delete;
-		building(SDL_Renderer* ren, const std::string spriteFile,
-				const int x, const int y, const buildingType* type) : 
-			entity(ren, spriteFile, x, y), type(type) {}
-		building(SDL_Renderer* ren, const std::string spriteFile,
+		Building() = delete;
+		Building(SDL_Renderer* ren, const std::string spriteFile,
+				const int x, const int y, const BuildingType* type) : 
+			GFXObject(ren, spriteFile, x, y), type(type) {}
+		Building(SDL_Renderer* ren, const std::string spriteFile,
 				const int x, const int y,
-				const std::shared_ptr<buildingType> type) : 
-			entity(ren, spriteFile, x, y), type(type.get()) {}
-		building(const building& other) = delete;
-		building(building&& other) noexcept : 
-			entity(std::move(other)), type(std::move(other.type)),
+				const std::shared_ptr<BuildingType> type) : 
+			GFXObject(ren, spriteFile, x, y), type(type.get()) {}
+		Building(const Building& other) = delete;
+		Building(Building&& other) noexcept : 
+			GFXObject(std::move(other)), type(std::move(other.type)),
 			turnsLeft(std::move(other.turnsLeft)) {}
-		building& operator=(const building& other) = delete;
+		Building& operator=(const Building& other) = delete;
 
 		std::string Name() const;
 		std::array<int, LAST_RESOURCE>	Cost() const;
@@ -116,10 +126,10 @@ class building : public entity {
 		unsigned int MaxOccupants() const;
 		std::array<int, LAST_RESOURCE> BonusResources() const;
 
-		std::vector<std::shared_ptr<unitType>> CanTrain() const;
-		void StartTraining(std::shared_ptr<unitType> newSpec);
+		std::vector<std::shared_ptr<UnitType>> CanTrain() const;
+		void StartTraining(std::shared_ptr<UnitType> newSpec);
 		int TurnsToTrain() const;
-		std::shared_ptr<unitType> NowTraining() const;
+		std::shared_ptr<UnitType> NowTraining() const;
 		void TrainingTurn();
 		void FinishTraining();
 };

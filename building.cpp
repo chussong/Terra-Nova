@@ -1,150 +1,150 @@
 #include "building.hpp"
 
-int buildingType::ID() const{
+int BuildingType::ID() const{
 	return id;
 }
 
-std::string buildingType::Name() const{
+std::string BuildingType::Name() const{
 	return name;
 }
 
-std::array<int, LAST_RESOURCE> buildingType::Cost() const{
+std::array<int, LAST_RESOURCE> BuildingType::Cost() const{
 	return cost;
 }
 
-int buildingType::BuildTime() const{
+int BuildingType::BuildTime() const{
 	return buildTime;
 }
 
-void buildingType::SetAllowedTerrain(const std::vector<std::shared_ptr<tileType>>& val){
-	std::vector<std::weak_ptr<tileType>> weakVal;
+/*void BuildingType::SetAllowedTerrain(const std::vector<std::shared_ptr<TileType>>& val){
+	std::vector<std::weak_ptr<TileType>> weakVal;
 	weakVal.resize(val.size());
 	for(unsigned int i = 0; i < weakVal.size(); ++i) weakVal[i] = val[i];
 	allowedTerrain = weakVal;
 }
 
 // this is obviously a very stupid implementation
-std::vector<std::shared_ptr<tileType>> buildingType::AllowedTerrain() const{
-	std::vector<std::shared_ptr<tileType>> strongTerrain;
+std::vector<std::shared_ptr<TileType>> BuildingType::AllowedTerrain() const{
+	std::vector<std::shared_ptr<TileType>> strongTerrain;
 	strongTerrain.resize(allowedTerrain.size());
 	for(auto i = 0u; i < strongTerrain.size(); ++i){
 		strongTerrain[i] = allowedTerrain[i].lock();
 	}
 	return strongTerrain;
-}
+}*/
 
-void buildingType::SetCanHarvest(const bool val){
+void BuildingType::SetCanHarvest(const bool val){
 	canHarvest = val;
 }
 
-bool buildingType::CanHarvest() const{
+bool BuildingType::CanHarvest() const{
 	return canHarvest;
 }
 
-void buildingType::SetAutomatic(const bool val){
+void BuildingType::SetAutomatic(const bool val){
 	automatic = val;
 }
 
-bool buildingType::Automatic() const{
+bool BuildingType::Automatic() const{
 	return automatic;
 }
 
-void buildingType::SetMaxOccupants(const int val){
+void BuildingType::SetMaxOccupants(const int val){
 	maxOccupants = val;
 }
 
-unsigned int buildingType::MaxOccupants() const{
+unsigned int BuildingType::MaxOccupants() const{
 	return maxOccupants;
 }
 
-void buildingType::SetBonusResources(const std::array<int, LAST_RESOURCE>& val){
+void BuildingType::SetBonusResources(const std::array<int, LAST_RESOURCE>& val){
 	bonusResources = val;
 }
 
-std::array<int, LAST_RESOURCE> buildingType::BonusResources() const{
+std::array<int, LAST_RESOURCE> BuildingType::BonusResources() const{
 	return bonusResources;
 }
 
-void buildingType::SetCanTrain(const std::vector<std::shared_ptr<unitType>>& val){
+void BuildingType::SetCanTrain(const std::vector<std::shared_ptr<UnitType>>& val){
 	canTrain = val;
 }
 
-void buildingType::SetCanTrain(const std::shared_ptr<unitType> val){
+void BuildingType::SetCanTrain(const std::shared_ptr<UnitType> val){
 	canTrain.clear();
 	canTrain.push_back(val);
 }
 
-std::vector<std::shared_ptr<unitType>> buildingType::CanTrain() const{
+std::vector<std::shared_ptr<UnitType>> BuildingType::CanTrain() const{
 	return canTrain;
 }
 
-std::string buildingPrototype::Name() const{
+std::string BuildingPrototype::Name() const{
 	return type->Name();
 }
 
-std::array<int, LAST_RESOURCE> buildingPrototype::Cost() const{
+std::array<int, LAST_RESOURCE> BuildingPrototype::Cost() const{
 	return type->Cost();
 }
 
-int buildingPrototype::BuildTime() const{
+int BuildingPrototype::BuildTime() const{
 	return type->BuildTime();
 }
 
-const buildingType* buildingPrototype::Type() const{
+const BuildingType* BuildingPrototype::Type() const{
 	return type;
 }
 
-std::string building::Name() const{
+std::string Building::Name() const{
 	return type->Name();
 }
 
-std::array<int, LAST_RESOURCE> building::Cost() const{
+std::array<int, LAST_RESOURCE> Building::Cost() const{
 	return type->Cost();
 }
 
-int building::BuildTime() const{
+int Building::BuildTime() const{
 	return type->BuildTime();
 }
 
-void building::StartConstruction(){
+void Building::StartConstruction(){
 	turnsLeft = BuildTime();
 }
 
-int building::TurnsLeft() const{
+int Building::TurnsLeft() const{
 	return turnsLeft;
 }
 
-void building::BuildTurn(){
+void Building::BuildTurn(){
 	turnsLeft--;
 }
 
-bool building::Finished() const{
+bool Building::Finished() const{
 	return turnsLeft == 0;
 }
 
-bool building::CanHarvest() const{
+bool Building::CanHarvest() const{
 	return turnsLeft == 0 && type->CanHarvest();
 }
 
-bool building::Automatic() const{
+bool Building::Automatic() const{
 	return type->Automatic();
 }
 
-unsigned int building::MaxOccupants() const{
+unsigned int Building::MaxOccupants() const{
 	return type->MaxOccupants();
 }
 
-std::array<int, LAST_RESOURCE> building::BonusResources() const{
+std::array<int, LAST_RESOURCE> Building::BonusResources() const{
 	return type->BonusResources();
 }
 
-std::vector<std::shared_ptr<unitType>> building::CanTrain() const{
+std::vector<std::shared_ptr<UnitType>> Building::CanTrain() const{
 	return type->CanTrain();
 }
 
-void building::StartTraining(std::shared_ptr<unitType> newSpec){
+void Building::StartTraining(std::shared_ptr<UnitType> newSpec){
 	if(!newSpec){
-		std::cerr << "Error: a building was assigned to respec a unit to a "
+		std::cerr << "Error: a Building was assigned to respec a Unit to a "
 			<< "blank specialization." << std::endl;
 		return;
 	}
@@ -152,18 +152,18 @@ void building::StartTraining(std::shared_ptr<unitType> newSpec){
 	turnsToTrain = newSpec->TrainingTime();
 }
 
-int building::TurnsToTrain() const{
+int Building::TurnsToTrain() const{
 	return turnsToTrain;
 }
 
-std::shared_ptr<unitType> building::NowTraining() const{
+std::shared_ptr<UnitType> Building::NowTraining() const{
 	return nowTraining;
 }
 
-void building::TrainingTurn(){
+void Building::TrainingTurn(){
 	turnsToTrain--;
 }
 
-void building::FinishTraining(){
+void Building::FinishTraining(){
 	nowTraining.reset();
 }

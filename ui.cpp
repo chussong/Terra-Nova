@@ -1,10 +1,10 @@
 #include "ui.hpp"
 
-void uiElement::AddValue(const int val){
+void UIElement::AddValue(const int val){
 	values.push_back(val);
 }
 
-void uiElement::SetValue(const unsigned int entry, const int newVal){
+void UIElement::SetValue(const unsigned int entry, const int newVal){
 	if(entry >= values.size()){
 		std::cout << "Attempted to set a UI element's invalid value " << entry
 			<< " to " << newVal << "." << std::endl;
@@ -13,7 +13,7 @@ void uiElement::SetValue(const unsigned int entry, const int newVal){
 	}
 }
 
-int uiElement::Value(const unsigned int entry) const{
+int UIElement::Value(const unsigned int entry) const{
 	if(entry >= values.size()){
 		std::cout << "Attempted to access a UI element's invalid value "
 			<< entry << "." << std::endl;
@@ -23,7 +23,7 @@ int uiElement::Value(const unsigned int entry) const{
 	return 0;
 }
 
-void uiElement::AddText(const std::string& text, const int x, const int y, 
+void UIElement::AddText(const std::string& text, const int x, const int y, 
 				TTF_Font* font, const textcolor_t color){
 	textLayout.x = layout.x + x;
 	textLayout.y = layout.y + y;
@@ -34,10 +34,10 @@ void uiElement::AddText(const std::string& text, const int x, const int y,
 		<< "," << textLayout.y << ")." << std::endl;*/
 }
 
-void uiElement::SetText(const std::string& text, TTF_Font* font, 
+void UIElement::SetText(const std::string& text, TTF_Font* font, 
 		const textcolor_t color){
-	if(font == nullptr) font = gfxObject::defaultFont;
-	SDL_Color colorCode = gfxObject::SDLifyTextColor(color);
+	if(font == nullptr) font = Sprite::defaultFont;
+	SDL_Color colorCode = Sprite::SDLifyTextColor(color);
 	/*switch(color){
 		case BLACK: 	colorCode.r = 0;
 						colorCode.g = 0;
@@ -52,7 +52,7 @@ void uiElement::SetText(const std::string& text, TTF_Font* font,
 	}*/
 /*	std::cout << "Text \"" << text << "\" set at position (" << textLayout.x 
 		<< "," << textLayout.y << ")." << std::endl;*/
-	textSprite = std::make_unique<gfxObject>(ren, text, textLayout, colorCode, font);
+	textSprite = std::make_unique<Sprite>(ren, text, textLayout, colorCode, font);
 	if(!textSprite) std::cout << "Error constructing textSprite!" << std::endl;
 	textSprite->MakeDefaultSize(textLayout);
 	textLayout.x -= textLayout.w/2;
@@ -60,7 +60,7 @@ void uiElement::SetText(const std::string& text, TTF_Font* font,
 }
 
 // WARNING: you have to make sure the source outlives this UI element!
-void uiElement::AddDynamicText(const int& source, const int x, const int y, 
+void UIElement::AddDynamicText(const int& source, const int x, const int y, 
 		TTF_Font* font, const textcolor_t color){
 	dynamicTextLayout.x = layout.x + x;
 	dynamicTextLayout.y = layout.y + y;
@@ -70,24 +70,24 @@ void uiElement::AddDynamicText(const int& source, const int x, const int y,
 }
 
 // WARNING: you have to make sure the source outlives this UI element!
-void uiElement::SetDynamicText(const int& source, TTF_Font* font,
+void UIElement::SetDynamicText(const int& source, TTF_Font* font,
 		const textcolor_t color){
-	if(font == nullptr) font = gfxObject::defaultFont;
+	if(font == nullptr) font = Sprite::defaultFont;
 	dynamicTextSource = &source;
 	dynamicTextCached = source;
 	dynamicTextFont = font;
-	dynamicTextColor = gfxObject::SDLifyTextColor(color);
-	dynamicTextSprite = std::make_unique<gfxObject>(ren, std::to_string(source),
+	dynamicTextColor = Sprite::SDLifyTextColor(color);
+	dynamicTextSprite = std::make_unique<Sprite>(ren, std::to_string(source),
 			dynamicTextLayout, dynamicTextColor, font);
 	dynamicTextSprite->MakeDefaultSize(dynamicTextLayout);
 	dynamicTextLayout.x -= dynamicTextLayout.w/2;
 	dynamicTextLayout.y -= dynamicTextLayout.h/2;
 }
 
-void uiElement::UpdateDynamicText() const{
+void UIElement::UpdateDynamicText() const{
 	if(*dynamicTextSource != dynamicTextCached){
 		dynamicTextCached = *dynamicTextSource;
-		dynamicTextSprite = std::make_unique<gfxObject>(ren, 
+		dynamicTextSprite = std::make_unique<Sprite>(ren, 
 				std::to_string(dynamicTextCached), dynamicTextLayout,
 				dynamicTextColor, dynamicTextFont);
 		dynamicTextLayout.x += dynamicTextLayout.w/2;
@@ -98,21 +98,21 @@ void uiElement::UpdateDynamicText() const{
 	}
 }
 
-/*void uiElement::EnableButton(const button_t type){
+/*void UIElement::EnableButton(const button_t type){
 	button = true;
 	this->type = type;
 }
 
-void uiElement::DisableButton(){
+void UIElement::DisableButton(){
 	button = false;
 }
 
-int uiElement::Select(){
+int UIElement::Select(){
 	if(button){
 		switch(type){
 			case END_TURN:		return static_cast<int>(NEXT_TURN);
 			case BUILDING:		if(values.size() < 1){
-									std::cerr << "Error: building button not \
+									std::cerr << "Error: Building button not \
 										given an ID." << std::endl;
 									return static_cast<int>(ERROR);
 								}
@@ -123,7 +123,7 @@ int uiElement::Select(){
 	return static_cast<int>(ERROR);
 }*/
 
-void uiElement::Render() const {
+void UIElement::Render() const {
 	if(!visible) return;
 	sprite->RenderTo(ren, layout);
 	if(textSprite){
@@ -138,7 +138,7 @@ void uiElement::Render() const {
 	}
 }
 
-void uiElement::MoveTo(int x, int y){
+void UIElement::MoveTo(int x, int y){
 	if(textSprite){
 		textLayout.x += x - layout.x;
 		textLayout.y += y - layout.y;
@@ -147,45 +147,45 @@ void uiElement::MoveTo(int x, int y){
 	layout.y = y;
 }
 
-void uiElement::MoveTo(SDL_Rect newLayout){
+void UIElement::MoveTo(SDL_Rect newLayout){
 	MoveTo(newLayout.x, newLayout.y);
 }
 
-UnitInfoPanel::UnitInfoPanel(SDL_Renderer* ren, const person* unit):
+UnitInfoPanel::UnitInfoPanel(SDL_Renderer* ren, const Unit* Unit):
 	UIAggregate(ren, SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH, 
 			SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT) {
 	int panelX = SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH;
 	int panelY = SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT;
-	background = std::make_unique<uiElement>(ren,
+	background = std::make_unique<UIElement>(ren,
 			"unit_info_panel",
 			panelX, panelY);
-	portrait = std::make_unique<uiElement>(ren,
-			unit->Spec()->Name() + "_portrait",
+	portrait = std::make_unique<UIElement>(ren,
+			Unit->Spec()->Name() + "_portrait",
 			panelX + PORTRAIT_X, panelY + PORTRAIT_Y);
-	factionIcon = std::make_unique<uiElement>(ren,
-			"factioncolor_p" + std::to_string(unit->Faction()),
+	factionIcon = std::make_unique<UIElement>(ren,
+			"factioncolor_p" + std::to_string(Unit->Faction()),
 			panelX + FACTIONCOLOR_X, panelY + FACTIONCOLOR_Y);
-	factionIcon->AddText(unit->Name(), UNIT_NAME_X, UNIT_NAME_Y);
-	healthIcon = std::make_unique<uiElement>(ren,
-			"healthicon_" + unit->Species(),
+	factionIcon->AddText(Unit->Name(), UNIT_NAME_X, UNIT_NAME_Y);
+	healthIcon = std::make_unique<UIElement>(ren,
+			"healthicon_" + Unit->Species(),
 			panelX + HEALTHICON_X, panelY + HEALTHICON_Y);
 	healthIcon->AddText(
-			std::to_string(unit->Health()) + "/" + std::to_string(unit->MaxHealth()), 
+			std::to_string(Unit->Health()) + "/" + std::to_string(Unit->MaxHealth()), 
 			UNIT_HEALTH_X, UNIT_HEALTH_Y);
-	if(unit->Spec()->Attack(0)){
-		std::string attackName = unit->Spec()->Attack(0)->Name();
+	if(Unit->Spec()->Attack(0)){
+		std::string attackName = Unit->Spec()->Attack(0)->Name();
 		std::replace(attackName.begin(), attackName.end(), ' ', '_');
-		attackIcon = std::make_unique<uiElement>(ren,
+		attackIcon = std::make_unique<UIElement>(ren,
 				attackName + "_icon",
 				panelX + WEAPONICON_X, panelY + WEAPONICON_Y);
 		attackIcon->AddText(std::to_string(
-				static_cast<int>(std::floor(100*unit->Accuracy()))) + "% | " 
-				+ std::to_string(unit->AttackRate()) + "x "
-				+ std::to_string(unit->Damage()) + " "
-				+ unit->DamageType(),
+				static_cast<int>(std::floor(100*Unit->Accuracy()))) + "% | " 
+				+ std::to_string(Unit->AttackRate()) + "x "
+				+ std::to_string(Unit->Damage()) + " "
+				+ Unit->DamageType(),
 				UNIT_ATTACK_X, UNIT_ATTACK_Y);
 	} else {
-		attackIcon = std::make_unique<uiElement>(ren,
+		attackIcon = std::make_unique<UIElement>(ren,
 				"null_attack_icon",
 				panelX + WEAPONICON_X, panelY + WEAPONICON_Y);
 		attackIcon->AddText("Unarmed", UNIT_ATTACK_X, UNIT_ATTACK_Y);
@@ -201,15 +201,15 @@ void UnitInfoPanel::Render() const{
 	attackIcon->Render();
 }
 
-void UnitInfoPanel::UpdateHealth(const person* unit){
+void UnitInfoPanel::UpdateHealth(const Unit* Unit){
 	healthIcon->SetText(
-			std::to_string(unit->Health()) + "/" + std::to_string(unit->MaxHealth()));
+			std::to_string(Unit->Health()) + "/" + std::to_string(Unit->MaxHealth()));
 }
 
-UnitOrderPanel::UnitOrderPanel(SDL_Renderer* ren, const person* unit):
+UnitOrderPanel::UnitOrderPanel(SDL_Renderer* ren, const Unit* Unit):
 	UIAggregate(ren, 0, SCREEN_HEIGHT - UNIT_ORDER_PANEL_HEIGHT),
-	background(ren, "unit_order_panel", x, y) {
-	UpdatePanel(unit);
+	background(ren, "Unit_order_panel", x, y) {
+	UpdatePanel(Unit);
 }
 
 void UnitOrderPanel::Render() const{
@@ -217,11 +217,11 @@ void UnitOrderPanel::Render() const{
 	for(auto& button : buttons) button.Render();
 }
 
-void UnitOrderPanel::UpdatePanel(const person* unit){
-	if(!unit){
+void UnitOrderPanel::UpdatePanel(const Unit* Unit){
+	if(!Unit){
 		buttons.clear();
 	} else {
-		for(auto order : unit->AvailableOrders()){
+		for(auto order : Unit->AvailableOrders()){
 			int buttonX = x + 5 + (ORDER_BUTTON_WIDTH+5)*buttons.size()%3;
 			int buttonY = y + 5 + (ORDER_BUTTON_HEIGHT+5)*buttons.size()/3;
 			buttons.emplace_back(ren, order.name, buttonX, buttonY, order.func);

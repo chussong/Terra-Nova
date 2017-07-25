@@ -52,7 +52,7 @@ class GFXObject : public std::enable_shared_from_this<GFXObject> {
 		int RightEdge() const;
 		int TopEdge() const;
 		int BottomEdge() const;
-		virtual bool InsideQ(const int x, const int y) const;
+		virtual bool InsideQ(const int x, const int y);
 
 		bool Clickable() const { return selectable; }
 		virtual bool IsUnit() const { return false; }

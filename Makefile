@@ -47,7 +47,7 @@ gfxobject.o: gfxobject.cpp gfxobject.hpp sprite.hpp gamewindow.hpp gamevars.hpp
 ui.o: ui.cpp ui.hpp gfxobject.hpp gamevars.hpp unit.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-tile.o: tile.cpp tile.hpp gfxobject.hpp unit.hpp building.hpp
+tile.o: tile.cpp tile.hpp gfxobject.hpp unit.hpp building.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 building.o: building.cpp building.hpp unit.hpp tile.hpp gfxobject.hpp \

@@ -61,7 +61,7 @@ void Tile::Resize(SDL_Rect newLayout){
 	Resize(newLayout.w, newLayout.h);
 }
 
-bool Tile::InsideQ(const int x, const int y) const {
+bool Tile::InsideQ(const int x, const int y){
 	/*std::cout << "Testing to see if a click at (" << x << "," << y << ") is "
 		<< "inside of a Tile at (" << layout.x << "," << layout.y << ")." << std::endl;*/
 	int relX = x - layout.x - MAPDISP_ORIGIN_X;
@@ -225,7 +225,17 @@ std::vector<Unit*> Tile::Occupants() const{
 	return occupants;
 }
 
-unsigned int Tile::NumberOfOccupants() const{
+std::shared_ptr<Unit> Tile::SharedOccupant(const unsigned int i) const {
+	if(i >= NumberOfOccupants()){
+		std::cerr << "Error: someone asked to take ownership of a tile's "
+			<< "occupant #" << i << ", but it only has " << NumberOfOccupants()
+			<< "." << std::endl;
+		return nullptr;
+	}
+	return weakOccupants[i].lock();
+}
+
+unsigned int Tile::NumberOfLivingOccupants() const{
 	unsigned int ret = 0u;
 	for(auto& occ : occupants) if(!occ->Dead()) ++ret;
 	return ret;

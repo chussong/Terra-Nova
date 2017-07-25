@@ -648,15 +648,17 @@ void Game::NextTurn(){
 }
 
 void Game::StartTurn(){
+	ClearDeadUnits(); // before everyone else locks their pointers
 	for(auto& m : maps) m->StartTurn();
 	//std::cout << "Processing turns in " << colonies.size() << " colonies." << std::endl;
 	for(unsigned int i = 0; i < colonies.size(); ++i) colonies[i]->ProcessTurn();
 	for(auto& u : units) u->ProcessTurn(); // resets move allowance
-	ClearDeadUnits(); // after everyone else has cleared their pointers
+	win->StartTurn();
 }
 
 void Game::EndTurn(){
 	for(auto& m : maps) m->EndTurn();
+	win->EndTurn();
 }
 
 void Game::ClearDeadUnits(){

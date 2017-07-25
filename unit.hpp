@@ -20,6 +20,7 @@ struct MoveCostTable {
 	int cold = 1;
 };
 
+// should also have support for orders with targets (different struct maybe?)
 struct Order {
 	std::string name;
 	std::function<void()> func;
@@ -105,7 +106,7 @@ class Unit : public GFXObject {
 	std::unique_ptr<Path> myPath;
 	order_t orders = ORDER_PATROL;
 	std::shared_ptr<Sprite> orderIcon;
-	std::vector<Order> availableOrders;
+	//std::vector<Order> availableOrders;
 
 	static std::string GenerateGivenName();
 	static std::string GenerateSurname();
@@ -163,7 +164,7 @@ class Unit : public GFXObject {
 		void OrderMove(std::unique_ptr<Path> newPath);
 		void OrderPatrol();
 		void OrderHarvest();
-		const std::vector<Order>& AvailableOrders() const { return availableOrders; }
+		std::vector<Order> AvailableOrders();
 
 		bool CanRespec() const			{return spec->CanRespec();}
 		char Faction() const			{return faction;}

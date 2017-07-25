@@ -28,7 +28,9 @@ class GameWindow : public std::enable_shared_from_this<GameWindow> {
 		// objects owned by someone else, e.g. Map owns Tiles, Game owns Units
 		std::vector<std::shared_ptr<UIAggregate>> topLevelUI;
 		std::vector<std::unique_ptr<GFXObject>> UI;
+		std::vector<std::weak_ptr<GFXObject>> weakClickables;
 		std::vector<GFXObject*> clickables;
+		std::vector<std::weak_ptr<GFXObject>> weakObjects;
 		std::vector<GFXObject*> objects;
 		std::vector<std::unique_ptr<UIElement>> background;
 
@@ -69,20 +71,24 @@ class GameWindow : public std::enable_shared_from_this<GameWindow> {
 		GFXObject* ClickedObject(const int x, const int y);
 		std::array<int, 4> Layout() const;
 		bool Ready() const;
+		void ClearSelected();
 
 		void ResetBackground(std::unique_ptr<UIElement> newThing);
 		void AddToBackground(std::unique_ptr<UIElement> newThing);
 		void ResetObjects();
 		void AddTopLevelUI(std::shared_ptr<UIAggregate> newThing);
 		void AddUI(std::unique_ptr<GFXObject> newThing);
-		void AddClickable(GFXObject* newThing);
+		//void AddClickable(GFXObject* newThing);
 		void AddClickable(std::shared_ptr<GFXObject> newThing);
-		void AddObject(GFXObject* newThing);
+		void AddObject(std::shared_ptr<GFXObject> newThing);
 
 		static bool InitSDL();
 		static void QuitSDL();
 
 		signal_t HandleKeyPress(SDL_Keycode key, std::shared_ptr<Map> theMap);
+
+		void StartTurn();
+		void EndTurn();
 
 		// Colony management screen -------------------------------------------
 
@@ -99,9 +105,13 @@ class GameWindow : public std::enable_shared_from_this<GameWindow> {
 				const int centerRow, const int centerColm);
 		void AddMapTiles(std::shared_ptr<Map> theMap,
 				const int centerRow, const int centerColm);
-		void MakeUnitInfoPanel(const GFXObject* Unit);
-		void UpdateUnitInfoPanel(const GFXObject* Unit);
-		void RemoveUnitInfoPanel();
+		void MakeInfoPanel(const GFXObject* source);
+		void UpdateInfoPanel(const GFXObject* source);
+		void SwapInfoPanel(const GFXObject* source);
+		void RemoveInfoPanel();
+		void MakeOrderPanel(GFXObject* source);
+		void SwapOrderPanel(GFXObject* source);
+		void RemoveOrderPanel();
 
 		void MoveUpLeft(Unit* mover, std::shared_ptr<Map> theMap);
 		void MoveUpRight(Unit* mover, std::shared_ptr<Map> theMap);

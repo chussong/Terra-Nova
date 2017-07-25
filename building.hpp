@@ -16,10 +16,7 @@ class BuildingType{
 
 	//std::vector<std::weak_ptr<TileType>> allowedTerrain; // empty means all terrain allowed
 	// instead of allowedTerrain, use these
-	bool coldAllowed = false;
-	bool woodedAllowed = false;
-	bool aquaticAllowed = false;
-	bool hillyAllowed = false;
+	TileAttributes allowedTerrain;
 
 	bool canHarvest = true;
 	bool automatic = false;	// i.e. automatically harvests resources on its Tile
@@ -43,10 +40,10 @@ class BuildingType{
 		//void SetAllowedTerrain(const std::vector<std::shared_ptr<TileType>>& val);
 		//std::vector<std::shared_ptr<TileType>> AllowedTerrain() const;
 
-		bool ColdAllowed()    const { return coldAllowed; }
-		bool WoodedAllowed()  const { return woodedAllowed; }
-		bool AquaticAllowed() const { return aquaticAllowed; }
-		bool HillyAllowed()   const { return hillyAllowed; }
+		bool AquaticAllowed() const { return allowedTerrain.aquatic; }
+		bool ColdAllowed()    const { return allowedTerrain.cold; }
+		bool HillyAllowed()   const { return allowedTerrain.hilly; }
+		bool WoodedAllowed()  const { return allowedTerrain.wooded; }
 
 		void SetCanHarvest(const bool val);
 		bool CanHarvest() const;

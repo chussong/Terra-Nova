@@ -117,8 +117,8 @@ GFXObject* GameWindow::ClickedObject(const int x, const int y){
 	return nullptr;
 }
 
+// this iterates through stuff backwards so that the most recent thing is on top
 GFXObject* GameWindow::SelectedObject(const int x, const int y){
-	// iterate through these backwards so that the most recent thing is on top
 	if(endTurnButton->InsideQ(x, y)){
 		if(endTurnButton->Click()) return selected;
 		return endTurnButton.get();
@@ -150,6 +150,13 @@ bool GameWindow::Ready() const{
 	return true;
 }
 
+void GameWindow::ClearSelected(){
+	if(!selected) return;
+	selected->Deselect();
+	RemoveInfoPanel();
+	RemoveOrderPanel();
+}
+
 void GameWindow::ResetBackground(std::unique_ptr<UIElement> newThing){
 	background.clear();
 	background.push_back(std::move(newThing));
@@ -160,7 +167,9 @@ void GameWindow::AddToBackground(std::unique_ptr<UIElement> newThing){
 }
 
 void GameWindow::ResetObjects(){
+	weakObjects.clear();
 	objects.clear();
+	weakClickables.clear();
 	clickables.clear();
 	UI.clear();
 	topLevelUI.clear();
@@ -174,19 +183,12 @@ void GameWindow::AddUI(std::unique_ptr<GFXObject> newThing){
 	UI.push_back(std::move(newThing));
 }
 
-void GameWindow::AddClickable(GFXObject* newThing){
-	clickables.push_back(newThing);
-}
-
 void GameWindow::AddClickable(std::shared_ptr<GFXObject> newThing){
-	std::cerr << "Warning: a shared_ptr is being added to the clickable list. "
-		<< "GameWindow will NOT own it, and you'll probably see a crash "
-		<< "momentarily!" << std::endl;
-	clickables.push_back(newThing.get());
+	weakClickables.push_back(newThing);
 }
 
-void GameWindow::AddObject(GFXObject* newThing){
-	objects.push_back(newThing);
+void GameWindow::AddObject(std::shared_ptr<GFXObject> newThing){
+	weakObjects.push_back(newThing);
 }
 
 signal_t GameWindow::HandleKeyPress(SDL_Keycode key, std::shared_ptr<Map> theMap){
@@ -242,6 +244,19 @@ signal_t GameWindow::HandleKeyPress(SDL_Keycode key, std::shared_ptr<Map> theMap
 			break;
 	}
 	return NOTHING;
+}
+
+void GameWindow::StartTurn(){
+	if(selected) UpdateInfoPanel(selected);
+	clickables = CheckAndLock(weakClickables);
+	objects = CheckAndLock(weakObjects);
+}
+
+void GameWindow::EndTurn(){
+	clickables.clear();
+	objects.clear();
+	if(dynamic_cast<Unit*>(selected) && dynamic_cast<Unit*>(selected)->Dead()) 
+		ClearSelected();
 }
 
 signal_t GameWindow::ColonyScreen(std::shared_ptr<Colony> col){
@@ -322,6 +337,8 @@ void GameWindow::MakeColonyScreen(const Colony* col) {
 	DrawResources(col);
 	//DrawColonists(col);
 	DrawColonyMisc(col);
+	clickables = CheckAndLock(weakClickables);
+	objects = CheckAndLock(weakObjects);
 }
 
 void GameWindow::DrawTiles(const Colony* col){
@@ -329,11 +346,13 @@ void GameWindow::DrawTiles(const Colony* col){
 		for(unsigned int j = 0; j < col->RowWidth(i); ++j){
 			col->Terrain(i,j)->MoveTo(ColonyTileX(col,i,j), ColonyTileY(col,i));
 			if(col->Terrain(i,j)->HasColony()){
-				AddClickable(col->Terrain(i,j).get());
+				AddClickable(col->Terrain(i,j));
 			} else {
-				AddObject(col->Terrain(i,j).get());
+				AddObject(col->Terrain(i,j));
 			}
-			for(auto& occ : col->Terrain(i,j)->Occupants()) AddClickable(occ);
+			for(auto k = 0u; k < col->Terrain(i,j)->NumberOfOccupants(); ++k){
+				AddClickable(col->Terrain(i,j)->SharedOccupant(k));
+			}
 			/*std::cout << "Tile " << i << ", a " << terrain[i]->TileType() << ", "
 				<< "moved to (" << terrain[i]->X() << "," << terrain[i]->Y() << ")."
 				<< std::endl;*/
@@ -431,7 +450,7 @@ signal_t GameWindow::MapScreen(std::shared_ptr<Map> theMap, int centerRow,
 	bool quit = false;
 	while(!quit){
 		if(selected && selected->IsUnit() && dynamic_cast<Unit*>(selected)->Dead()){
-			selected = nullptr;
+			ClearSelected();
 		}
 		while(SDL_PollEvent(&e)){
 			switch(e.type){
@@ -470,26 +489,25 @@ signal_t GameWindow::MapScreen(std::shared_ptr<Map> theMap, int centerRow,
 							   }
 				case SDL_MOUSEBUTTONDOWN:{
 					if(e.button.button == SDL_BUTTON_LEFT){
-						if(selected){
+						GFXObject* newSelected = SelectedObject(e.button.x, e.button.y);
+						if(!newSelected && selected){
 							selected->Deselect();
-							RemoveUnitInfoPanel();
-						}
-						selected = SelectedObject(e.button.x, e.button.y);
-						if(selected){
-							switch(selected->Select()/100){
-								case NEXT_TURN/100:
-									selected = nullptr;
-									return NEXT_TURN;
-								case SCREEN_CHANGE/100:
-									selected = nullptr;
-									return SCREEN_CHANGE;
-								default:
-									break;
-							}
-							if(selected->IsUnit()){
-								MakeUnitInfoPanel(dynamic_cast<Unit*>(selected));
+							RemoveInfoPanel();
+							RemoveOrderPanel();
+						} else if(selected != newSelected) {
+							if(selected) selected->Deselect();
+							newSelected->Select();
+							if(newSelected->IsUnit()){
+								if(selected && selected->IsUnit()){
+									SwapInfoPanel(newSelected);
+									SwapOrderPanel(newSelected);
+								} else {
+									MakeInfoPanel(newSelected);
+									MakeOrderPanel(newSelected);
+								}
 							}
 						}
+						selected = newSelected;
 					}
 					if(selected && e.button.button == SDL_BUTTON_RIGHT){
 						GFXObject* obj =
@@ -544,6 +562,8 @@ void GameWindow::MapScreenCenteredOn(std::shared_ptr<Map> theMap, const int cent
 		endTurnButton->MoveTo(SCREEN_WIDTH-200, 200);
 		endTurnButton->SetVisible(true);
 	}
+	clickables = CheckAndLock(weakClickables);
+	objects = CheckAndLock(weakObjects);
 }
 
 void GameWindow::AddMapTiles(std::shared_ptr<Map> theMap, const int centerRow, 
@@ -564,25 +584,35 @@ void GameWindow::AddMapTiles(std::shared_ptr<Map> theMap, const int centerRow,
 					<< "," << theMap->Terrain(i,j)->Y() << ")." << std::endl;*/
 			}
 			if(theMap->Terrain(i,j)->HasColony()){
-				AddClickable(theMap->Terrain(i,j).get());
+				AddClickable(theMap->Terrain(i,j));
 			} else {
-				AddObject(theMap->Terrain(i,j).get());
+				AddObject(theMap->Terrain(i,j));
 			}
-			for(auto& occ : theMap->Terrain(i,j)->Occupants()){
-				AddClickable(occ);
+			for(auto k = 0u; k < theMap->Terrain(i,j)->NumberOfOccupants(); ++k){
+				AddClickable(theMap->Terrain(i,j)->SharedOccupant(k));
 			}
 		}
 	}
 }
 
-void GameWindow::MakeUnitInfoPanel(const GFXObject* source){
-	if(!source->IsUnit()) return;
+void GameWindow::MakeInfoPanel(const GFXObject* source){
+	if(!(source && source->IsUnit())) return;
 	AddTopLevelUI(std::make_shared<UnitInfoPanel>(ren, 
 				dynamic_cast<const Unit*>(source)));
 }
 
-void GameWindow::UpdateUnitInfoPanel(const GFXObject* source){
-	if(!source->IsUnit()) return;
+void GameWindow::SwapInfoPanel(const GFXObject* source){
+	if(!(source && source->IsUnit())) return;
+	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
+		if(std::dynamic_pointer_cast<UnitInfoPanel>(topLevelUI[i])){
+			std::dynamic_pointer_cast<UnitInfoPanel>(topLevelUI[i])->Update(
+					dynamic_cast<const Unit*>(source));
+		}
+	}
+}
+
+void GameWindow::UpdateInfoPanel(const GFXObject* source){
+	if(!(source && source->IsUnit())) return;
 	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
 		if(std::dynamic_pointer_cast<UnitInfoPanel>(topLevelUI[i])){
 			std::dynamic_pointer_cast<UnitInfoPanel>(topLevelUI[i])->UpdateHealth(
@@ -591,7 +621,7 @@ void GameWindow::UpdateUnitInfoPanel(const GFXObject* source){
 	}
 }
 
-void GameWindow::RemoveUnitInfoPanel(){
+void GameWindow::RemoveInfoPanel(){
 	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
 		if(std::dynamic_pointer_cast<UnitInfoPanel>(topLevelUI[i])){
 			topLevelUI.erase(topLevelUI.begin() + i);
@@ -599,32 +629,56 @@ void GameWindow::RemoveUnitInfoPanel(){
 	}
 }
 
+void GameWindow::MakeOrderPanel(GFXObject* source){
+	if(!(source && source->IsUnit())) return;
+	AddUI(std::make_unique<UnitOrderPanel>(ren, 
+				dynamic_cast<Unit*>(source)));
+}
+
+void GameWindow::SwapOrderPanel(GFXObject* source){
+	if(!(source && source->IsUnit())) return;
+	for(unsigned int i = 0; i < UI.size(); ++i){
+		if(dynamic_cast<UnitOrderPanel*>(UI[i].get())){
+			dynamic_cast<UnitOrderPanel*>(UI[i].get())->Update(
+					dynamic_cast<Unit*>(source));
+		}
+	}
+}
+
+void GameWindow::RemoveOrderPanel(){
+	for(unsigned int i = 0; i < UI.size(); ++i){
+		if(dynamic_cast<UnitOrderPanel*>(UI[i].get())){
+			UI.erase(UI.begin() + i);
+		}
+	}
+}
+
 void GameWindow::MoveUpLeft(Unit* mover, std::shared_ptr<Map> theMap){
 	theMap->MoveUnitTo(mover, mover->Row()-1, mover->Colm()-1);
-	UpdateUnitInfoPanel(mover);
+	UpdateInfoPanel(mover);
 }
 
 void GameWindow::MoveUpRight(Unit* mover, std::shared_ptr<Map> theMap){
 	theMap->MoveUnitTo(mover, mover->Row()-1, mover->Colm()+1);
-	UpdateUnitInfoPanel(mover);
+	UpdateInfoPanel(mover);
 }
 
 void GameWindow::MoveLeft(Unit* mover, std::shared_ptr<Map> theMap){
 	theMap->MoveUnitTo(mover, mover->Row(), mover->Colm()-2);
-	UpdateUnitInfoPanel(mover);
+	UpdateInfoPanel(mover);
 }
 
 void GameWindow::MoveRight(Unit* mover, std::shared_ptr<Map> theMap){
 	theMap->MoveUnitTo(mover, mover->Row(), mover->Colm()+2);
-	UpdateUnitInfoPanel(mover);
+	UpdateInfoPanel(mover);
 }
 
 void GameWindow::MoveDownLeft(Unit* mover, std::shared_ptr<Map> theMap){
 	theMap->MoveUnitTo(mover, mover->Row()+1, mover->Colm()-1);
-	UpdateUnitInfoPanel(mover);
+	UpdateInfoPanel(mover);
 }
 
 void GameWindow::MoveDownRight(Unit* mover, std::shared_ptr<Map> theMap){
 	theMap->MoveUnitTo(mover, mover->Row()+1, mover->Colm()+1);
-	UpdateUnitInfoPanel(mover);
+	UpdateInfoPanel(mover);
 }

@@ -12,6 +12,8 @@ class UIElement : public GFXObject {
 	std::unique_ptr<Sprite> textSprite = nullptr;
 	SDL_Rect textLayout;
 
+	// dynamic text should probably be a class/struct of its own that has
+	// formatting codes and knows how to render itself
 	int const* dynamicTextSource;
 	TTF_Font* dynamicTextFont;
 	SDL_Color dynamicTextColor;
@@ -20,16 +22,11 @@ class UIElement : public GFXObject {
 	mutable int dynamicTextCached;
 	mutable SDL_Rect dynamicTextLayout;
 
-	// want to deprecate these two
-	//bool button = false;
-	//button_t type = END_TURN;
-
 	// probably this should be moved to Button; it represents things like which
 	// type of Building it is, not things like how many resources are displayed
 	std::vector<int> values;
 
 	public:
-		UIElement() = delete;
 		UIElement(SDL_Renderer* ren, const std::string spriteFile,
 				const int x, const int y) : 
 			GFXObject(ren, spriteFile, x, y) {}
@@ -56,11 +53,6 @@ class UIElement : public GFXObject {
 		void SetDynamicText(const int& source, TTF_Font* font = nullptr,
 				const textcolor_t color = BLACK);
 
-		// we want to deprecate these three functions
-		/*void EnableButton(const button_t type);
-		void DisableButton();
-		int Select();*/
-
 		void Render() const;
 		void MoveTo(int x, int y);
 		void MoveTo(SDL_Rect newLayout);
@@ -79,6 +71,7 @@ class Button : public UIElement {
 			<< "invalid function!" << std::endl; onClick(); return true; }
 };
 
+// this class is dumb, it should just be a GFXObject
 class UIAggregate {
 	protected:
 		SDL_Renderer* ren;
@@ -100,23 +93,30 @@ class UnitInfoPanel : public UIAggregate {
 	std::unique_ptr<UIElement> attackIcon;
 
 	public:
-		UnitInfoPanel(SDL_Renderer* ren, const Unit* Unit);
+		UnitInfoPanel(SDL_Renderer* ren, const Unit* source);
 
 		void Render() const;
 
-		void UpdateHealth(const Unit* Unit);
+		void Update(const Unit* source);
+		// should use dynamic text instead of doing UpdateHealth explicitly
+		void UpdateHealth(const Unit* source);
 };
 
-class UnitOrderPanel : public UIAggregate {
-	UIElement background;
+class UnitOrderPanel : public GFXObject {
+	//UIElement background;
 	std::vector<Button> buttons;
+	unsigned int activeButton;
 
 	public:
-		UnitOrderPanel(SDL_Renderer* ren, const Unit* Unit);
+		UnitOrderPanel(SDL_Renderer* ren, Unit* source);
 
 		void Render() const;
 
-		void UpdatePanel(const Unit* Unit);
+		void Update(Unit* source);
+		bool InsideQ(const int x, const int y); 
+		bool Click();
+
+		void MoveTo(int x, int y);
 };
 
 #endif

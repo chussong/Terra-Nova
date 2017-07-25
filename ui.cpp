@@ -52,6 +52,8 @@ void UIElement::SetText(const std::string& text, TTF_Font* font,
 	}*/
 /*	std::cout << "Text \"" << text << "\" set at position (" << textLayout.x 
 		<< "," << textLayout.y << ")." << std::endl;*/
+	textLayout.x += textLayout.w/2;
+	textLayout.y += textLayout.h/2;
 	textSprite = std::make_unique<Sprite>(ren, text, textLayout, colorCode, font);
 	if(!textSprite) std::cout << "Error constructing textSprite!" << std::endl;
 	textSprite->MakeDefaultSize(textLayout);
@@ -151,7 +153,7 @@ void UIElement::MoveTo(SDL_Rect newLayout){
 	MoveTo(newLayout.x, newLayout.y);
 }
 
-UnitInfoPanel::UnitInfoPanel(SDL_Renderer* ren, const Unit* Unit):
+UnitInfoPanel::UnitInfoPanel(SDL_Renderer* ren, const Unit* source):
 	UIAggregate(ren, SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH, 
 			SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT) {
 	int panelX = SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH;
@@ -159,37 +161,7 @@ UnitInfoPanel::UnitInfoPanel(SDL_Renderer* ren, const Unit* Unit):
 	background = std::make_unique<UIElement>(ren,
 			"unit_info_panel",
 			panelX, panelY);
-	portrait = std::make_unique<UIElement>(ren,
-			Unit->Spec()->Name() + "_portrait",
-			panelX + PORTRAIT_X, panelY + PORTRAIT_Y);
-	factionIcon = std::make_unique<UIElement>(ren,
-			"factioncolor_p" + std::to_string(Unit->Faction()),
-			panelX + FACTIONCOLOR_X, panelY + FACTIONCOLOR_Y);
-	factionIcon->AddText(Unit->Name(), UNIT_NAME_X, UNIT_NAME_Y);
-	healthIcon = std::make_unique<UIElement>(ren,
-			"healthicon_" + Unit->Species(),
-			panelX + HEALTHICON_X, panelY + HEALTHICON_Y);
-	healthIcon->AddText(
-			std::to_string(Unit->Health()) + "/" + std::to_string(Unit->MaxHealth()), 
-			UNIT_HEALTH_X, UNIT_HEALTH_Y);
-	if(Unit->Spec()->Attack(0)){
-		std::string attackName = Unit->Spec()->Attack(0)->Name();
-		std::replace(attackName.begin(), attackName.end(), ' ', '_');
-		attackIcon = std::make_unique<UIElement>(ren,
-				attackName + "_icon",
-				panelX + WEAPONICON_X, panelY + WEAPONICON_Y);
-		attackIcon->AddText(std::to_string(
-				static_cast<int>(std::floor(100*Unit->Accuracy()))) + "% | " 
-				+ std::to_string(Unit->AttackRate()) + "x "
-				+ std::to_string(Unit->Damage()) + " "
-				+ Unit->DamageType(),
-				UNIT_ATTACK_X, UNIT_ATTACK_Y);
-	} else {
-		attackIcon = std::make_unique<UIElement>(ren,
-				"null_attack_icon",
-				panelX + WEAPONICON_X, panelY + WEAPONICON_Y);
-		attackIcon->AddText("Unarmed", UNIT_ATTACK_X, UNIT_ATTACK_Y);
-	}
+	Update(source);
 }
 
 
@@ -201,30 +173,100 @@ void UnitInfoPanel::Render() const{
 	attackIcon->Render();
 }
 
-void UnitInfoPanel::UpdateHealth(const Unit* Unit){
-	healthIcon->SetText(
-			std::to_string(Unit->Health()) + "/" + std::to_string(Unit->MaxHealth()));
+void UnitInfoPanel::Update(const Unit* source){
+	int panelX = SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH;
+	int panelY = SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT;
+	portrait = std::make_unique<UIElement>(ren,
+			source->Spec()->Name() + "_portrait",
+			panelX + PORTRAIT_X, panelY + PORTRAIT_Y);
+	factionIcon = std::make_unique<UIElement>(ren,
+			"factioncolor_p" + std::to_string(source->Faction()),
+			panelX + FACTIONCOLOR_X, panelY + FACTIONCOLOR_Y);
+	factionIcon->AddText(source->Name(), UNIT_NAME_X, UNIT_NAME_Y);
+	if(healthIcon){
+		UpdateHealth(source);
+	} else {
+		healthIcon = std::make_unique<UIElement>(ren,
+				"healthicon_" + source->Species(),
+				panelX + HEALTHICON_X, panelY + HEALTHICON_Y);
+		healthIcon->AddText(
+				std::to_string(source->Health()) + "/" + 
+						std::to_string(source->MaxHealth()), 
+				UNIT_HEALTH_X, UNIT_HEALTH_Y);
+	}
+	if(source->Spec()->Attack(0)){
+		std::string attackName = source->Spec()->Attack(0)->Name();
+		std::replace(attackName.begin(), attackName.end(), ' ', '_');
+		attackIcon = std::make_unique<UIElement>(ren,
+				attackName + "_icon",
+				panelX + WEAPONICON_X, panelY + WEAPONICON_Y);
+		attackIcon->AddText(std::to_string(
+				static_cast<int>(std::floor(100*source->Accuracy()))) + "% | " 
+				+ std::to_string(source->AttackRate()) + "x "
+				+ std::to_string(source->Damage()) + " "
+				+ source->DamageType(),
+				UNIT_ATTACK_X, UNIT_ATTACK_Y);
+	} else {
+		attackIcon = std::make_unique<UIElement>(ren,
+				"null_attack_icon",
+				panelX + WEAPONICON_X, panelY + WEAPONICON_Y);
+		attackIcon->AddText("Unarmed", UNIT_ATTACK_X, UNIT_ATTACK_Y);
+	}
 }
 
-UnitOrderPanel::UnitOrderPanel(SDL_Renderer* ren, const Unit* Unit):
-	UIAggregate(ren, 0, SCREEN_HEIGHT - UNIT_ORDER_PANEL_HEIGHT),
-	background(ren, "Unit_order_panel", x, y) {
-	UpdatePanel(Unit);
+void UnitInfoPanel::UpdateHealth(const Unit* source){
+	healthIcon->SetText(
+			std::to_string(source->Health()) + "/" + std::to_string(source->MaxHealth()));
+}
+
+UnitOrderPanel::UnitOrderPanel(SDL_Renderer* ren, Unit* source):
+	GFXObject(ren, "unit_order_panel", 0, SCREEN_HEIGHT - ORDER_PANEL_HEIGHT){
+	Update(source);
+	activeButton = -1u;
 }
 
 void UnitOrderPanel::Render() const{
-	background.Render();
+	GFXObject::Render();
 	for(auto& button : buttons) button.Render();
 }
 
-void UnitOrderPanel::UpdatePanel(const Unit* Unit){
-	if(!Unit){
-		buttons.clear();
-	} else {
-		for(auto order : Unit->AvailableOrders()){
-			int buttonX = x + 5 + (ORDER_BUTTON_WIDTH+5)*buttons.size()%3;
-			int buttonY = y + 5 + (ORDER_BUTTON_HEIGHT+5)*buttons.size()/3;
-			buttons.emplace_back(ren, order.name, buttonX, buttonY, order.func);
+void UnitOrderPanel::Update(Unit* source){
+	buttons.clear();
+	if(source){
+		for(auto order : source->AvailableOrders()){
+			int buttonX = X() + 5 + (ORDER_BUTTON_WIDTH+5)*(buttons.size()%3);
+			int buttonY = Y() + 5 + (ORDER_BUTTON_HEIGHT+5)*(buttons.size()/3);
+			buttons.emplace_back(ren, "button_" + order.name, buttonX, buttonY,
+					order.func);
 		}
+	}
+}
+
+// Note that this returns false if you click on the frame rather than a button
+bool UnitOrderPanel::InsideQ(const int x, const int y){
+	for(auto i = 0u; i < buttons.size(); ++i){
+		if(buttons[i].InsideQ(x, y)){
+			activeButton = i;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool UnitOrderPanel::Click(){
+	if(activeButton >= buttons.size()){
+		std::cerr << "Error: UnitOrderPanel clicked, but it does not have an "
+			<< "active button set by InsideQ()." << std::endl;
+	}
+	const bool ret = buttons[activeButton].Click();
+	activeButton = -1u;
+	return ret;
+}
+
+void UnitOrderPanel::MoveTo(int x, int y){
+	GFXObject::MoveTo(x,y);
+	for(auto i = 0u; i < buttons.size(); ++i){
+		buttons[i].MoveTo(x + 5 + (ORDER_BUTTON_WIDTH+5)*(i%3),
+				y + 5 + (ORDER_BUTTON_HEIGHT+5)*(i/3));
 	}
 }

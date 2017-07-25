@@ -7,6 +7,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
+#include "gamevars.hpp"
 #include "gfxobject.hpp"
 #include "building.hpp"
 #include "unit.hpp"
@@ -17,10 +18,7 @@ class TileType {
 
 	// this should be a regular pointer to a vector of Building types
 	std::vector<std::weak_ptr<BuildingType>> allowedBuildings;
-	bool cold = false;
-	bool wooded = false;
-	bool aquatic = false;
-	bool hilly = false;
+	TileAttributes attributes;
 
 	public:
 		TileType() = delete;
@@ -35,14 +33,14 @@ class TileType {
 		void AddAllowedBuilding(const std::shared_ptr<BuildingType> newBldg)
 			{ allowedBuildings.push_back(newBldg); }
 
-		bool Cold() const		{ return cold; }
-		bool Wooded() const		{ return wooded; }
-		bool Aquatic() const	{ return aquatic; }
-		bool Hilly() const		{ return hilly; }
-		void SetCold(const bool val)	{ cold = val; }
-		void SetWooded(const bool val)	{ wooded = val; }
-		void SetAquatic(const bool val)	{ aquatic = val; }
-		void SetHilly(const bool val)	{ hilly = val; }
+		bool Cold() const		{ return attributes.cold; }
+		bool Wooded() const		{ return attributes.wooded; }
+		bool Aquatic() const	{ return attributes.aquatic; }
+		bool Hilly() const		{ return attributes.hilly; }
+		void SetCold(const bool val)	{ attributes.cold = val; }
+		void SetWooded(const bool val)	{ attributes.wooded = val; }
+		void SetAquatic(const bool val)	{ attributes.aquatic = val; }
+		void SetHilly(const bool val)	{ attributes.hilly = val; }
 
 };
 
@@ -80,7 +78,7 @@ class Tile : public GFXObject {
 		void Resize(int w, int h);
 		void Resize(SDL_Rect newLayout);
 
-		bool InsideQ(const int x, const int y) const;
+		bool InsideQ(const int x, const int y);
 		// deprecate Select() when possible
 		int Select();
 		bool Click();
@@ -106,7 +104,9 @@ class Tile : public GFXObject {
 		bool AddOccupant(std::shared_ptr<Unit> newOccupant);
 		bool RemoveOccupant(Unit* removeThis);
 		std::vector<Unit*> Occupants() const;
-		unsigned int NumberOfOccupants() const;
+		std::shared_ptr<Unit> SharedOccupant(const unsigned int i) const;
+		unsigned int NumberOfOccupants() const { return weakOccupants.size(); }
+		unsigned int NumberOfLivingOccupants() const;
 		Unit* Defender() const;
 		char Owner() const;
 

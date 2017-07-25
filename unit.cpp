@@ -22,8 +22,6 @@ Unit::Unit(SDL_Renderer* ren,
 	healthBackground = GFXManager::RequestSprite("healthbar_background");
 	healthBar = GFXManager::RequestSprite("healthbar_p" + std::to_string(faction));
 
-	availableOrders.emplace_back("patrol", std::bind(&Unit::OrderPatrol, this));
-	availableOrders.emplace_back("harvest", std::bind(&Unit::OrderHarvest, this));
 	SetOrders(ORDER_PATROL);
 }
 
@@ -262,6 +260,13 @@ void Unit::OrderPatrol(){
 void Unit::OrderHarvest(){
 	SetOrders(ORDER_HARVEST);
 	myPath = nullptr;
+}
+
+std::vector<Order> Unit::AvailableOrders() {
+	std::vector<Order> ret;
+	ret.emplace_back("patrol", std::bind(&Unit::OrderPatrol, this));
+	ret.emplace_back("harvest", std::bind(&Unit::OrderHarvest, this));
+	return ret;
 }
 
 std::vector<std::shared_ptr<AttackType>> Unit::Attacks() const{

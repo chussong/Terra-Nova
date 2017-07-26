@@ -1,6 +1,6 @@
 #include "tile.hpp"
 
-Tile::Tile(std::shared_ptr<TileType> type, SDL_Renderer* ren,
+Tile::Tile(TileType* type, SDL_Renderer* ren,
 		const int row, const int colm): GFXObject(ren, type->Path(), 0, 0),
 		type(type), row(row), colm(colm) {}
 
@@ -26,6 +26,9 @@ void Tile::StartTurn(){
 		std::cout << "The Tile at (" << row << "," << colm << ") has "
 			<< occupants.size() << " occupants." << std::endl;
 	}*/
+	if(linkedColony && (Faction() == linkedColony->Faction())){
+		linkedColony->AddResources(this->Income());
+	}
 }
 
 void Tile::EndTurn(){
@@ -77,28 +80,26 @@ bool Tile::InsideQ(const int x, const int y){
 	return true;
 }
 
-// should be deprecated
-int Tile::Select() {
+/*int Tile::Select() {
 	if(hasColony) return SCREEN_CHANGE;
 	return NOTHING;
-}
+}*/
 
 bool Tile::Click() {
-	//if(HasColony()){
-		//EnterColony(col);
-		//^^^ this will be a GameWindow function that makes a Colony screen out
-		//of the Colony that you pass it. It will need to be stored as a
-		//std::function at the Tile level
-	//}
+	/*if(HasColony()){
+		//EnterColony(linkedColony);
+		return true;
+	}
 
-	return false;
+	return false;*/
+	return HasColony();
 }
 
-std::shared_ptr<TileType> Tile::Type() const{
-	return type.lock();
+TileType* Tile::Type() const{
+	return type;
 }
 
-void Tile::SetTileType(const std::shared_ptr<TileType> newType){
+void Tile::SetTileType(TileType* newType){
 	ChangeSprite(newType->Path());
 	type = newType;
 }
@@ -115,8 +116,8 @@ std::array<int, LAST_RESOURCE> Tile::Income() const{
 	if(bldg && bldg->Finished() && bldg->Automatic()) hasHarvester = true;
 	if(!hasHarvester) return inc;
 
-	inc = type.lock()->Yield();
-	//std::cout << "Yield[0]: " << type.lock()->Yield()[0] << std::endl;
+	inc = type->Yield();
+	//std::cout << "Yield[0]: " << type->Yield()[0] << std::endl;
 	if(bldg){
 		for(unsigned int i = 0; i < inc.size(); ++i) 
 			inc[i] += bldg->BonusResources()[i];
@@ -128,17 +129,28 @@ bool Tile::HasColony() const{
 	return hasColony;
 }
 
-void Tile::SetHasColony(const bool val){
-	if(val == true){
+Colony* Tile::LinkedColony() const{
+	return linkedColony;
+}
+
+void Tile::SetColony(Colony* newColony){
+	if(newColony){
 		RemoveBuilding();
 		//selectable = true;
-		ChangeSprite("terrain/colony");
+		ChangeSprite("terrain/colony_p" + std::to_string(newColony->Faction()));
+		newColony->SetRow(this->Row());
+		newColony->SetColumn(this->Colm());
+		LinkColony(newColony);
+		hasColony = true;
+	} else {
+		ChangeSprite(type->Path());
+		LinkColony(nullptr);
+		hasColony = false;
 	}
-	if(val == false){
-		//selectable = false;
-		ChangeSprite(type.lock()->Path());
-	}
-	hasColony = val;
+}
+
+void Tile::LinkColony(Colony* colonyToLink){
+	linkedColony = colonyToLink;
 }
 
 void Tile::SetLocation(const int row, const int colm){
@@ -247,7 +259,7 @@ Unit* Tile::Defender() const{
 	return Occupants()[0];
 }
 
-char Tile::Owner() const{
+int Tile::Faction() const{
 	if(NumberOfOccupants() == 0) return 0;
 	return Occupants()[0]->Faction();
 }

@@ -24,7 +24,7 @@ main.o: main.cpp unit.hpp colony.hpp map.hpp game.hpp gamewindow.hpp \
 unit.o: unit.cpp unit.hpp gfxobject.hpp gamevars.hpp path.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-colony.o: colony.cpp colony.hpp tile.hpp templates.hpp building.hpp gamevars.hpp
+colony.o: colony.cpp colony.hpp templates.hpp building.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 map.o: map.cpp map.hpp templates.hpp gamevars.hpp tile.hpp path.hpp
@@ -47,7 +47,8 @@ gfxobject.o: gfxobject.cpp gfxobject.hpp sprite.hpp gamewindow.hpp gamevars.hpp
 ui.o: ui.cpp ui.hpp gfxobject.hpp gamevars.hpp unit.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-tile.o: tile.cpp tile.hpp gfxobject.hpp unit.hpp building.hpp gamevars.hpp
+tile.o: tile.cpp tile.hpp gfxobject.hpp unit.hpp building.hpp gamevars.hpp \
+		colony.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 building.o: building.cpp building.hpp unit.hpp tile.hpp gfxobject.hpp \

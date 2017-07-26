@@ -18,66 +18,8 @@ Game::Game(){
 }
 
 void Game::Begin(){
-	/*int temp_Colony_row = 28;
-	int temp_Colony_colm = 76;
-
-	std::shared_ptr<Map> terraNova = CreateMap();
-	std::shared_ptr<Colony> aurora = CreateColony(terraNova, 
-			temp_Colony_row, temp_Colony_colm, "Aurora", 1);
-	aurora->AddResource(FOOD, 60);
-	aurora->AddResource(CARBON, 120);
-	aurora->AddResource(IRON, -20);
-	std::shared_ptr<Unit> col = CreatePerson(
-			terraNova->Terrain(aurora->Row(), aurora->Column()+2),
-			UnitTypes[0], 1);
-	std::shared_ptr<Unit> lin = CreatePerson(
-			terraNova->Terrain(aurora->Row()+1, aurora->Column()+1),
-			UnitTypes[2], 1);
-	lin->ChangeName("Commander","Lin");
-
-	std::shared_ptr<Unit> enemy = CreatePerson(
-			terraNova->Terrain(aurora->Row(), aurora->Column()+4),
-			UnitTypes[1], 2);*/
-
 	StartTurn();
-
-	bool quit = false;
-	screentype_t nextScreen = COLONY_SCREEN;
-	while(!quit){
-		switch(nextScreen){
-			case COLONY_SCREEN: nextScreen = ThrowToColonyScreen(colonies[0]);
-								break;
-			case MAP_SCREEN:	nextScreen = ThrowToMapScreen(maps[0], 4, 8);
-								break;
-			case QUIT_SCREEN:	quit = true;
-								break;
-		}
-	}
-}
-
-screentype_t Game::ThrowToColonyScreen(std::shared_ptr<Colony> col){
-	while(true){
-		switch(win->ColonyScreen(col)){
-			case NEXT_TURN:		NextTurn();
-								break;
-			case SCREEN_CHANGE:	return MAP_SCREEN;
-			case QUIT:			return QUIT_SCREEN;
-			default:			return QUIT_SCREEN;
-		}
-	}
-}
-
-screentype_t Game::ThrowToMapScreen(std::shared_ptr<Map> theMap, int centerRow,
-		int centerColm){
-	while(true){
-		switch(win->MapScreen(theMap, centerRow, centerColm)){
-			case NEXT_TURN:		NextTurn();
-								break;
-			case SCREEN_CHANGE:	return COLONY_SCREEN;
-			case QUIT:			return QUIT_SCREEN;
-			default:			return QUIT_SCREEN;
-		}
-	}
+	win->MapScreen(maps[0], 4, 8);
 }
 
 bool Game::Tick(){
@@ -438,7 +380,7 @@ std::vector<std::vector<std::shared_ptr<Tile>>> Game::ParseMap(
 			if(mapAsStrings[i].size() == 0) std::cerr << "Tile alias error!" << std::endl;
 			newTiles[newTiles.size()-1][2*i + (newTiles.size()-1)%2]
 				= std::make_shared<Tile>(
-						TileDict.find(mapAsStrings[i][0])->second, Window()->Renderer(),
+						TileDict.find(mapAsStrings[i][0])->second.get(), Window()->Renderer(),
 						newTiles.size()-1, 2*i + (newTiles.size()-1)%2);
 			//std::cout << " survived." << std::endl;
 		}
@@ -467,7 +409,7 @@ void Game::ParseFeatures(std::shared_ptr<Map> parentMap,
 	}
 }
 
-std::shared_ptr<Colony> Game::ParseColony(std::shared_ptr<Map> parentMap,
+void Game::ParseColony(std::shared_ptr<Map> parentMap,
 		const std::vector<std::string>& desc){
 	std::string name("");
 	int row = -1;
@@ -493,9 +435,9 @@ std::shared_ptr<Colony> Game::ParseColony(std::shared_ptr<Map> parentMap,
 		std::cerr << "Error: identified a Colony feature in map.txt which does "
 			<< "not appear to have all of the information needed for "
 			<< "instantiation." << std::endl;
-		return nullptr;
+		return;
 	}
-	return CreateColony(parentMap, row-1, 2*(colm-1) + (row-1)%2, name, owner);
+	CreateColony(parentMap, row-1, 2*(colm-1) + (row-1)%2, name, owner);
 }
 
 void Game::ParseUnits(std::shared_ptr<Map> parentMap, 
@@ -608,21 +550,20 @@ std::shared_ptr<Unit> Game::CreatePerson(Map* theMap, const int row,
 	return newPerson;
 }
 
-std::shared_ptr<Colony> Game::CreateColony(std::shared_ptr<Map> parentMap,
+void Game::CreateColony(std::shared_ptr<Map> parentMap,
 		const int row, const int colm, const std::string& name, const int faction){
 	if(row < 0 || colm < 0 || static_cast<unsigned int>(row) > parentMap->NumberOfRows() 
 			|| static_cast<unsigned int>(colm) > parentMap->NumberOfColumns()){
 		std::cerr << "Error: attempted to create a Colony out of bounds.";
-		return nullptr;
+		return;
 	}
-	std::shared_ptr<Colony> newColony(std::make_shared<Colony>(Window()->Renderer(),
-				parentMap->SurroundingTerrain(row, colm), faction));
-	newColony->SetBuildingTypes(buildingTypes);
-	newColony->ChangeName(name);
-	parentMap->Terrain(row, colm)->SetHasColony(true);
-	//parentMap->AddColony(newColony, row, colm);
-	colonies.push_back(newColony);
-	return newColony;
+	//std::shared_ptr<Colony> newColony(std::make_shared<Colony>(Window()->Renderer(),
+				//parentMap->SurroundingTerrain(row, colm), faction));
+	//newColony->SetBuildingTypes(buildingTypes);
+	//newColony->ChangeName(name);
+	//parentMap->Terrain(row, colm)->SetHasColony(newColony->Faction());
+	parentMap->AddColony(row, colm, faction, name, buildingTypes);
+	//colonies.push_back(newColony);
 }
 
 std::shared_ptr<Map> Game::CreateMap(){
@@ -651,7 +592,7 @@ void Game::StartTurn(){
 	ClearDeadUnits(); // before everyone else locks their pointers
 	for(auto& m : maps) m->StartTurn();
 	//std::cout << "Processing turns in " << colonies.size() << " colonies." << std::endl;
-	for(unsigned int i = 0; i < colonies.size(); ++i) colonies[i]->ProcessTurn();
+	//for(unsigned int i = 0; i < colonies.size(); ++i) colonies[i]->ProcessTurn();
 	for(auto& u : units) u->ProcessTurn(); // resets move allowance
 	win->StartTurn();
 }

@@ -164,6 +164,7 @@ class Unit : public GFXObject {
 		void OrderMove(std::unique_ptr<Path> newPath);
 		void OrderPatrol();
 		void OrderHarvest();
+		//std::shared_ptr<Colony> OrderFoundColony();
 		std::vector<Order> AvailableOrders();
 
 		bool CanRespec() const			{return spec->CanRespec();}

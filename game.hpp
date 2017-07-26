@@ -27,7 +27,7 @@ class Game {
 	std::vector<std::shared_ptr<TileType>> tileTypes;
 	std::vector<std::shared_ptr<Map>> maps;
 	std::vector<std::shared_ptr<Unit>> units;
-	std::vector<std::shared_ptr<Colony>> colonies;
+	//std::vector<std::shared_ptr<Colony>> colonies;
 
 	std::shared_ptr<GameWindow> win;
 
@@ -41,8 +41,8 @@ class Game {
 		Game();
 
 		void Begin();
-		screentype_t ThrowToColonyScreen(std::shared_ptr<Colony> col);
-		screentype_t ThrowToMapScreen(std::shared_ptr<Map> theMap,
+		void ThrowToColonyScreen(std::shared_ptr<Colony> col);
+		void ThrowToMapScreen(std::shared_ptr<Map> theMap,
 				int centerRow, int centerColm);
 
 		bool Tick();	// false means quit, true means continue ticking
@@ -67,7 +67,7 @@ class Game {
 
 		void ParseFeatures(std::shared_ptr<Map> parentMap, 
 				const std::vector<std::string> desc);
-		std::shared_ptr<Colony> ParseColony(std::shared_ptr<Map> parentMap,
+		void ParseColony(std::shared_ptr<Map> parentMap,
 				const std::vector<std::string>& desc);
 
 		void ParseUnits(std::shared_ptr<Map> parentMap,
@@ -82,7 +82,7 @@ class Game {
 		std::shared_ptr<Unit> CreatePerson(Map* theMap, const int row,
 				const int colm,
 				const std::shared_ptr<UnitType> spec, const char faction);
-		std::shared_ptr<Colony> CreateColony(std::shared_ptr<Map> parentMap,
+		void CreateColony(std::shared_ptr<Map> parentMap,
 				const int row, const int colm, const std::string& name, 
 				const int faction);
 		std::shared_ptr<Map> CreateMap();

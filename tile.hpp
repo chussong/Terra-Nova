@@ -11,6 +11,7 @@
 #include "gfxobject.hpp"
 #include "building.hpp"
 #include "unit.hpp"
+#include "colony.hpp"
 
 class TileType {
 	const std::string name;
@@ -45,8 +46,8 @@ class TileType {
 };
 
 class Tile : public GFXObject {
-	std::weak_ptr<TileType> type;
-	std::shared_ptr<Building> bldg;
+	TileType* type;
+	std::shared_ptr<Building> bldg; // should be unique_ptr
 	std::vector<std::weak_ptr<Unit>> weakOccupants;
 	std::vector<Unit*> occupants;
 
@@ -54,11 +55,12 @@ class Tile : public GFXObject {
 	int colm;
 
 	bool hasColony = false;
-	//std::function<void(Colony*)> EnterColony
+	Colony* linkedColony = nullptr;
+	//std::function<void(Colony*)> EnterColony;
 
 	public:
 		Tile() = delete;
-		Tile(std::shared_ptr<TileType> type, SDL_Renderer* ren,
+		Tile(TileType* type, SDL_Renderer* ren,
 				const int row, const int colm);
 		Tile(const GFXObject& other) = delete;
 		Tile(Tile&& other) noexcept : 
@@ -79,12 +81,11 @@ class Tile : public GFXObject {
 		void Resize(SDL_Rect newLayout);
 
 		bool InsideQ(const int x, const int y);
-		// deprecate Select() when possible
-		int Select();
+		//int Select();
 		bool Click();
-		std::shared_ptr<TileType> Type() const;
+		TileType* Type() const;
 		std::string Name() const { return Type()->Name(); }
-		void SetTileType(const std::shared_ptr<TileType> newType);
+		void SetTileType(TileType* newType);
 		std::array<int, LAST_RESOURCE> Income() const;
 		bool Cold() const		{ return Type()->Cold(); }
 		bool Wooded() const		{ return Type()->Wooded(); }
@@ -92,7 +93,9 @@ class Tile : public GFXObject {
 		bool Hilly() const		{ return Type()->Hilly(); }
 
 		bool HasColony() const;
-		void SetHasColony(const bool val);
+		Colony* LinkedColony() const;
+		void SetColony(Colony* newColony);
+		void LinkColony(Colony* colonyToLink);
 
 		void SetLocation(const int row, const int colm);
 		int Row() const;
@@ -108,7 +111,7 @@ class Tile : public GFXObject {
 		unsigned int NumberOfOccupants() const { return weakOccupants.size(); }
 		unsigned int NumberOfLivingOccupants() const;
 		Unit* Defender() const;
-		char Owner() const;
+		int Faction() const;
 
 		void Training();
 

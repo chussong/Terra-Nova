@@ -230,6 +230,7 @@ void UnitOrderPanel::Render() const{
 	for(auto& button : buttons) button.Render();
 }
 
+// would like to add a FoundColony button handed down from Game
 void UnitOrderPanel::Update(Unit* source){
 	buttons.clear();
 	if(source){
@@ -240,6 +241,12 @@ void UnitOrderPanel::Update(Unit* source){
 					order.func);
 		}
 	}
+}
+
+void UnitOrderPanel::AddButton(Button newButton){
+	newButton.MoveTo(X() + 5 + (ORDER_BUTTON_WIDTH+5)*(buttons.size()%3),
+			Y() + 5 + (ORDER_BUTTON_HEIGHT+5)*(buttons.size()/3));
+	buttons.push_back(std::move(newButton));
 }
 
 // Note that this returns false if you click on the frame rather than a button

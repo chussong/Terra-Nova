@@ -11,6 +11,12 @@ constexpr std::array<std::array<int, 2>, 6> hexAdj{{
 	{{0, 2}}, {{-1, 1}}, {{-1, -1}}, {{0, -2}}, {{1, -1}}, {{1, 1}}
 }};
 
+constexpr std::array<std::array<int, 2>, 18> twoHexAdj{{
+		{{0, 2}}, {{-1, 1}}, {{-1, -1}}, {{0, -2}}, {{1, -1}}, {{1, 1}},
+		{{0, 4}}, {{-1, 3}}, {{-2, 2}}, {{-2, 0}}, {{-2, -2}}, {{-1, -3}},
+		{{0, -4}}, {{1, -3}}, {{2, -2}}, {{2, 0}}, {{2, 2}}, {{1, 3}}
+}};
+
 /*template<typename T>
 class matrix {
 	std::vector<std::vector<T>> m;
@@ -102,6 +108,14 @@ std::array<U,6> ForSurrounding(std::function<T(int,int)> Fetch, const int center
 		Func(Fetch(centerRow + 1, centerColumn + 1))
 	}};
 	return ret;
+}
+
+template<typename T, typename Predicate>
+void ForTwoSurrounding(std::function<T(int,int)> Fetch, const int centerRow,
+		const int centerColumn, Predicate Func){
+	for(auto i = 0u; i < twoHexAdj.size(); ++i){
+		Func(Fetch(centerRow + twoHexAdj[i][0], centerColumn + twoHexAdj[i][1]));
+	}
 }
 
 template<class T>

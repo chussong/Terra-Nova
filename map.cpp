@@ -38,6 +38,7 @@ void Map::StartTurn(){
 	//CleanExpired(colonies);
 	roamers = CheckAndLock(weakRoamers);
 	ForAllTiles(&Tile::StartTurn);
+	for(auto& col : colonies) col->ProcessTurn();
 
 	ProcessMovement();
 }
@@ -51,9 +52,9 @@ void Map::InitTerrain(std::vector<std::shared_ptr<TileType>> types){
 	for(unsigned int row = 0; row < terrain.size(); ++row){
 		for(unsigned int col = row%2; col < terrain[row].size(); col+=2){
 			if(col % 2 == 0) terrain[row][col] = 
-				std::make_shared<Tile>(FindByName(types, "plains"), ren, row, col);
+				std::make_shared<Tile>(FindByName(types, "plains").get(), ren, row, col);
 			if(col % 2 == 1) terrain[row][col] = 
-				std::make_shared<Tile>(FindByName(types, "mountain"), ren, row, col);
+				std::make_shared<Tile>(FindByName(types, "mountain").get(), ren, row, col);
 		}
 	}
 }
@@ -418,12 +419,21 @@ std::vector<Map::MoveData> Map::FindMoverData(const std::vector<Unit*>& roamers)
 
 // end of movement execution
 
-/*void Map::AddColony(const std::shared_ptr<Colony> col, int row, int colm){
-	colonies.emplace_back(col);
-	Terrain(row, colm)->SetHasColony(true);
+void Map::AddColony(const int row, const int colm, const int faction,
+		const std::string name, 
+		const std::vector<std::shared_ptr<BuildingType>> buildingTypes){
+	std::unique_ptr<Colony> newCol = std::make_unique<Colony>(ren, faction, name);
+	newCol->SetBuildingTypes(buildingTypes);
+	Colony* colPtr = newCol.get();
+	Terrain(row, colm)->SetColony(colPtr);
+	ForTwoSurrounding(std::function<Tile*(int,int)>([this] (int i, int j)
+				{ return Terrain(i,j).get(); }),
+			row, colm, [colPtr] (Tile* t) 
+			{ if(t && !t->LinkedColony()) t->LinkColony(colPtr); });
+	colonies.push_back(std::move(newCol));
 }
 
-std::shared_ptr<Colony> Map::Colony(const int num){
+/*std::shared_ptr<Colony> Map::Colony(const int num){
 	if(num < 0 || static_cast<unsigned int>(num) >= colonies.size())
 		return nullptr;
 	return colonies[num].lock();
@@ -517,43 +527,45 @@ bool Map::OutOfBounds(const int row, const int colm) const{
 	return OutOfBounds(static_cast<unsigned int>(row), static_cast<unsigned int>(colm));
 }
 
-/*
-std::vector<std::vector<std::shared_ptr<Tile>>> Map::SurroundingTerrain(
-		int centerColm, int centerRow, int widthToDisplay, int heightToDisplay){
-
-	leftEdge = std::max(centerColm - widthToDisplay, 0);
-	leftEdge = std::min(leftEdge, width - 2*widthToDisplay);
-	bottomEdge = std::max(centerRow - heightToDisplay/2, 0);
-	bottomEdge = std::min(bottomEdge, height - heightToDisplay);
-
-	std::vector<std::vector<std::shared_ptr<Tile>>> sur;
-	sur.resize(heightToDisplay);
-	for(unsigned int i = 0; i < sur.size(); ++i){
-		sur[i].resize(2*widthToDisplay);
-		for(unsigned int j = i%2; j < sur[i].size(); j+=2){
-			sur[i][j] = terrain	[bottomEdge + i][leftEdge - centerRow%2 + j];
-		}
-	}
-	return sur;
+void Map::SetViewCenter(const int row, const int col){
+	viewCenterRow = row;
+	viewCenterCol = col;
 }
-*/
 
 void Map::MoveView(direction_t dir){
 	int xShift=0, yShift=0;
 	switch(dir){
 		case VIEW_DOWN:
-			yShift = -TILE_HEIGHT;
+			yShift = TILE_HEIGHT;
+			viewCenterRow;
 			break;
 		case VIEW_UP:
-			yShift = TILE_HEIGHT;
+			yShift = -TILE_HEIGHT;
+			--viewCenterRow;
 			break;
 		case VIEW_LEFT:
 			xShift = TILE_WIDTH;
+			viewCenterCol -= 2;
 			break;
 		case VIEW_RIGHT:
 			xShift = -TILE_WIDTH;
+			viewCenterCol += 2;
 			break;
 	}
+
+	ShiftAllTiles(xShift, yShift);
+}
+
+void Map::CenterViewOn(const int row, const int col){
+	if(row == viewCenterRow && col == viewCenterCol) return;
+	int yShift = TILE_HEIGHT*(row - viewCenterRow);
+	int xShift = TILE_WIDTH*(col - viewCenterCol)/2;
+
+	ShiftAllTiles(xShift, yShift);
+	SetViewCenter(row, col);
+}
+
+void Map::ShiftAllTiles(const int xShift, const int yShift){
 	for(unsigned int i = 0; i < terrain.size(); ++i){
 		for(unsigned int j = i%2; j < terrain[i].size(); j+=2){
 			Terrain(i,j)->MoveTo(Terrain(i,j)->X() + xShift,

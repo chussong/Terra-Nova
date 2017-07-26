@@ -113,10 +113,12 @@ class UnitOrderPanel : public GFXObject {
 		void Render() const;
 
 		void Update(Unit* source);
+		void AddButton(Button newButton);
 		bool InsideQ(const int x, const int y); 
 		bool Click();
 
 		void MoveTo(int x, int y);
+
 };
 
 #endif

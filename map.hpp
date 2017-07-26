@@ -7,7 +7,7 @@
 #include "templates.hpp"
 #include "gamevars.hpp"
 #include "tile.hpp"
-//#include "colony.hpp"
+#include "colony.hpp"
 #include "path.hpp"
 
 class Map {
@@ -26,12 +26,15 @@ class Map {
 
 	int width;
 	int height;
+	int viewCenterRow;
+	int viewCenterCol;
+
 	/* Terrain format: each entry of terrain is a vector corresponding to a row
 	 * of the hex grid. Each of these rows is a vector of Tiles which is twice
 	 * as long as the number of Tiles it actually contains: odd rows have only
 	 * odd entries and even rows have only even entries.*/
 	std::vector<std::vector<std::shared_ptr<Tile>>> terrain;
-	//std::vector<std::weak_ptr<Colony>> colonies;
+	std::vector<std::unique_ptr<Colony>> colonies;
 	std::vector<std::weak_ptr<Unit>> weakRoamers;
 	std::vector<Unit*> roamers;
 
@@ -80,11 +83,16 @@ class Map {
 		Map(SDL_Renderer* ren, std::vector<std::vector<std::shared_ptr<Tile>>> Tiles):
 			ren(ren), terrain(Tiles) {}
 
+		Map(const Map& other) = delete;
+		Map& operator=(const Map other) = delete;
+
 		void StartTurn();
 		void EndTurn();
 
-		/*void AddColony(const std::shared_ptr<Colony> Colony, int row, int colm);
-		std::shared_ptr<Colony> Colony(const int num);
+		void AddColony(const int row, const int colm, const int faction,
+				const std::string name, 
+				const std::vector<std::shared_ptr<BuildingType>> buildingTypes);
+		/*std::shared_ptr<Colony> Colony(const int num);
 		const std::shared_ptr<Colony> Colony(const int num) const;*/
 		void AddRoamer(std::shared_ptr<Unit> newRoamer, const int row, const int colm);
 
@@ -97,7 +105,10 @@ class Map {
 		bool OutOfBounds(const unsigned int row, const unsigned int colm) const;
 		bool OutOfBounds(const int row, const int colm) const;
 
+		void SetViewCenter(const int row, const int col);
 		void MoveView(direction_t dir);
+		void CenterViewOn(const int row, const int col);
+		void ShiftAllTiles(const int xShift, const int yShift);
 		bool MoveUnitTo(Unit* mover, const int row, const int colm);
 		bool MoveUnitTo(Unit* mover, const std::array<unsigned int,2>& coords);
 

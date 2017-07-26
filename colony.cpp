@@ -1,12 +1,8 @@
 #include "colony.hpp"
 
-Colony::Colony(SDL_Renderer* ren, 
-		std::vector<std::vector<std::shared_ptr<Tile>>> terrain,
-		const int faction): 
-		ren(ren), faction(faction), terrain(terrain)
+Colony::Colony(SDL_Renderer* ren, const int faction, const std::string name): 
+		ren(ren), name(name), faction(faction)
 {
-	name = "Aurora";
-
 	resources.fill(0);
 	resourceCap.fill(RESCAP);
 	//resPerTurn.fill(0);
@@ -87,18 +83,18 @@ std::string Colony::Name() const{
 }
 
 int Colony::Row() const{
-	return terrain[2][2]->Row();
+	return row;
 }
 
 int Colony::Column() const{
-	return terrain[2][2]->Colm();
+	return colm;
 }
 
-std::shared_ptr<Tile> Colony::Terrain(const unsigned int row, const unsigned int colm) const{
+/*std::shared_ptr<Tile> Colony::Terrain(const unsigned int row, const unsigned int colm) const{
 	if(row < terrain.size() || colm < terrain[row].size())
 		return terrain[row][colm];
 	return nullptr;
-}
+}*/
 
 const int& Colony::Resource(const resource_t resource) const{
 	return resources[resource];
@@ -112,7 +108,7 @@ const int& Colony::Resource(const int resource) const{
 	worker->SetLocation(location->Row(), location->Colm(), false);
 }*/
 
-void Colony::EnqueueBuilding(const BuildingType* type, Tile* clickedTile){
+/*void Colony::EnqueueBuilding(const BuildingType* type, Tile* clickedTile){
 	if(!type){
 		std::cerr << "Error: attempted to add a nullptr to Building queue." << std::endl;
 		return;
@@ -122,12 +118,12 @@ void Colony::EnqueueBuilding(const BuildingType* type, Tile* clickedTile){
 		return;
 	}
 
-	if(clickedTile->Owner() != 0 && Owner() != clickedTile->Owner()){
+	if(clickedTile->Faction() != 0 && Faction() != clickedTile->Faction()){
 		std::cout << "Can not build on occupied territory." << std::endl;
 		return;
 	}
 
-	/*std::vector<std::shared_ptr<TileType>> allowedTerrain = type->AllowedTerrain();
+	std::vector<std::shared_ptr<TileType>> allowedTerrain = type->AllowedTerrain();
 	bool allowedToBuild = allowedTerrain.empty();
 	for(auto& terrainType : allowedTerrain){
 		if(terrainType == clickedTile->Type()){
@@ -139,7 +135,7 @@ void Colony::EnqueueBuilding(const BuildingType* type, Tile* clickedTile){
 		std::cout << "Unable to build a(n) " << type->Name() << " on the "
 			<< "selected terrain's Tile type." << std::endl;
 		return;
-	}*/
+	}
 
 	std::array<bool, LAST_RESOURCE> haveEnough;
 	std::array<int, LAST_RESOURCE> cost = type->Cost();
@@ -172,9 +168,9 @@ void Colony::EnqueueBuilding(const BuildingType* type, Tile* clickedTile){
 		}
 		std::cout << "\b\b." << std::endl;
 	}
-}
+}*/
 
-void Colony::EnqueueBuilding(const unsigned int id, Tile* dTile){
+/*void Colony::EnqueueBuilding(const unsigned int id, Tile* dTile){
 	if(id >= buildingTypes.size()){
 		std::cerr << "Error: asked to enqueue a Building type with an id higher \
 			than what we know (" << id << ">" << buildingTypes.size()-1 << ")."
@@ -182,7 +178,7 @@ void Colony::EnqueueBuilding(const unsigned int id, Tile* dTile){
 		return;
 	}
 	EnqueueBuilding(buildingTypes[id].get(), dTile);
-}
+}*/
 
 void Colony::AdvanceQueue(){
 	if(buildQueue.size() == 0){
@@ -198,14 +194,14 @@ void Colony::AdvanceQueue(){
 
 void Colony::ProcessTurn(){
 	//std::cout << "Colony processing turn..." << std::endl;
-	for(auto& row : terrain){
+	/*for(auto& row : terrain){
 		for(auto& space : row){
-			if(space->Owner() != Owner()) continue;
+			if(space->Faction() != this->Faction()) continue;
 			AddResources(space->Income());
 			space->Training();
 		}
-	}
-	AdvanceQueue();
+	}*/
+	//AdvanceQueue();
 }
 
 std::string Colony::ResourceName(const resource_t resource){

@@ -104,6 +104,7 @@ int GFXObject::BottomEdge() const{
 }
 
 bool GFXObject::InsideQ(const int x, const int y){
+	if(!visible) return false;
 	if(x < layout.x || y < layout.y || x >= layout.x + layout.w || 
 			y >= layout.y + layout.h) return false;
 	return true;

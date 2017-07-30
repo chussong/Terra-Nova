@@ -57,6 +57,12 @@ bool Unit::TakeDamage(const int damage){
 	return false;
 }
 
+// this corresponds to things which consume the unit but don't trigger death effects
+void Unit::BeConsumed(){
+	health = 0;
+	Die(); // should probably be something else that also gets the unit deleted
+}
+
 void Unit::Die(){
 	std::cout << Name() << " belonging to player " << (int)faction << " has died!" 
 		<< std::endl;

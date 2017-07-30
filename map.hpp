@@ -9,6 +9,8 @@
 #include "tile.hpp"
 #include "colony.hpp"
 #include "path.hpp"
+#include "ui.hpp"
+#include "faction.hpp"
 
 class Map {
 	enum MoveStatus { MS_UNCHECKED, MS_CLEAR, MS_BOUNCE, MS_ASSAULT, 
@@ -89,9 +91,9 @@ class Map {
 		void StartTurn();
 		void EndTurn();
 
-		void AddColony(const int row, const int colm, const int faction,
-				const std::string name, 
-				const std::vector<std::shared_ptr<BuildingType>> buildingTypes);
+		Colony* AddColony(const int row, const int colm, const int faction);
+		void BuildColony(Unit& builder);
+		Button MakeBuildColonyButton(Unit& builder);
 		/*std::shared_ptr<Colony> Colony(const int num);
 		const std::shared_ptr<Colony> Colony(const int num) const;*/
 		void AddRoamer(std::shared_ptr<Unit> newRoamer, const int row, const int colm);

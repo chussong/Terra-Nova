@@ -16,16 +16,17 @@
 class Sprite {
 	SDL_Texture* image;
 //	SDL_Rect spritebox;
-//	std::string text; should we just make this an image so we don't render?
-//	int layer; should this be stored here or in Gamewindow?
 
+	static SDL_Rect PackIntoRect(const int x, const int y);
 	public:
-		static TTF_Font* defaultFont;
+		//static TTF_Font* defaultFont;
 		static SDL_Color SDLifyTextColor(const textcolor_t color);
 
 		Sprite() = delete;
 		explicit Sprite(SDL_Renderer* ren, const std::string filename,
 				SDL_Rect layout);
+		explicit Sprite(SDL_Renderer* ren, const std::string filename,
+				const int x, const int y);
 		explicit Sprite(SDL_Renderer* ren, const std::string text,
 				SDL_Rect layout, const SDL_Color color, 
 				TTF_Font* font = defaultFont);

@@ -1,18 +1,12 @@
 #include "colony.hpp"
 
-Colony::Colony(SDL_Renderer* ren, const int faction, const std::string name): 
-		ren(ren), name(name), faction(faction)
+Colony::Colony(SDL_Renderer* ren, const int faction): 
+		ren(ren), name(Faction::GenerateColonyName(faction)), faction(faction)
 {
 	resources.fill(0);
 	resourceCap.fill(RESCAP);
-	//resPerTurn.fill(0);
 	powerSupply = 0;
 	powerDemand = 0;
-}
-
-void Colony::SetBuildingTypes(
-		const std::vector<std::shared_ptr<BuildingType>> buildingTypes){
-	this->buildingTypes = buildingTypes;
 }
 
 void Colony::ChangeName(const std::string name){
@@ -29,8 +23,6 @@ int Colony::AddResource(const resource_t resource, int amount){
 		resources[resource] += amount;
 		amount = 0;
 	}
-	//if(resourcePanels[resource])
-		//resourcePanels[resource]->SetText(std::to_string(resources[resource]));
 	return amount;
 }
 
@@ -49,7 +41,6 @@ std::array<int, LAST_RESOURCE> Colony::AddResources(
 			resources[i] += income[i];
 			leftovers[i] = 0;
 		}
-		//resourcePanels[i]->SetText(std::to_string(resources[i]));
 	}
 	return leftovers;
 }
@@ -63,20 +54,8 @@ int Colony::TakeResource(const resource_t resource, int amount){
 	} else {
 		resources[resource] -= amount;
 	}
-	//resourcePanels[resource]->SetText(std::to_string(resources[resource]));
 	return amount;
 }
-
-/*void Colony::SetResourceIncome(const resource_t resource, int amount){
-	if(amount < 0) return;
-	if(resource < 0 || resource >= LAST_RESOURCE) return;
-	resPerTurn[resource] = amount;
-}
-
-void Colony::AddResourceIncome(const resource_t resource, int amount){
-	if(resource < 0 || resource >= LAST_RESOURCE) return;
-	resPerTurn[resource] += amount;
-}*/
 
 std::string Colony::Name() const{
 	return name;
@@ -89,12 +68,6 @@ int Colony::Row() const{
 int Colony::Column() const{
 	return colm;
 }
-
-/*std::shared_ptr<Tile> Colony::Terrain(const unsigned int row, const unsigned int colm) const{
-	if(row < terrain.size() || colm < terrain[row].size())
-		return terrain[row][colm];
-	return nullptr;
-}*/
 
 const int& Colony::Resource(const resource_t resource) const{
 	return resources[resource];
@@ -193,15 +166,6 @@ void Colony::AdvanceQueue(){
 }
 
 void Colony::ProcessTurn(){
-	//std::cout << "Colony processing turn..." << std::endl;
-	/*for(auto& row : terrain){
-		for(auto& space : row){
-			if(space->Faction() != this->Faction()) continue;
-			AddResources(space->Income());
-			space->Training();
-		}
-	}*/
-	//AdvanceQueue();
 }
 
 std::string Colony::ResourceName(const resource_t resource){

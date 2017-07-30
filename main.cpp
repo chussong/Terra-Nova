@@ -1,11 +1,9 @@
-#include <iostream>
-#include <memory>
-
-#include "unit.hpp"
-#include "colony.hpp"
-#include "map.hpp"
+#include "gamevars.hpp"
 #include "game.hpp"
-#include "gamewindow.hpp"
+
+TTF_Font* defaultFont;
+TTF_Font* dialogueFont;
+TTF_Font* uiFont;
 
 int main(){
 	Game Game1;

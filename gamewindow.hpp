@@ -19,11 +19,13 @@
 #include "tile.hpp"
 #include "colony.hpp"
 #include "map.hpp"
+#include "dialogue.hpp"
 
 class GameWindow {
 	protected:
 		SDL_Window* win;
 		SDL_Renderer* ren;
+		Map* theMap = nullptr;
 		int playerNumber;
 
 		int viewCenterRow = 0;
@@ -50,8 +52,8 @@ class GameWindow {
 		Colony* newFocusColony = nullptr;
 		Colony* currentFocusColony = nullptr;
 
-		void FocusOnColony(const Map& theMap);
-		void BreakFocusOnColony(Map& theMap);
+		void FocusOnColony();
+		void BreakFocusOnColony();
 		void DrawResources(const Colony* col);
 		void DrawColonyMisc(const Colony* col);
 		void LeaveColony() { std::cout << "Leaving colony." << std::endl;
@@ -62,6 +64,7 @@ class GameWindow {
 		void ClearOutOfBounds();
 
 		std::unique_ptr<Button> endTurnButton;
+		std::unique_ptr<DialogueBox> dialogueBox;
 
 		void ClickObject(GFXObject* toClick);
 		void ClickTile(Tile* clickedTile);
@@ -88,7 +91,7 @@ class GameWindow {
 		std::array<int, 4> Layout() const;
 		bool Ready() const;
 		void ClearSelected();
-		void ChangeSelected(GFXObject* newSelected); // use SelectNew instead
+		//void ChangeSelected(GFXObject* newSelected); // use SelectNew instead
 		void SelectNew(const int clickX, const int clickY);
 
 		void ResetBackground(std::unique_ptr<UIElement> newThing);
@@ -109,12 +112,12 @@ class GameWindow {
 
 		// Map screen ---------------------------------------------------------
 
-		signal_t MapScreen(std::shared_ptr<Map> theMap, int centerRow,
+		signal_t MapScreen(Map* baseMap, int centerRow,
 				int centerColm);
 
-		void MapScreenCenteredOn(Map& theMap, 
-				const int centerRow, const int centerColm);
-		void AddMapTiles(Map& theMap, const int centerRow, const int centerColm);
+		void MapScreenCenteredOn(const int centerRow, const int centerColm);
+		void AddMapTiles();
+		void CenterMapTiles(const int centerRow, const int centerColm);
 		void MakeInfoPanel(const GFXObject* source);
 		void UpdateInfoPanel(const GFXObject* source);
 		void SwapInfoPanel(const GFXObject* source);

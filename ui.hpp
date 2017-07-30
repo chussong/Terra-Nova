@@ -19,28 +19,31 @@ class UIElement : public GFXObject {
 	SDL_Color dynamicTextColor;
 	void UpdateDynamicText() const;
 	mutable std::unique_ptr<Sprite> dynamicTextSprite = nullptr;
-	mutable int dynamicTextCached;
-	mutable SDL_Rect dynamicTextLayout;
+	mutable int dynamicTextCached = 0;
+	mutable SDL_Rect dynamicTextLayout = SDL_Rect();
 
 	// probably this should be moved to Button; it represents things like which
 	// type of Building it is, not things like how many resources are displayed
-	std::vector<int> values;
+	//std::vector<int> values;
 
 	public:
 		UIElement(SDL_Renderer* ren, const std::string spriteFile,
 				const int x, const int y) : 
 			GFXObject(ren, spriteFile, x, y) {}
 		UIElement(const UIElement& other) = delete;
-		UIElement(UIElement&& other) noexcept : 
+		/*UIElement(UIElement&& other) noexcept : 
 			GFXObject(std::move(other)), textSprite(std::move(other.textSprite)),
-			textLayout(std::move(other.textLayout)),
-			values(std::move(other.values)){}
-//		UIElement(UIElement&& other) noexcept = default;
+			textLayout(std::move(other.textLayout)), 
+			dynamicTextSource(std::move(other.dynamicTextSource)),
+			dynamicTextFont(std::move(other.dynamicTextFont)),
+			dynamicTextColor(std::move(other.dynamicTextColor)) {}*/
+			//values(std::move(other.values)){}
+		UIElement(UIElement&& other) noexcept = default;
 		UIElement& operator=(const UIElement& other) = delete;
 
-		void AddValue(const int val);
+		/*void AddValue(const int val);
 		void SetValue(const unsigned int entry, const int newVal);
-		int Value(const unsigned int entry) const;
+		int Value(const unsigned int entry) const;*/
 
 		void AddText(const std::string& text, const int x, const int y, 
 				TTF_Font* font = nullptr, const textcolor_t color = BLACK);
@@ -113,7 +116,7 @@ class UnitOrderPanel : public GFXObject {
 		void Render() const;
 
 		void Update(Unit* source);
-		void AddButton(Button newButton);
+		void AddButton(Button&& newButton);
 		bool InsideQ(const int x, const int y); 
 		bool Click();
 

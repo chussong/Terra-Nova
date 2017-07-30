@@ -419,11 +419,8 @@ std::vector<Map::MoveData> Map::FindMoverData(const std::vector<Unit*>& roamers)
 
 // end of movement execution
 
-void Map::AddColony(const int row, const int colm, const int faction,
-		const std::string name, 
-		const std::vector<std::shared_ptr<BuildingType>> buildingTypes){
-	std::unique_ptr<Colony> newCol = std::make_unique<Colony>(ren, faction, name);
-	newCol->SetBuildingTypes(buildingTypes);
+Colony* Map::AddColony(const int row, const int colm, const int faction){
+	std::unique_ptr<Colony> newCol = std::make_unique<Colony>(ren, faction);
 	Colony* colPtr = newCol.get();
 	Terrain(row, colm)->SetColony(colPtr);
 	ForTwoSurrounding(std::function<Tile*(int,int)>([this] (int i, int j)
@@ -431,6 +428,17 @@ void Map::AddColony(const int row, const int colm, const int faction,
 			row, colm, [colPtr] (Tile* t) 
 			{ if(t && !t->LinkedColony()) t->LinkColony(colPtr); });
 	colonies.push_back(std::move(newCol));
+	return colonies.back().get();
+}
+
+void Map::BuildColony(Unit& builder){
+	AddColony(builder.Row(), builder.Colm(), builder.Faction());
+	builder.BeConsumed();
+}
+
+Button Map::MakeBuildColonyButton(Unit& builder){
+	return { ren, "button_build_colony", 0, 0,
+			std::function<void()>(std::bind(&Map::BuildColony, this, std::ref(builder)))};
 }
 
 /*std::shared_ptr<Colony> Map::Colony(const int num){
@@ -537,7 +545,7 @@ void Map::MoveView(direction_t dir){
 	switch(dir){
 		case VIEW_DOWN:
 			yShift = TILE_HEIGHT;
-			viewCenterRow;
+			++viewCenterRow;
 			break;
 		case VIEW_UP:
 			yShift = -TILE_HEIGHT;
@@ -557,9 +565,12 @@ void Map::MoveView(direction_t dir){
 }
 
 void Map::CenterViewOn(const int row, const int col){
+	//std::cout << "Centering view on (" << row << "," << col << ")." << std::endl;
 	if(row == viewCenterRow && col == viewCenterCol) return;
-	int yShift = TILE_HEIGHT*(row - viewCenterRow);
-	int xShift = TILE_WIDTH*(col - viewCenterCol)/2;
+	//std::cout << "Moving center of map view from (" << viewCenterRow << ","
+		//<< viewCenterCol << ") to (" << row << "," << col << ")." << std::endl;
+	int yShift = TILE_HEIGHT*(viewCenterRow - row);
+	int xShift = TILE_WIDTH*(viewCenterCol - col)/2;
 
 	ShiftAllTiles(xShift, yShift);
 	SetViewCenter(row, col);

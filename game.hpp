@@ -18,9 +18,10 @@
 #include "colony.hpp"
 #include "map.hpp"
 #include "gamewindow.hpp"
+#include "faction.hpp"
 
 class Game {
-	std::vector<std::shared_ptr<BuildingType>> buildingTypes;
+	std::vector<BuildingType> buildingTypes;
 	std::vector<std::shared_ptr<AttackType>> attackTypes;
 	std::vector<std::shared_ptr<UnitType>> unitTypes;
 
@@ -51,7 +52,7 @@ class Game {
 		void ReadAttackTypes(); // read exported file listing attack types
 		void ReadUnitTypes();
 		void ReadBuildingTypes();
-		const std::vector<std::shared_ptr<BuildingType>>& BuildingTypes() const;
+		const std::vector<BuildingType>& BuildingTypes() const;
 
 		void ReadTileTypes();
 		void ReadMap(const std::string& MapName);

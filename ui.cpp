@@ -1,19 +1,19 @@
 #include "ui.hpp"
 
-void UIElement::AddValue(const int val){
+/*void UIElement::AddValue(const int val){
 	values.push_back(val);
-}
+}*/
 
-void UIElement::SetValue(const unsigned int entry, const int newVal){
+/*void UIElement::SetValue(const unsigned int entry, const int newVal){
 	if(entry >= values.size()){
 		std::cout << "Attempted to set a UI element's invalid value " << entry
 			<< " to " << newVal << "." << std::endl;
 	} else {
 		values[entry] = newVal;
 	}
-}
+}*/
 
-int UIElement::Value(const unsigned int entry) const{
+/*int UIElement::Value(const unsigned int entry) const{
 	if(entry >= values.size()){
 		std::cout << "Attempted to access a UI element's invalid value "
 			<< entry << "." << std::endl;
@@ -21,7 +21,7 @@ int UIElement::Value(const unsigned int entry) const{
 		return values[entry];
 	}
 	return 0;
-}
+}*/
 
 void UIElement::AddText(const std::string& text, const int x, const int y, 
 				TTF_Font* font, const textcolor_t color){
@@ -36,7 +36,7 @@ void UIElement::AddText(const std::string& text, const int x, const int y,
 
 void UIElement::SetText(const std::string& text, TTF_Font* font, 
 		const textcolor_t color){
-	if(font == nullptr) font = Sprite::defaultFont;
+	if(font == nullptr) font = defaultFont;
 	SDL_Color colorCode = Sprite::SDLifyTextColor(color);
 	/*switch(color){
 		case BLACK: 	colorCode.r = 0;
@@ -54,6 +54,9 @@ void UIElement::SetText(const std::string& text, TTF_Font* font,
 		<< "," << textLayout.y << ")." << std::endl;*/
 	textLayout.x += textLayout.w/2;
 	textLayout.y += textLayout.h/2;
+	// setting width and height so textSprite knows how wide the box is
+	textLayout.w = layout.w;
+	textLayout.h = layout.h;
 	textSprite = std::make_unique<Sprite>(ren, text, textLayout, colorCode, font);
 	if(!textSprite) std::cout << "Error constructing textSprite!" << std::endl;
 	textSprite->MakeDefaultSize(textLayout);
@@ -74,7 +77,7 @@ void UIElement::AddDynamicText(const int& source, const int x, const int y,
 // WARNING: you have to make sure the source outlives this UI element!
 void UIElement::SetDynamicText(const int& source, TTF_Font* font,
 		const textcolor_t color){
-	if(font == nullptr) font = Sprite::defaultFont;
+	if(font == nullptr) font = defaultFont;
 	dynamicTextSource = &source;
 	dynamicTextCached = source;
 	dynamicTextFont = font;
@@ -230,7 +233,6 @@ void UnitOrderPanel::Render() const{
 	for(auto& button : buttons) button.Render();
 }
 
-// would like to add a FoundColony button handed down from Game
 void UnitOrderPanel::Update(Unit* source){
 	buttons.clear();
 	if(source){
@@ -243,7 +245,7 @@ void UnitOrderPanel::Update(Unit* source){
 	}
 }
 
-void UnitOrderPanel::AddButton(Button newButton){
+void UnitOrderPanel::AddButton(Button&& newButton){
 	newButton.MoveTo(X() + 5 + (ORDER_BUTTON_WIDTH+5)*(buttons.size()%3),
 			Y() + 5 + (ORDER_BUTTON_HEIGHT+5)*(buttons.size()/3));
 	buttons.push_back(std::move(newButton));

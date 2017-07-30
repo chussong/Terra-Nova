@@ -1,5 +1,7 @@
 #include "game.hpp"
 
+std::vector<BuildingType*> Faction::defaultBuildingTypes;
+
 Game::Game(){
 	win = std::make_shared<GameWindow>("Terra Nova", 100, 100, 1024, 768);
 	try{
@@ -19,7 +21,7 @@ Game::Game(){
 
 void Game::Begin(){
 	StartTurn();
-	win->MapScreen(maps[0], 4, 8);
+	win->MapScreen(maps[0].get(), 4, 8);
 }
 
 bool Game::Tick(){
@@ -155,40 +157,31 @@ void Game::ReadUnitTypes(){
 void Game::ReadBuildingTypes(){
 	int idsUsed = 0;
 	buildingTypes.clear();
-	std::shared_ptr<BuildingType> newType;
 	std::array<int, 4> costs;
-	//std::vector<std::shared_ptr<TileType>> allowedTerrain;
 
 	costs = {{0,60,40,40}};
-	//allowedTerrain.clear();
-	//allowedTerrain.push_back(PLAINS);
-	newType = std::make_shared<BuildingType>(idsUsed++, "Factory Farm", costs,3);
-	//newType->SetAllowedTerrain(allowedTerrain);
-	newType->SetBonusResources({{4,0,0,0}});
-	buildingTypes.push_back(newType);
+	BuildingType factoryFarm(idsUsed++, "Factory Farm", costs, 3);
+	factoryFarm.SetBonusResources({{4,0,0,0}});
+	buildingTypes.push_back(std::move(factoryFarm));
 
 	costs = {{0,20,60,80}};
-	//allowedTerrain.clear();
-	//allowedTerrain.push_back(MOUNTAIN);
-	newType = std::make_shared<BuildingType>(idsUsed++, "Automated Mine", costs,
-			4);
-	//newType->SetAllowedTerrain(allowedTerrain);
-	newType->SetMaxOccupants(0);
-	newType->SetAutomatic(true);
-	buildingTypes.push_back(newType);
+	BuildingType autoMine(idsUsed++, "Automated Mine", costs, 4);
+	autoMine.SetMaxOccupants(0);
+	autoMine.SetAutomatic(true);
+	buildingTypes.push_back(std::move(autoMine));
 
 	costs = {{0,20,20,40}};
-	newType = std::make_shared<BuildingType>(idsUsed++, "Academy", costs, 4);
-	newType->SetCanHarvest(false);
-	newType->SetCanTrain(unitTypes[1]);
-	buildingTypes.push_back(newType);
+	BuildingType academy(idsUsed++, "Academy", costs, 4);
+	academy.SetCanHarvest(false);
+	academy.SetCanTrain(unitTypes[1]);
+	buildingTypes.push_back(std::move(academy));
 
-	if(buildingTypes.size() > 100){
-		std::cerr << "Error: only up to 100 Building types are supported." << std::endl;
-	}
+	std::vector<BuildingType*> factionBuildingTypes;
+	for(auto& bt : buildingTypes) factionBuildingTypes.push_back(&bt);
+	Faction::SetDefaultBuildingTypes(std::move(factionBuildingTypes));
 }
 
-const std::vector<std::shared_ptr<BuildingType>>& Game::BuildingTypes() const{
+const std::vector<BuildingType>& Game::BuildingTypes() const{
 	return buildingTypes;
 }
 
@@ -562,7 +555,8 @@ void Game::CreateColony(std::shared_ptr<Map> parentMap,
 	//newColony->SetBuildingTypes(buildingTypes);
 	//newColony->ChangeName(name);
 	//parentMap->Terrain(row, colm)->SetHasColony(newColony->Faction());
-	parentMap->AddColony(row, colm, faction, name, buildingTypes);
+	Colony* newCol = parentMap->AddColony(row, colm, faction);
+	if(newCol && name != "") newCol->ChangeName(name);
 	//colonies.push_back(newColony);
 }
 

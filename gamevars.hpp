@@ -1,6 +1,8 @@
 #ifndef GAMEVARS_HPP
 #define GAMEVARS_HPP
 
+#include <string>
+
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
@@ -18,8 +20,21 @@ enum signal_t { ERROR = 0, SELECTED = 100, NEXT_TURN = 200, TRY_BUILD = 300,
 constexpr int SCREEN_WIDTH = 1024;
 constexpr int SCREEN_HEIGHT = 768;
 
-constexpr auto DEFAULT_FONT = "/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf";
+constexpr auto DEFAULT_FONT = "./Ubuntu-R.ttf";
 constexpr int DEFAULT_FONT_SIZE = 20;
+constexpr auto UI_FONT = DEFAULT_FONT;
+constexpr int UI_FONT_SIZE = 20;
+//constexpr auto UI_FONT = "/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf";
+constexpr auto DIALOGUE_FONT_NORMAL = DEFAULT_FONT;
+constexpr int DIALOGUE_FONT_SIZE = 30;
+
+extern TTF_Font* defaultFont;
+extern TTF_Font* uiFont;
+extern TTF_Font* dialogueFont;
+
+inline TTF_Font* DefaultFont() { return defaultFont; }
+inline TTF_Font* UIFont() { return uiFont ? uiFont : DefaultFont(); }
+inline TTF_Font* DialogueFont() { return dialogueFont ? dialogueFont : DefaultFont(); }
 
 // Tiles and terrain
 
@@ -92,11 +107,15 @@ constexpr int ORDER_PANEL_HEIGHT = 155;
 constexpr int ORDER_BUTTON_WIDTH = 45;
 constexpr int ORDER_BUTTON_HEIGHT = 45;
 
+constexpr int DIALOGUE_BOX_WIDTH = 800;
+constexpr int DIALOGUE_BOX_HEIGHT = 200;
+constexpr int DIALOGUE_BOX_X = (SCREEN_WIDTH - DIALOGUE_BOX_WIDTH)/2;
+constexpr int DIALOGUE_BOX_Y = SCREEN_HEIGHT - DIALOGUE_BOX_HEIGHT;
+
 // misc UI
 
 enum button_t { END_TURN = 0, BUILDING = 1, LEAVE_COLONY = 2 };
 
-extern TTF_Font* defaultFont;
 enum textcolor_t { BLACK = 0, RED = 1, BLUE = 2, GREEN = 3,
 	LAST_COLOR = 4 };
 

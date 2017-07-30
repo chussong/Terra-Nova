@@ -1,6 +1,6 @@
 #include "sprite.hpp"
 
-TTF_Font* Sprite::defaultFont;
+//TTF_Font* Sprite::defaultFont;
 SDL_Renderer* GFXManager::ren;
 std::vector<std::string> GFXManager::loadedSpriteNames;
 std::vector<std::shared_ptr<Sprite>> GFXManager::loadedSprites;
@@ -22,23 +22,34 @@ SDL_Color Sprite::SDLifyTextColor(const textcolor_t color){
 	return colorCode;
 }
 
+SDL_Rect Sprite::PackIntoRect(const int x, const int y){
+	SDL_Rect ret;
+	ret.x = x;
+	ret.y = y;
+	return ret;
+}
+
 Sprite::Sprite(SDL_Renderer* ren, const std::string filename,
 		SDL_Rect layout){
-	// if(IMG not initialized) print error
 	image = IMG_LoadTexture(ren, filename.c_str());
 	if(image == nullptr) LogSDLError(std::cout, "LoadTexture");
 
 	SDL_QueryTexture(image, NULL, NULL, &layout.w, &layout.h);
+	// these two lines below seem very bad actually
 	if(layout.w >= SCREEN_WIDTH) layout.w = SCREEN_WIDTH - 1;
 	if(layout.h >= SCREEN_HEIGHT) layout.h = SCREEN_HEIGHT - 1;
 }
+
+Sprite::Sprite(SDL_Renderer* ren, const std::string filename, const int x, const int y):
+		Sprite(ren, filename, PackIntoRect(x,y)) {}
 
 Sprite::Sprite(SDL_Renderer* ren, const std::string text,
 		SDL_Rect layout, const SDL_Color color, TTF_Font* font){
 	if(font == nullptr) font = defaultFont;
 /*	std::cout << "Writing \"" << text << "\" at (" << layout.x << "," <<
 		layout.y << ") using the font at " << font << "." << std::endl;*/
-	SDL_Surface* surf = TTF_RenderText_Blended(font, text.c_str(), color);
+	SDL_Surface* surf = TTF_RenderText_Blended_Wrapped(font, text.c_str(), color,
+			9*layout.w/10);
 	if(surf == nullptr){
 		LogSDLError(std::cout, "TTF_RenderText");
 	} else {

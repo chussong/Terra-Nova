@@ -108,6 +108,8 @@ class Unit : public GFXObject {
 	std::shared_ptr<Sprite> orderIcon;
 	//std::vector<Order> availableOrders;
 
+	void Die();
+
 	static std::string GenerateGivenName();
 	static std::string GenerateSurname();
 
@@ -123,9 +125,9 @@ class Unit : public GFXObject {
 		void ChangeGender(const std::string gender);
 		void ChangeSpec(const std::shared_ptr<UnitType> spec);
 		bool TakeDamage(const int damage); // false = survived
-		void Die();
 		bool Dead() const { return health <= 0; }
 		bool IsUnit() const { return true; }
+		void BeConsumed();
 
 		void MoveSpriteToTile(const int X, const int Y, const int W, const int H);
 		void Render() const;

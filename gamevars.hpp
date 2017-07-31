@@ -97,10 +97,16 @@ constexpr int WEAPONICON_X = 156;
 constexpr int WEAPONICON_Y = 106;
 constexpr int UNIT_NAME_X = 140;
 constexpr int UNIT_NAME_Y = 25;
+constexpr int UNIT_NAME_W = 199;
+constexpr int UNIT_NAME_H = 48;
 constexpr int UNIT_HEALTH_X = 140;
 constexpr int UNIT_HEALTH_Y = 25;
+constexpr int UNIT_HEALTH_W = 199;
+constexpr int UNIT_HEALTH_H = 48;
 constexpr int UNIT_ATTACK_X = 145;
 constexpr int UNIT_ATTACK_Y = 25;
+constexpr int UNIT_ATTACK_W = 199;
+constexpr int UNIT_ATTACK_H = 48;
 
 constexpr int ORDER_PANEL_WIDTH = 155;
 constexpr int ORDER_PANEL_HEIGHT = 155;

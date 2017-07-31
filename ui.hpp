@@ -45,7 +45,7 @@ class UIElement : public GFXObject {
 		void SetValue(const unsigned int entry, const int newVal);
 		int Value(const unsigned int entry) const;*/
 
-		void AddText(const std::string& text, const int x, const int y, 
+		void AddText(const std::string& text, const SDL_Rect boundingBox,
 				TTF_Font* font = nullptr, const textcolor_t color = BLACK);
 		void SetText(const std::string& text, TTF_Font* font = nullptr,
 				const textcolor_t color = BLACK);

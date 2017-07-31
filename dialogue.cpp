@@ -63,8 +63,12 @@ void DialogueBox::DisplayLine(){
 			<< "." << std::endl;
 		return;
 	}
-	AddText(CurrentLine(), DIALOGUE_BOX_WIDTH/2, DIALOGUE_BOX_HEIGHT/2,
-			dialogueFont);
+	SDL_Rect boundingBox;
+	boundingBox.x = DIALOGUE_BOX_WIDTH/2;
+	boundingBox.y = DIALOGUE_BOX_HEIGHT/2;
+	boundingBox.w = DIALOGUE_BOX_WIDTH*9/10;
+	boundingBox.h = DIALOGUE_BOX_HEIGHT*9/10;
+	AddText(CurrentLine(), boundingBox, dialogueFont);
 }
 
 std::string DialogueBox::CurrentLine() const{
@@ -84,7 +88,12 @@ void DialogueBox::DisplayDecision(){
 	for(auto i = 0u; i < currentDecision->options.size(); ++i){
 		decText += std::to_string(i+1) + ". " + currentDecision->options[i] + "\n";
 	}
-	AddText(decText, DIALOGUE_BOX_WIDTH/2, DIALOGUE_BOX_HEIGHT/2, dialogueFont);
+	SDL_Rect boundingBox;
+	boundingBox.x = DIALOGUE_BOX_WIDTH/2;
+	boundingBox.y = DIALOGUE_BOX_HEIGHT/2;
+	boundingBox.w = DIALOGUE_BOX_WIDTH*9/10;
+	boundingBox.h = DIALOGUE_BOX_HEIGHT*9/10;
+	AddText(decText, boundingBox, dialogueFont);
 }
 
 bool DialogueBox::MakeDecision(const unsigned int n){

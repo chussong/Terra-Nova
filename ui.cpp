@@ -23,12 +23,15 @@
 	return 0;
 }*/
 
-void UIElement::AddText(const std::string& text, const int x, const int y, 
+void UIElement::AddText(const std::string& text, const SDL_Rect newLayout,
 				TTF_Font* font, const textcolor_t color){
-	textLayout.x = layout.x + x;
-	textLayout.y = layout.y + y;
-	textLayout.w = 0;
-	textLayout.h = 0;
+	textLayout = newLayout;
+	textLayout.x += layout.x;
+	textLayout.y += layout.y;
+	if(textLayout.w == 0) textLayout.w = layout.w;
+	if(textLayout.h == 0) textLayout.h = layout.h;
+	textLayout.x -= textLayout.w/2;
+	textLayout.y -= textLayout.h/2;
 	SetText(text, font, color);
 /*	std::cout << "Text \"" << text << "\" added at position (" << textLayout.x 
 		<< "," << textLayout.y << ")." << std::endl;*/
@@ -55,8 +58,8 @@ void UIElement::SetText(const std::string& text, TTF_Font* font,
 	textLayout.x += textLayout.w/2;
 	textLayout.y += textLayout.h/2;
 	// setting width and height so textSprite knows how wide the box is
-	textLayout.w = layout.w;
-	textLayout.h = layout.h;
+	//if(textLayout.w == 0) textLayout.w = layout.w;
+	//if(textLayout.h == 0) textLayout.h = layout.h;
 	textSprite = std::make_unique<Sprite>(ren, text, textLayout, colorCode, font);
 	if(!textSprite) std::cout << "Error constructing textSprite!" << std::endl;
 	textSprite->MakeDefaultSize(textLayout);
@@ -185,18 +188,30 @@ void UnitInfoPanel::Update(const Unit* source){
 	factionIcon = std::make_unique<UIElement>(ren,
 			"factioncolor_p" + std::to_string(source->Faction()),
 			panelX + FACTIONCOLOR_X, panelY + FACTIONCOLOR_Y);
-	factionIcon->AddText(source->Name(), UNIT_NAME_X, UNIT_NAME_Y);
+	SDL_Rect textBox;
+	textBox.x = UNIT_NAME_X;
+	textBox.y = UNIT_NAME_Y;
+	textBox.w = UNIT_NAME_W;
+	textBox.h = UNIT_NAME_H;
+	factionIcon->AddText(source->Name(), textBox);
 	if(healthIcon){
 		UpdateHealth(source);
 	} else {
 		healthIcon = std::make_unique<UIElement>(ren,
 				"healthicon_" + source->Species(),
 				panelX + HEALTHICON_X, panelY + HEALTHICON_Y);
+		textBox.x = UNIT_HEALTH_X;
+		textBox.y = UNIT_HEALTH_Y;
+		textBox.w = UNIT_HEALTH_W;
+		textBox.h = UNIT_HEALTH_H;
 		healthIcon->AddText(
 				std::to_string(source->Health()) + "/" + 
-						std::to_string(source->MaxHealth()), 
-				UNIT_HEALTH_X, UNIT_HEALTH_Y);
+						std::to_string(source->MaxHealth()), textBox);
 	}
+	textBox.x = UNIT_ATTACK_X;
+	textBox.y = UNIT_ATTACK_Y;
+	textBox.w = UNIT_ATTACK_W+10;
+	textBox.h = UNIT_ATTACK_H;
 	if(source->Spec()->Attack(0)){
 		std::string attackName = source->Spec()->Attack(0)->Name();
 		std::replace(attackName.begin(), attackName.end(), ' ', '_');
@@ -207,13 +222,12 @@ void UnitInfoPanel::Update(const Unit* source){
 				static_cast<int>(std::floor(100*source->Accuracy()))) + "% | " 
 				+ std::to_string(source->AttackRate()) + "x "
 				+ std::to_string(source->Damage()) + " "
-				+ source->DamageType(),
-				UNIT_ATTACK_X, UNIT_ATTACK_Y);
+				+ source->DamageType(), textBox);
 	} else {
 		attackIcon = std::make_unique<UIElement>(ren,
 				"null_attack_icon",
 				panelX + WEAPONICON_X, panelY + WEAPONICON_Y);
-		attackIcon->AddText("Unarmed", UNIT_ATTACK_X, UNIT_ATTACK_Y);
+		attackIcon->AddText("Unarmed", textBox);
 	}
 }
 

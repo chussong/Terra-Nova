@@ -35,6 +35,22 @@ class GameWindow {
 		bool PlayerOwns(const T* thing) const{
 			return thing && thing->Owner() == playerNumber;
 		}
+		
+		template<typename Container>
+		bool SearchForHoverText(const Container& con, 
+				const int hoverX, const int hoverY){
+			for(auto it = con.rbegin(); it != con.rend(); ++it){
+				if((*it)->InsideQ(hoverX, hoverY)){
+					if(!hoverTextBox) hoverTextBox = std::make_unique<UIElement>(ren,
+							"hover_text_background", 
+							std::min(hoverX, SCREEN_WIDTH-200),
+							std::min(hoverY, SCREEN_HEIGHT-200));
+					SetHoverText(*(*it));
+					return true;
+				}
+			}
+			return false;
+		}
 
 		// GameWindow owns the pure UI stuff; the others are pointers to
 		// objects owned by someone else, e.g. Map owns Tiles, Game owns Units
@@ -65,6 +81,7 @@ class GameWindow {
 
 		std::unique_ptr<Button> endTurnButton;
 		std::unique_ptr<DialogueBox> dialogueBox;
+		std::unique_ptr<UIElement> hoverTextBox;
 
 		void ClickObject(GFXObject* toClick);
 		void ClickTile(Tile* clickedTile);
@@ -93,6 +110,9 @@ class GameWindow {
 		void ClearSelected();
 		//void ChangeSelected(GFXObject* newSelected); // use SelectNew instead
 		void SelectNew(const int clickX, const int clickY);
+
+		void FillHoverText(const int hoverX, const int hoverY);
+		void SetHoverText(const GFXObject& textSource);
 
 		void ResetBackground(std::unique_ptr<UIElement> newThing);
 		void AddToBackground(std::unique_ptr<UIElement> newThing);

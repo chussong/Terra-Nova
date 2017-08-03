@@ -36,6 +36,7 @@ void GameWindow::Render(){
 	for(auto& thing : topLevelUI) thing->Render();
 	if(endTurnButton) endTurnButton->Render();
 	if(dialogueBox) dialogueBox->Render();
+	if(hoverTextBox) hoverTextBox->Render();
 	SDL_RenderPresent(ren);
 }
 
@@ -422,6 +423,26 @@ void GameWindow::SelectNew(const int clickX, const int clickY){
 	selected = newSelected;
 }
 
+void GameWindow::FillHoverText(const int hoverX, const int hoverY){
+	if(SearchForHoverText(UI, hoverX, hoverY)) return;
+	if(SearchForHoverText(clickables, hoverX, hoverY)) return;
+	//if(SearchForHoverText(objects, hoverX, hoverY)) return;
+	hoverTextBox = nullptr;
+}
+
+// this should Resize(int,int) the box to be slightly larger than the text
+void GameWindow::SetHoverText(const GFXObject& textSource){
+	if(!hoverTextBox){
+		std::cerr << "Error: asked to set the text in the hover text box, but "
+			<< "the box was a nullptr." << std::endl;
+		return;
+	}
+	SDL_Rect textBound = hoverTextBox->Layout();
+	textBound.x = textBound.w/2;
+	textBound.y = textBound.h/2;
+	hoverTextBox->AddText(textSource.HoverText(), textBound, uiFont);
+}
+
 signal_t GameWindow::MapScreen(Map* baseMap, int centerRow,
 		int centerColm){
 	theMap = baseMap;
@@ -520,6 +541,7 @@ signal_t GameWindow::MapScreen(Map* baseMap, int centerRow,
 			} else {
 			}
 		}
+		FillHoverText(e.button.x, e.button.y);
 		Render();
 	}
 	return QUIT;

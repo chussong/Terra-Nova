@@ -37,6 +37,10 @@ void GFXObject::Deselect(){
 	selected = false;
 }
 
+std::string GFXObject::HoverText() const{
+	return "This object has no specialized hover text.";
+}
+
 void GFXObject::MoveTo(int x, int y){
 	/*if(x < 0) x = 0;
 	if(y < 0) y = 0;
@@ -85,6 +89,10 @@ int GFXObject::W() const{
 
 int GFXObject::H() const{
 	return layout.h;
+}
+
+const SDL_Rect& GFXObject::Layout() const{
+	return layout;
 }
 
 int GFXObject::LeftEdge() const{

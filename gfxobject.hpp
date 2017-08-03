@@ -38,6 +38,7 @@ class GFXObject : public std::enable_shared_from_this<GFXObject> {
 		virtual bool Click() { return false; }
 		void SetVisible(const bool newVal) { visible = newVal; }
 
+		virtual std::string HoverText() const;
 
 		virtual void MoveTo(int x, int y);
 		virtual void MoveTo(SDL_Rect newLayout);
@@ -48,6 +49,7 @@ class GFXObject : public std::enable_shared_from_this<GFXObject> {
 		int Y() const;
 		int W() const;
 		int H() const;
+		const SDL_Rect& Layout() const;
 		int LeftEdge() const;
 		int RightEdge() const;
 		int TopEdge() const;

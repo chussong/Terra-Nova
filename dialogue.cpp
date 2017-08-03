@@ -24,6 +24,14 @@ Dialogue::DecisionPoint* Dialogue::DecisionAt(const size_t n) {
 	return nullptr;
 }
 
+void Dialogue::AddCharacter(const std::string& name){
+	characters.push_back(name);
+}
+
+const std::vector<std::string>& Dialogue::Characters() const{
+	return characters;
+}
+
 DialogueBox::DialogueBox(SDL_Renderer* ren, Dialogue* dialogue):
 	UIElement(ren, "dialogue_box_background", DIALOGUE_BOX_X,
 			DIALOGUE_BOX_Y), 
@@ -34,7 +42,27 @@ DialogueBox::DialogueBox(SDL_Renderer* ren, Dialogue* dialogue):
 }
 
 void DialogueBox::SetDialogue(Dialogue* newDialogue){
+	if(!newDialogue){
+		std::cerr << "Error: tried to set DialogueBox's dialogue to a nullptr."
+			<< std::endl;
+		return;
+	}
 	dialogue = newDialogue;
+	portraits.clear();
+	int position = 0;
+	for(auto& charName : dialogue->Characters()){
+		portraits.emplace_back(ren, charName, position);
+		switch(position){
+			case 0: position = 3;
+					break;
+			case 1: position = 2;
+					break;
+			case 2: position = 0;
+					break;
+			case 3: position = 1;
+					break;
+		}
+	}
 	currentLine = -1;
 	Advance();
 }
@@ -71,8 +99,48 @@ void DialogueBox::DisplayLine(){
 	AddText(CurrentLine(), boundingBox, dialogueFont);
 }
 
-std::string DialogueBox::CurrentLine() const{
-	return dialogue->Line(currentLine);
+void DialogueBox::ActivateSpeaker(const size_t speakerNumber){
+	currentSpeaker = speakerNumber;
+	speakerName = std::make_unique<UIElement>(ren, "dialogue_speaker_name",
+			layout.x + layout.w/20, layout.y + layout.h/20);
+	SDL_Rect boundingBox;
+	boundingBox.x = layout.w/10;
+	boundingBox.y = layout.h/10;
+	boundingBox.w = layout.w/5;
+	boundingBox.h = layout.w/5;
+	speakerName->AddText(portraits[currentSpeaker].Name(), boundingBox,
+			dialogueFont);
+}
+
+void DialogueBox::ParseCommand(const std::string& command){
+	if(command.compare(0, 8, "@active=") == 0){
+		try{
+			ActivateSpeaker(std::stoul(command.substr(8, command.length()-9)));
+		}
+		catch(std::invalid_argument){
+			std::cerr << "Error: got an @active=#@ dialogue command but could not read "
+				<< "the number which was supposed to be made active." << std::endl;
+			return;
+		}
+		catch(std::out_of_range){
+			std::cerr << "Error: got an @active=#@ dialogue command but the "
+				<< "number was out of range." << std::endl;
+			return;
+		}
+	}
+}
+
+std::string DialogueBox::CurrentLine(){
+	std::string ret(dialogue->Line(currentLine));
+	std::regex extractor("@(.*?)@");
+	auto command_begin = std::sregex_iterator(ret.begin(), ret.end(), extractor);
+	auto command_end = std::sregex_iterator();
+	for(std::sregex_iterator it = command_begin; it != command_end; ++it){
+		std::string command = it->str();
+		//std::cout << "Found a command in the dialogue: " << command << std::endl;
+		ParseCommand(command);
+	}
+	return std::regex_replace(ret, extractor, "");
 }
 
 bool DialogueBox::CanAdvance() const{
@@ -111,6 +179,8 @@ bool DialogueBox::MakeDecision(const unsigned int n){
 }
 
 void DialogueBox::Render() const{
+	for(auto& portrait : portraits) portrait.Render();
 	UIElement::Render();
+	if(speakerName) speakerName->Render();
 	if(CanAdvance()) advanceArrow.Render();
 }

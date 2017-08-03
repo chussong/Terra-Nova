@@ -428,7 +428,8 @@ signal_t GameWindow::MapScreen(Map* baseMap, int centerRow,
 	MapScreenCenteredOn(centerRow, centerColm);
 
 	Dialogue testDialogue;
-	testDialogue.AddLine("This is a test dialogue.");
+	testDialogue.AddCharacter("lin");
+	testDialogue.AddLine("@active=0@This is a test dialogue.");
 	testDialogue.AddLine("It contains three lines of varying lengths, intended "
 			"to test the robustness of the dialogue display system.");
 	testDialogue.AddLine("This is the third of those lines.");

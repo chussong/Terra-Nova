@@ -6,6 +6,7 @@
 #include <array>
 #include <iostream>
 #include <memory>
+#include <algorithm>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
@@ -52,7 +53,7 @@ class GFXManager {
 	public:
 		GFXManager() = delete;
 		static void Initialize(SDL_Renderer* newRen);
-		static std::shared_ptr<Sprite> RequestSprite(const std::string& name);
+		static std::shared_ptr<Sprite> RequestSprite(std::string name);
 
 		static SDL_Renderer* Ren() { return ren; }
 };

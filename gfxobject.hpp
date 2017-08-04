@@ -27,6 +27,7 @@ class GFXObject : public std::enable_shared_from_this<GFXObject> {
 		GFXObject(const GFXObject& other) = delete;
 		GFXObject(GFXObject&& other) noexcept = default;
 		GFXObject& operator=(const GFXObject& other) = delete;
+		virtual ~GFXObject() = default;
 
 		// Click() represents a thing something does when you click on it which
 		// does not result in the selection of the object; if Click() returns

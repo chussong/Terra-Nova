@@ -354,7 +354,7 @@ void GameWindow::DrawColonyMisc(const Colony* col){
 	int gridLeftEdge = SCREEN_WIDTH - 50 - 
 		BUILDING_GRID_COLUMNS*(BUILDING_WIDTH + 2*BUILDING_GRID_PADDING);
 	int gridTopEdge = 350;
-	auto buildingGrid = std::make_unique<UIElement>(ren, "buildingGrid", 
+	auto buildingGrid = std::make_unique<UIElement>(ren, "building_grid", 
 			gridLeftEdge, gridTopEdge);
 	AddUI(std::move(buildingGrid));
 
@@ -449,7 +449,7 @@ signal_t GameWindow::MapScreen(Map* baseMap, int centerRow,
 	MapScreenCenteredOn(centerRow, centerColm);
 
 	Dialogue testDialogue;
-	testDialogue.AddCharacter("lin");
+	testDialogue.AddCharacter("commander");
 	testDialogue.AddLine("@active=0@This is a test dialogue.");
 	testDialogue.AddLine("It contains three lines of varying lengths, intended "
 			"to test the robustness of the dialogue display system.");

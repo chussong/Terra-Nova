@@ -183,7 +183,7 @@ void UnitInfoPanel::Update(const Unit* source){
 	int panelX = SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH;
 	int panelY = SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT;
 	portrait = std::make_unique<UIElement>(ren,
-			source->Spec()->Name() + "_portrait",
+			"units/" + source->Spec()->Name() + "/portrait",
 			panelX + PORTRAIT_X, panelY + PORTRAIT_Y);
 	factionIcon = std::make_unique<UIElement>(ren,
 			"factioncolor_p" + std::to_string(source->Faction()),

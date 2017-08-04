@@ -71,7 +71,7 @@ class DialoguePortrait : public GFXObject {
 
 	public:
 		DialoguePortrait(SDL_Renderer* ren, const std::string& name, 
-				const int position): GFXObject(ren, name + "_dialogue",
+				const int position): GFXObject(ren, "units/" + name + "/dialogue",
 					DialoguePortraitX(position), DialoguePortraitY(position)),
 				name(name) {layout.w = 280; layout.h = 400;}
 

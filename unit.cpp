@@ -10,7 +10,7 @@ std::string Unit::GenerateSurname(){
 
 Unit::Unit(SDL_Renderer* ren, 
 		const std::shared_ptr<UnitType> spec, const char faction): 
-		GFXObject(ren, spec->Name(), 0, 0, true),
+		GFXObject(ren, "units/" + spec->Name() + "/sprite", 0, 0, true),
 		spec(spec), faction(faction), location({{-1u,-1u}}) {
 	givenName = GenerateGivenName();
 	surname = GenerateSurname();
@@ -43,7 +43,8 @@ void Unit::ChangeGender(const std::string gender){
 void Unit::ChangeSpec(const std::shared_ptr<UnitType> spec){
 	this->spec = spec;
 	sprite = GFXManager::RequestSprite(spec->Name());
-	selectedSprite = GFXManager::RequestSprite(spec->Name() + "_selected");
+	selectedSprite = GFXManager::RequestSprite(
+			"units/" + spec->Name() + "/sprite_selected");
 }
 
 bool Unit::TakeDamage(const int damage){

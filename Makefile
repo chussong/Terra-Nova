@@ -56,7 +56,7 @@ building.o: building.cpp building.hpp unit.hpp tile.hpp gfxobject.hpp \
 		gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-path.o: path.cpp path.hpp map.hpp templates.hpp
+path.o: path.cpp path.hpp map.hpp templates.hpp sprite.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 dialogue.o: dialogue.cpp dialogue.hpp ui.hpp unit.hpp

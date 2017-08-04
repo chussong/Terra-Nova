@@ -143,7 +143,8 @@ std::shared_ptr<Sprite> GFXManager::LoadSprite(const std::string& name){
 
 /* If this ever gets slow, try swapping each sprite forward by 1 every time
  * it's found, causing more frequently requested sprites to be easier to get.*/
-std::shared_ptr<Sprite> GFXManager::RequestSprite(const std::string& name){
+std::shared_ptr<Sprite> GFXManager::RequestSprite(std::string name){
+	std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 	for(unsigned int i = 0; i < loadedSpriteNames.size(); ++i){
 		if(loadedSpriteNames[i] == name){
 			/*std::cout << "Found the requested sprite, \"" << name << "\", at "

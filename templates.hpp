@@ -43,6 +43,37 @@ std::vector<T*> CheckAndLock(std::vector<std::weak_ptr<T>>& in){
 	return ret;
 }
 
+// This class can be used to hold pointers to objects which might expire.
+// You MUST call StartTurn and EndTurn on this every turn, or it becomes unsafe!
+// Inserting new data puts it into the weak_ptr vector, while accesses and 
+// iterators always refer to the vector of raw pointers (which are safe as long
+// as StartTurn() and EndTurn() are being called).
+template<class T>
+class WeakVector{
+	std::vector<std::weak_ptr<T>> weak;
+	std::vector<T*> safe;
+
+	public:
+		void StartTurn() { safe = CheckAndLock(weak); }
+		void EndTurn() noexcept { safe.clear(); }
+
+		T*& operator[](const int i) { return safe[i]; }
+		const T*& operator[](const int i) const { return safe[i]; }
+
+		std::size_t size() const noexcept { return safe.size(); }
+		typename std::vector<T*>::const_iterator	begin() const noexcept
+				{ return safe.begin(); }
+		typename std::vector<T*>::iterator			begin() noexcept
+				{ return safe.begin(); }
+		typename std::vector<T*>::const_iterator	end()	const noexcept
+				{ return safe.end(); }
+		typename std::vector<T*>::iterator			end()	noexcept
+				{ return safe.end(); }
+
+		void push_back(const std::weak_ptr<T> newEl) { weak.push_back(newEl); }
+		void push_back(const std::shared_ptr<T> newEl) { weak.push_back(newEl); }
+};
+
 // beware: this is NOT case sensitive!
 template<class T>
 std::shared_ptr<T> FindByName(std::vector<std::shared_ptr<T>> vec,

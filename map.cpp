@@ -471,10 +471,10 @@ void Map::AddRoamer(std::shared_ptr<Unit> newRoamer, const int row, const int co
 
 std::shared_ptr<Tile> Map::Terrain(const int row, const int column) const{
 	if(OutOfBounds(row, column)){
-		if(row != -1 || column != -1){
+		/*if(row != -1 || column != -1){
 			std::cout << "Warning: someone requested the out-of-bounds Tile at "
 				"(" << row << "," << column << ")." << std::endl;
-		}
+		}*/
 		return nullptr;
 	}
 	if((row + column)%2 != 0){
@@ -645,4 +645,21 @@ std::unique_ptr<Path> Map::PathTo(const int startRow, const int startColm,
 	std::vector<std::array<unsigned int, 2>> steps(ShortestPath(startRow, startColm,
 				destRow, destColm, moveCosts));
 	return steps.size() == 0 ? nullptr : std::make_unique<Path>(steps);
+}
+
+std::unique_ptr<Path> Map::PathTo(const std::array<unsigned int, 2>& startLoc,
+		const std::array<unsigned int, 2>& destLoc,
+		const MoveCostTable& moveCosts){
+	return PathTo(startLoc[0], startLoc[1], destLoc[0], destLoc[1], moveCosts);
+}
+
+unsigned int Map::DistanceBetween(const unsigned int rowA, 
+		const unsigned int colA, const unsigned int rowB,
+		const unsigned int colB, const MoveCostTable& moveCosts){
+	return ShortestPath(rowA, colA, rowB, colB, moveCosts).size();
+}
+
+unsigned int Map::DistanceBetween(const std::array<unsigned int, 2>& locA,
+		const std::array<unsigned int, 2>& locB, const MoveCostTable& moveCosts){
+	return DistanceBetween(locA[0], locA[1], locB[0], locB[1], moveCosts);
 }

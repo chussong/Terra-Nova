@@ -119,5 +119,15 @@ class Map {
 		std::unique_ptr<Path> PathTo(const int startRow, const int startColm, 
 				const int destRow, const int destColm, 
 				const MoveCostTable& moveCosts);
+		std::unique_ptr<Path> PathTo(const std::array<unsigned int, 2>& startLoc,
+				const std::array<unsigned int, 2>& destLoc,
+				const MoveCostTable& moveCosts);
+
+		unsigned int DistanceBetween(const unsigned int rowA, 
+				const unsigned int colA, const unsigned int rowB,
+				const unsigned int colB, const MoveCostTable& moveCosts);
+		unsigned int DistanceBetween(const std::array<unsigned int, 2>& locA,
+				const std::array<unsigned int, 2>& locB, 
+				const MoveCostTable& moveCosts);
 };
 #endif

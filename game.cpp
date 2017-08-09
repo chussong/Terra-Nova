@@ -3,6 +3,8 @@
 std::vector<BuildingType*> Faction::defaultBuildingTypes;
 
 Game::Game(){
+	Random::Initialize(); // maybe this should be somewhere else
+
 	win = std::make_shared<GameWindow>("Terra Nova", 100, 100, 1024, 768);
 	try{
 		ReadAttackTypes();
@@ -17,6 +19,10 @@ Game::Game(){
 		throw;
 	}
 	win->AddEndTurnButton(EndTurnButton(win->Renderer()));
+
+	// placeholder
+	aiPlayers.emplace_back(*maps[0], 2);
+	for(auto& u : units) aiPlayers[0].AddUnit(u);
 }
 
 void Game::Begin(){
@@ -515,17 +521,17 @@ std::vector<std::shared_ptr<Unit>> Game::ParseGenericUnits(
 		std::shared_ptr<Map> parentMap, 
 		const std::shared_ptr<UnitType> genericType, 
 		std::vector<std::string> unitDesc){
-	std::vector<std::shared_ptr<Unit>> units;
+	std::vector<std::shared_ptr<Unit>> parsedUnits;
 	std::vector<std::string> details;
 	for(auto& ud : unitDesc){
 		boost::split(details, ud, boost::is_any_of(","));
 		int row = std::stoi(details[0]);
 		int colm = std::stoi(details[1]);
 		int owner = std::stoi(details[2]);
-		units.push_back(CreatePerson(parentMap.get(), row-1, 2*(colm-1)+(row-1)%2,
+		parsedUnits.push_back(CreatePerson(parentMap.get(), row-1, 2*(colm-1)+(row-1)%2,
 					genericType, owner));
 	}
-	return units;
+	return parsedUnits;
 }
 
 std::shared_ptr<Unit> Game::CreatePerson(Map* theMap, const int row,
@@ -538,7 +544,7 @@ std::shared_ptr<Unit> Game::CreatePerson(Map* theMap, const int row,
 	}
 	std::shared_ptr<Unit> newPerson(std::make_shared<Unit>(Window()->Renderer(),
 				spec, faction));
-	units.push_back(newPerson);
+	//units.push_back(newPerson);
 	theMap->AddRoamer(newPerson, row, colm);
 	return newPerson;
 }
@@ -588,11 +594,17 @@ void Game::StartTurn(){
 	//std::cout << "Processing turns in " << colonies.size() << " colonies." << std::endl;
 	//for(unsigned int i = 0; i < colonies.size(); ++i) colonies[i]->ProcessTurn();
 	for(auto& u : units) u->ProcessTurn(); // resets move allowance
+	for(auto& aip : aiPlayers) aip.StartTurn();
+
+	// I don't think we should actually be doing this here
+	for(auto& aip : aiPlayers) aip.GiveOrders();
+
 	win->StartTurn();
 }
 
 void Game::EndTurn(){
 	for(auto& m : maps) m->EndTurn();
+	for(auto& aip : aiPlayers) aip.EndTurn();
 	win->EndTurn();
 }
 

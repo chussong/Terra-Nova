@@ -4,36 +4,69 @@
 #include <vector>
 #include <string>
 #include <regex>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include "ui.hpp"
 #include "unit.hpp"
+#include "file.hpp"
 
 class Dialogue {
 	public:
 		struct DecisionPoint {
-			std::string commands;
-			size_t beforeLine;
+			std::string name;
+			std::string commands; // not sure this is necessary
+			//size_t beforeLine; // should deprecate this
 			std::vector<std::string> options;
 			std::vector<size_t> jumpTo;
 
-			DecisionPoint(size_t beforeLine, std::vector<std::string> options,
+			// this first constructor should be deprecated
+			/*DecisionPoint(size_t beforeLine, std::vector<std::string> options,
 					std::vector<size_t> jumpTo): 
 				beforeLine(beforeLine), options(options), jumpTo(jumpTo)
 				{ if(options.size() != jumpTo.size()) 
+					throw(std::runtime_error("Mismatched options & jumpTo")); }*/
+
+			DecisionPoint(std::string decisionName, 
+					std::vector<std::string> options,
+					std::vector<size_t> jumpTo): 
+				name(decisionName), options(options), jumpTo(jumpTo)
+				{ if(options.size() != jumpTo.size()) 
 					throw(std::runtime_error("Mismatched options & jumpTo")); }
+		};
+
+		struct Hook {
+			std::string name;
+			size_t lineNumber;
+
+			Hook(std::string name, size_t lineNumber): name(name),
+				lineNumber(lineNumber) {}
 		};
 
 	private:
 		std::vector<std::string> characters;
 		std::vector<std::string> lines;
 		std::vector<DecisionPoint> decisionPoints;
+		std::vector<Hook> hooks;
+
+		static std::vector<std::string> ParseLines(
+				const std::vector<std::string>& source);
+		static std::vector<Hook> ExtractHooks(std::vector<std::string>& lines);
+		static std::vector<DecisionPoint> ParseDecisions(
+				const std::vector<std::string>& source, 
+				const std::vector<Hook>& hooks);
+		static std::string FindOptionText(const std::string& sourceLine);
+		static std::string FindHookName(const std::string& sourceLine);
 
 	public:
+		Dialogue() = default;
+		explicit Dialogue(const std::string& filePath);
+
 		void AddLine(std::string line);
 		void AddDecisionPoint(DecisionPoint dp);
 		size_t Length() const;
 		const std::string& Line(const size_t lineNum) const;
 
-		DecisionPoint* DecisionAt(const size_t);
+		const DecisionPoint* DecisionNamed(const std::string& name) const;
 		bool JumpTo(const size_t destLine);
 
 		void AddCharacter(const std::string& name);
@@ -84,11 +117,16 @@ class DialogueBox : public UIElement {
 	std::unique_ptr<UIElement> speakerName = nullptr;
 
 	Dialogue* dialogue = nullptr;
-	size_t currentLine = 0;
+	size_t currentLineNumber = 0;
 	UIElement advanceArrow;
+	UIElement closeBox;
 
-	Dialogue::DecisionPoint* currentDecision = nullptr;
+	std::string currentLine = "";
+	Dialogue::DecisionPoint const* currentDecision = nullptr;
+	bool makingDecision = false;
+	bool endAfterCurrentLine = false;
 
+	std::string LoadLine();
 	void ParseCommand(const std::string& command);
 
 	public:
@@ -97,7 +135,7 @@ class DialogueBox : public UIElement {
 		void SetDialogue(Dialogue* newDialogue);
 		bool Advance();
 		void DisplayLine();
-		std::string CurrentLine();
+		const std::string& CurrentLine() const;
 
 		bool CanAdvance() const;
 		void DisplayDecision();

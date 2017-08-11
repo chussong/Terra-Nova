@@ -267,7 +267,8 @@ signal_t GameWindow::HandleKeyPress(SDL_Keycode key){
 			case SDLK_p:
 				return SIG_ORDER_PATROL;
 			case SDLK_b:
-				if(selected && selected->IsUnit()){
+				if(selected && selected->IsUnit() 
+						&& !dynamic_cast<Unit*>(selected)->Unique()){
 					theMap->BuildColony(*dynamic_cast<Unit*>(selected));
 				}
 				break;
@@ -448,8 +449,8 @@ signal_t GameWindow::MapScreen(Map* baseMap, int centerRow,
 	theMap = baseMap;
 	MapScreenCenteredOn(centerRow, centerColm);
 
-	Dialogue testDialogue;
-	testDialogue.AddCharacter("commander");
+	Dialogue testDialogue("chapters/1/dialogues/1.txt");
+	/*testDialogue.AddCharacter("commander");
 	testDialogue.AddLine("@active=0@This is a test dialogue.");
 	testDialogue.AddLine("It contains three lines of varying lengths, intended "
 			"to test the robustness of the dialogue display system.");
@@ -458,7 +459,7 @@ signal_t GameWindow::MapScreen(Map* baseMap, int centerRow,
 	std::vector<size_t> decJumps {0, 1, 2};
 
 	Dialogue::DecisionPoint decPt(1, decOpts, decJumps);
-	testDialogue.AddDecisionPoint(decPt);
+	testDialogue.AddDecisionPoint(decPt);*/
 	dialogueBox = std::make_unique<DialogueBox>(ren, &testDialogue);
 
 	SDL_Event e;
@@ -647,7 +648,9 @@ void GameWindow::MakeOrderPanel(GFXObject* source){
 	if(!(source && source->IsUnit())) return;
 	auto panel = std::make_unique<UnitOrderPanel>(ren, 
 			dynamic_cast<Unit*>(source));
-	panel->AddButton(theMap->MakeBuildColonyButton(*dynamic_cast<Unit*>(source)));
+	if(!dynamic_cast<Unit*>(source)->Unique()){
+		panel->AddButton(theMap->MakeBuildColonyButton(*dynamic_cast<Unit*>(source)));
+	}
 	AddUI(std::move(panel));
 }
 
@@ -658,8 +661,10 @@ void GameWindow::SwapOrderPanel(GFXObject* source){
 		if(dynamic_cast<UnitOrderPanel*>(UI[i].get())){
 			dynamic_cast<UnitOrderPanel*>(UI[i].get())->Update(
 					dynamic_cast<Unit*>(source));
-			dynamic_cast<UnitOrderPanel*>(UI[i].get())->AddButton(
+			if(!dynamic_cast<Unit*>(source)->Unique()){
+				dynamic_cast<UnitOrderPanel*>(UI[i].get())->AddButton(
 					theMap->MakeBuildColonyButton(*dynamic_cast<Unit*>(source)));
+			}
 		}
 	}
 }

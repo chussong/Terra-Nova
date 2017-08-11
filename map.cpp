@@ -295,6 +295,7 @@ bool Map::AssaultMoves(std::vector<MoveData>& moverData){
 	return somethingChanged;
 }
 
+// apparently there's a segfault in this somewhere
 bool Map::ClashMoves(std::vector<MoveData>& moverData){
 	bool somethingChanged = false;
 	for(auto& md : moverData){

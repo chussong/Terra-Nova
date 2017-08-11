@@ -96,6 +96,7 @@ class Unit : public GFXObject {
 	std::string surname;
 	bool female;
 	std::shared_ptr<UnitType> spec;
+	bool unique = false;
 	
 	int health;
 	int movesLeft;
@@ -169,6 +170,8 @@ class Unit : public GFXObject {
 		//std::shared_ptr<Colony> OrderFoundColony();
 		std::vector<Order> AvailableOrders();
 
+		void MarkUnique()				{unique = true;}
+		bool Unique() const				{return unique;}
 		bool CanRespec() const			{return spec->CanRespec();}
 		char Faction() const			{return faction;}
 

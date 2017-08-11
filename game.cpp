@@ -3,8 +3,6 @@
 std::vector<BuildingType*> Faction::defaultBuildingTypes;
 
 Game::Game(){
-	Random::Initialize(); // maybe this should be somewhere else
-
 	win = std::make_shared<GameWindow>("Terra Nova", 100, 100, 1024, 768);
 	try{
 		ReadAttackTypes();
@@ -514,6 +512,7 @@ std::shared_ptr<Unit> Game::ParseUniqueUnit(std::shared_ptr<Map> parentMap,
 	std::shared_ptr<Unit> ret(CreatePerson(
 				parentMap.get(), row-1, 2*(colm-1)+(row-1)%2, spec, owner ));
 	ret->ChangeName(name);
+	ret->MarkUnique();
 	return ret;
 }
 

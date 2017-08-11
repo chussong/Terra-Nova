@@ -9,9 +9,10 @@ EXECUTABLE = TerraNova
 
 SOURCES = main.cpp unit.cpp colony.cpp map.cpp game.cpp gamewindow.cpp \
 		  sprite.cpp gfxobject.cpp ui.cpp tile.cpp building.cpp path.cpp \
-		  dialogue.cpp ai.cpp random.cpp
+		  dialogue.cpp ai.cpp random.cpp file.cpp
 OBJECTS = main.o unit.o colony.o map.o game.o gamewindow.o sprite.o \
-		  gfxobject.o ui.o tile.o building.o path.o dialogue.o ai.o random.o
+		  gfxobject.o ui.o tile.o building.o path.o dialogue.o ai.o random.o \
+		  file.o
 
 all: $(EXECUTABLE)
 
@@ -59,13 +60,16 @@ building.o: building.cpp building.hpp unit.hpp tile.hpp gfxobject.hpp \
 path.o: path.cpp path.hpp map.hpp templates.hpp sprite.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-dialogue.o: dialogue.cpp dialogue.hpp ui.hpp unit.hpp
+dialogue.o: dialogue.cpp dialogue.hpp ui.hpp unit.hpp file.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 random.o: random.cpp random.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 ai.o: ai.cpp ai.hpp random.hpp unit.hpp map.hpp tile.hpp colony.hpp
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+file.o: file.cpp file.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 clean:

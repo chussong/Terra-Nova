@@ -1,0 +1,21 @@
+% characters present at the start of the dialogue
+[Characters]
+commander
+
+[Lines]
+-@hook=first@@active=0@This is a test dialogue.@decision=dec_pt1@
+
+-@hook=second@It contains four lines of varying lengths, intended to test the
+robustness of the dialogue display system.
+-This is the third line, which ends the dialogue.@end@
+
+-@hook=fourth@This is a line which is only accessible from the decision point.
+@end@
+
+% due to limitations in current code, options can not extend across multiple lines
+[Decisions]
+dec_pt1{
+	option: "Start over", first
+	option: "Continue", second
+	option: "Take the path less traveled", fourth
+}

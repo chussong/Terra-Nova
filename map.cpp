@@ -295,7 +295,6 @@ bool Map::AssaultMoves(std::vector<MoveData>& moverData){
 	return somethingChanged;
 }
 
-// apparently there's a segfault in this somewhere
 bool Map::ClashMoves(std::vector<MoveData>& moverData){
 	bool somethingChanged = false;
 	for(auto& md : moverData){
@@ -307,10 +306,7 @@ bool Map::ClashMoves(std::vector<MoveData>& moverData){
 					clashers.push_back(&md2);
 				}
 			}
-			std::random_device rd;
-			std::mt19937 rng(rd());
-			std::uniform_int_distribution<int> rando(0, clashers.size());
-			int win = rando(rng);
+			int win = Random::Int(0, clashers.size()-1);
 			MoveUnitTo(roamers[clashers[win]->id], clashers[win]->destination);
 			roamers[clashers[win]->id]->AdvancePath();
 			for(auto& cl : clashers) cl->status = MS_FINISHED;

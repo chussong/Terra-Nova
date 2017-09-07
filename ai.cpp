@@ -57,6 +57,12 @@ Unit* TacticalAI::FindNearestEnemy(const Unit& attacker){
 	for(auto i = 0u; i < enemyUnits.size(); ++i){
 		currentDistance = map.DistanceBetween(attacker.Location(), 
 				enemyUnits[i]->Location(), attacker.MoveCosts());
+		// -----------------------------
+		// the following line is temporary -- a TacticalAI should always be
+		// willing to engage with any enemy it knows about. Instead we should
+		// just not be handing far-off enemies to the TacticalAI.
+		if(currentDistance > 3) continue;
+		// -----------------------------
 		currentPriority = TargetPriority(*enemyUnits[i], currentDistance);
 		if(currentPriority < bestPriority 
 				|| ((currentPriority == bestPriority) && Random::Bool())){

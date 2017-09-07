@@ -8,6 +8,14 @@ Dialogue::Dialogue(const std::string& filePath){
 	decisionPoints = ParseDecisions(File::GetSection(file, "Decisions"), hooks);
 }
 
+Dialogue::Dialogue(const File::fs::path& filePath) {
+	std::vector<std::string> file = File::ReadFromFullPath(filePath);
+	characters = File::GetSection(file, "Characters");
+	lines = ParseLines(File::GetSection(file, "Lines"));
+	hooks = ExtractHooks(lines);
+	decisionPoints = ParseDecisions(File::GetSection(file, "Decisions"), hooks);
+}
+
 std::vector<std::string> Dialogue::ParseLines(
 		const std::vector<std::string>& source){
 	//std::cout << "Parsing the following lines of dialogue:" << std::endl;

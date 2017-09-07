@@ -1,0 +1,13 @@
+event1{
+	map_start_trigger
+	play_dialogue: 1
+}
+
+event2{
+	location_trigger{
+		5,1
+		5,3
+		5,5
+	}
+	play_dialogue: 2
+}

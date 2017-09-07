@@ -444,12 +444,26 @@ void GameWindow::SetHoverText(const GFXObject& textSource){
 	hoverTextBox->AddText(textSource.HoverText(), textBound, uiFont);
 }
 
+/*void GameWindow::PlayDialogue(const std::string& dialoguePath) {
+	Dialogue newDialogue(dialoguePath);
+	dialogueBox = std::make_unique<DialogueBox>(ren, &testDialogue);
+}*/
+
+void GameWindow::PlayDialogue(Dialogue* dialogue) {
+	if(!dialogue) {
+		std::cerr << "Error: GameWindow was asked to play a null dialogue."
+			<< std::endl;
+		return;
+	}
+	dialogueBox = std::make_unique<DialogueBox>(ren, dialogue);
+}
+
 signal_t GameWindow::MapScreen(Map* baseMap, int centerRow,
 		int centerColm){
 	theMap = baseMap;
 	MapScreenCenteredOn(centerRow, centerColm);
 
-	Dialogue testDialogue("chapters/1/dialogues/1.txt");
+	//Dialogue testDialogue("chapters/1/dialogues/1.txt");
 	/*testDialogue.AddCharacter("commander");
 	testDialogue.AddLine("@active=0@This is a test dialogue.");
 	testDialogue.AddLine("It contains three lines of varying lengths, intended "
@@ -460,7 +474,7 @@ signal_t GameWindow::MapScreen(Map* baseMap, int centerRow,
 
 	Dialogue::DecisionPoint decPt(1, decOpts, decJumps);
 	testDialogue.AddDecisionPoint(decPt);*/
-	dialogueBox = std::make_unique<DialogueBox>(ren, &testDialogue);
+	//dialogueBox = std::make_unique<DialogueBox>(ren, &testDialogue);
 
 	SDL_Event e;
 	bool quit = false;

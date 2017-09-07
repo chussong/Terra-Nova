@@ -4,15 +4,15 @@ SDL_LIB = -L/usr/local/lib -lSDL2 -lSDL2_image -lSDL2_ttf
 SDL_INCLUDE = -I/usr/include/SDL2/
 
 CXXFLAGS = -Wall -Wextra -pedantic -g -c -std=c++14 $(SDL_INCLUDE)
-LDFLAGS = $(SDL_LIB)
+LDFLAGS = $(SDL_LIB) -lboost_system -lboost_filesystem
 EXECUTABLE = TerraNova
 
 SOURCES = main.cpp unit.cpp colony.cpp map.cpp game.cpp gamewindow.cpp \
 		  sprite.cpp gfxobject.cpp ui.cpp tile.cpp building.cpp path.cpp \
-		  dialogue.cpp ai.cpp random.cpp file.cpp
+		  dialogue.cpp ai.cpp random.cpp file.cpp event.cpp
 OBJECTS = main.o unit.o colony.o map.o game.o gamewindow.o sprite.o \
 		  gfxobject.o ui.o tile.o building.o path.o dialogue.o ai.o random.o \
-		  file.o
+		  file.o event.o
 
 all: $(EXECUTABLE)
 
@@ -29,7 +29,7 @@ colony.o: colony.cpp colony.hpp templates.hpp building.hpp gamevars.hpp \
 		faction.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-map.o: map.cpp map.hpp templates.hpp gamevars.hpp tile.hpp path.hpp
+map.o: map.cpp map.hpp templates.hpp gamevars.hpp tile.hpp path.hpp random.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 game.o: game.cpp game.hpp templates.hpp exceptions.hpp unit.hpp building.hpp \
@@ -70,6 +70,9 @@ ai.o: ai.cpp ai.hpp random.hpp unit.hpp map.hpp tile.hpp colony.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 file.o: file.cpp file.hpp
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+event.o: event.cpp event.hpp file.hpp dialogue.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 clean:

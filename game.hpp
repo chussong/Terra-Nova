@@ -20,6 +20,7 @@
 #include "gamewindow.hpp"
 #include "faction.hpp"
 #include "ai.hpp"
+#include "event.hpp"
 
 class Game {
 	std::vector<BuildingType> buildingTypes;
@@ -31,15 +32,22 @@ class Game {
 	std::vector<std::shared_ptr<Unit>> units;
 	//std::vector<std::shared_ptr<Colony>> colonies;
 
+	std::vector<Event> mapStartEvents;
+	std::vector<Event> locationEvents;
+
 	std::vector<AIPlayer> aiPlayers;
 
 	std::shared_ptr<GameWindow> win;
 
 	void ClearDeadUnits();
+	void ClearFinishedEvents();
 
 	void StartTurn();
 	void EndTurn();
 	std::unique_ptr<Button> EndTurnButton(SDL_Renderer* ren);
+
+	bool ExecuteEventIfTriggered(Event& event);
+	bool ExecuteEvent(Event& event);
 
 	public:
 		Game();

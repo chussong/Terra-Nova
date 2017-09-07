@@ -11,6 +11,7 @@
 #include "path.hpp"
 #include "ui.hpp"
 #include "faction.hpp"
+#include "random.hpp"
 
 class Map {
 	enum MoveStatus { MS_UNCHECKED, MS_CLEAR, MS_BOUNCE, MS_ASSAULT, 

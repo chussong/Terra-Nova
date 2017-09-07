@@ -60,6 +60,7 @@ class Dialogue {
 	public:
 		Dialogue() = default;
 		explicit Dialogue(const std::string& filePath);
+		explicit Dialogue(const File::fs::path& filePath);
 
 		void AddLine(std::string line);
 		void AddDecisionPoint(DecisionPoint dp);

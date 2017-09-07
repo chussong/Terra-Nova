@@ -11,12 +11,18 @@ Game::Game(){
 		ReadTileTypes();
 		ReadMap("1");
 	}
-	catch(const readError &e){
+	catch(const readError& e){
 		// instead of complaining, should generate the def files from hard-coded versions
 		std::cerr << e.what() << std::endl;
 		throw;
 	}
 	win->AddEndTurnButton(EndTurnButton(win->Renderer()));
+
+	std::vector<Event> events = Event::ReadEventDirectory("1");
+	for(auto& event : events) {
+		if(event.HasStartTrigger()) mapStartEvents.push_back(std::move(event));
+		if(event.HasLocationTrigger()) locationEvents.push_back(std::move(event));
+	}
 
 	// placeholder
 	aiPlayers.emplace_back(*maps[0], 2);
@@ -24,6 +30,7 @@ Game::Game(){
 }
 
 void Game::Begin(){
+	for(auto& event : mapStartEvents) ExecuteEvent(event);
 	StartTurn();
 	win->MapScreen(maps[0].get(), 4, 8);
 }
@@ -589,7 +596,13 @@ void Game::NextTurn(){
 
 void Game::StartTurn(){
 	ClearDeadUnits(); // before everyone else locks their pointers
+	ClearFinishedEvents();
 	for(auto& m : maps) m->StartTurn();
+	for(auto& event : locationEvents) ExecuteEventIfTriggered(event);
+	//locationEvents.erase(
+			//std::remove_if(locationEvents.begin(), locationEvents.end(),
+				//std::bind(&Game::ExecuteEventIfTriggered, this, 
+							//std::placeholders::_1)) );
 	//std::cout << "Processing turns in " << colonies.size() << " colonies." << std::endl;
 	//for(unsigned int i = 0; i < colonies.size(); ++i) colonies[i]->ProcessTurn();
 	for(auto& u : units) u->ProcessTurn(); // resets move allowance
@@ -610,6 +623,40 @@ void Game::EndTurn(){
 void Game::ClearDeadUnits(){
 	units.erase(
 			std::remove_if(units.begin(), units.end(),
-				[](std::shared_ptr<Unit>& p){return p->Dead();}),
+				[](std::shared_ptr<Unit>& unit){return unit->Dead();}),
 			units.end());
+}
+
+// warning: since each event owns its associated dialogue, this will cause a 
+// segfault if the event is cleared before the player closes the dialogue. As of
+// the writing of this comment, such a situation is impossible because you can't
+// start a new turn with a dialogue open.
+void Game::ClearFinishedEvents(){
+	locationEvents.erase(
+			std::remove_if(locationEvents.begin(), locationEvents.end(),
+				[](const Event& event){return event.Finished();}),
+			locationEvents.end() );
+}
+
+// Return true if event was triggered and is not repeatable; false otherwise.
+//
+// this is definitely still pretty hackish. Need to specify map (or have event
+// know which map it's on) and a player (or have event know player number).
+bool Game::ExecuteEventIfTriggered(Event& event) {
+	if(event.HasLocationTrigger()) {
+		for(auto& loc : *event.TriggerLocations()) {
+			if(maps[0]->Terrain(loc)->Faction() == 1) {
+				//std::cout << "Firing event, will erase shortly." << std::endl;
+				return ExecuteEvent(event);
+			}
+		}
+	}
+	return false;
+}
+
+// Return false if event is repeatable and should not be cleared.
+bool Game::ExecuteEvent(Event& event) {
+	if(event.HasLinkedDialogue()) win->PlayDialogue(event.LinkedDialogue());
+	if(!event.Repeatable()) event.SetFinished();
+	return true;
 }

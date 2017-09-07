@@ -5,15 +5,43 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <exception>
+//#include <filesystem>
 
 #include <SDL.h>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/filesystem.hpp>
+
+// currently using boost::filesystem to stay on C++14; if switched to 17, can 
+// use std::filesystem instead. In that case, can likely unlink boost_system
+// and boost_filesystem in the Makefile.
 
 namespace File {
-	void Initialize();
 
-	std::vector<std::string> Read(const std::string& relativePath);
-	std::vector<std::string> GetSection(const std::vector<std::string>& source,
-			const std::string& sectionName);
+namespace fs = boost::filesystem;
+//namespace fs = std::filesystem;
+
+void Initialize();
+
+const fs::path& BasePath();
+std::vector<std::string> ReadFromFullPath(const fs::path& fullPath);
+std::vector<std::string> Read(const std::string& relativePath);
+std::vector<std::vector<std::string>> ReadAll(const std::string& relativePath);
+std::vector<std::string> GetSection(const std::vector<std::string>& source,
+		const std::string& sectionName);
+std::vector<std::string> GetField(const std::vector<std::string>& source,
+		const size_t startingLine);
+
+template<typename Result>
+std::vector<Result> ForEachFile(const fs::path& location, 
+		Result (*function)(const fs::path&)) {
+	std::vector<Result> ret;
+	for(auto& file : fs::directory_iterator(location)) {
+		ret.push_back(function(file.path()));
+	}
+	return ret;
 }
+
+} // namespace File
 
 #endif

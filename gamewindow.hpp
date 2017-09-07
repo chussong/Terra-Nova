@@ -130,6 +130,11 @@ class GameWindow {
 		void StartTurn();
 		void EndTurn();
 
+		// Dialogue -----------------------------------------------------------
+
+		//void PlayDialogue(const std::string& dialoguePath);
+		void PlayDialogue(Dialogue* dialogue);
+
 		// Map screen ---------------------------------------------------------
 
 		signal_t MapScreen(Map* baseMap, int centerRow,

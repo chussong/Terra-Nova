@@ -101,6 +101,7 @@ void Sprite::MakeDefaultSize(SDL_Rect& layout) const{
 
 void GFXManager::Initialize(SDL_Renderer* newRen){
 	GFXManager::ren = newRen;
+	//std::cout << "GFXManager initialized." << std::endl;
 }
 
 std::string GFXManager::GetSpritePath(const std::string& subDir){

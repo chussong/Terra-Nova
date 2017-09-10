@@ -51,6 +51,7 @@ class Game {
 
 	public:
 		Game();
+		explicit Game(std::shared_ptr<GameWindow> win);
 
 		void Begin();
 		void ThrowToColonyScreen(std::shared_ptr<Colony> col);

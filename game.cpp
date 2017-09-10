@@ -2,8 +2,13 @@
 
 std::vector<BuildingType*> Faction::defaultBuildingTypes;
 
-Game::Game(){
-	win = std::make_shared<GameWindow>("Terra Nova", 100, 100, 1024, 768);
+Game::Game(): Game(nullptr){
+}
+
+Game::Game(std::shared_ptr<GameWindow> window): win(window) {
+	if(!win) {
+		win = std::make_shared<GameWindow>("Terra Nova", 100, 100, 1024, 768);
+	}
 	try{
 		ReadAttackTypes();
 		ReadUnitTypes();

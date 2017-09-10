@@ -1,8 +1,8 @@
 #include "gamewindow.hpp"
 
-GameWindow::GameWindow(const std::string& title, const int x, const int y,
-		const int w, const int h): playerNumber(1), selected(nullptr) {
-	if((SDL_WasInit(SDL_INIT_EVERYTHING) & SDL_INIT_EVERYTHING) == 0){
+GameWindow::GameWindow(const std::string&, const int, const int,
+		const int, const int): playerNumber(1), selected(nullptr) {
+	/*if((SDL_WasInit(SDL_INIT_EVERYTHING) & SDL_INIT_EVERYTHING) == 0){
 		if(!InitSDL()) return;
 	}
 	win = SDL_CreateWindow(title.c_str(), x, y, w, h, SDL_WINDOW_SHOWN);
@@ -15,7 +15,7 @@ GameWindow::GameWindow(const std::string& title, const int x, const int y,
 			LogSDLError(std::cout, "CreateRenderer");
 		}
 	}
-	GFXManager::Initialize(ren);
+	GFXManager::Initialize(ren);*/
 }
 
 GameWindow::~GameWindow(){
@@ -38,38 +38,6 @@ void GameWindow::Render(){
 	if(dialogueBox) dialogueBox->Render();
 	if(hoverTextBox) hoverTextBox->Render();
 	SDL_RenderPresent(ren);
-}
-
-bool GameWindow::InitSDL(){
-	if(SDL_Init(SDL_INIT_EVERYTHING) != 0){
-		LogSDLError(std::cout, "SDL_Init");
-		return false;
-	}
-	if((IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) != IMG_INIT_PNG){
-		LogSDLError(std::cout, "IMG_Init");
-		SDL_Quit();
-		return false;
-	}
-	if(TTF_Init() != 0){
-		LogSDLError(std::cout, "TTF_Init");
-		IMG_Quit();
-		SDL_Quit();
-		return false;
-	}
-	//Sprite::defaultFont = TTF_OpenFont(DEFAULT_FONT, DEFAULT_FONT_SIZE);
-	defaultFont = TTF_OpenFont(DEFAULT_FONT, DEFAULT_FONT_SIZE);
-	dialogueFont = TTF_OpenFont(DIALOGUE_FONT_NORMAL, DIALOGUE_FONT_SIZE);
-	uiFont = TTF_OpenFont(UI_FONT, UI_FONT_SIZE);
-	return true;
-}
-
-void GameWindow::QuitSDL(){
-	TTF_CloseFont(defaultFont);
-	TTF_CloseFont(dialogueFont);
-	TTF_CloseFont(uiFont);
-	TTF_Quit();
-	IMG_Quit();
-	SDL_Quit();
 }
 
 SDL_Renderer* GameWindow::Renderer() const{

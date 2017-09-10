@@ -24,6 +24,7 @@ namespace fs = boost::filesystem;
 void Initialize();
 
 const fs::path& BasePath();
+std::string AbsolutePath(const std::string& relativePath);
 std::vector<std::string> ReadFromFullPath(const fs::path& fullPath);
 std::vector<std::string> Read(const std::string& relativePath);
 std::vector<std::vector<std::string>> ReadAll(const std::string& relativePath);

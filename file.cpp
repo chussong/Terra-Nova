@@ -14,6 +14,10 @@ const fs::path& BasePath() {
 	return basePath;
 }
 
+std::string AbsolutePath(const std::string& relativePath) {
+	return (basePath / relativePath).native();
+}
+
 std::vector<std::string> ReadFromFullPath(const fs::path& fullPath){
 	std::vector<std::string> ret;
 

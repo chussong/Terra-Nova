@@ -17,7 +17,8 @@
 #include "building.hpp"
 #include "colony.hpp"
 #include "map.hpp"
-#include "gamewindow.hpp"
+//#include "gamewindow.hpp"
+#include "gamescreen.hpp"
 #include "faction.hpp"
 #include "ai.hpp"
 #include "event.hpp"
@@ -37,7 +38,7 @@ class Game {
 
 	std::vector<AIPlayer> aiPlayers;
 
-	std::shared_ptr<GameWindow> win;
+	GameScreen* screen;
 
 	void ClearDeadUnits();
 	void ClearFinishedEvents();
@@ -51,7 +52,7 @@ class Game {
 
 	public:
 		Game();
-		explicit Game(std::shared_ptr<GameWindow> win);
+		explicit Game(GameScreen* screen);
 
 		void Begin();
 		void ThrowToColonyScreen(std::shared_ptr<Colony> col);
@@ -100,7 +101,7 @@ class Game {
 				const int faction);
 		std::shared_ptr<Map> CreateMap();
 
-		std::shared_ptr<GameWindow> Window() { return win; }
+		GameScreen* Screen() { return screen; }
 
 		void NextTurn();
 };

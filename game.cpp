@@ -5,9 +5,12 @@ std::vector<BuildingType*> Faction::defaultBuildingTypes;
 Game::Game(): Game(nullptr){
 }
 
-Game::Game(std::shared_ptr<GameWindow> window): win(window) {
-	if(!win) {
-		win = std::make_shared<GameWindow>("Terra Nova", 100, 100, 1024, 768);
+Game::Game(GameScreen* screen): screen(screen) {
+	if(!screen) {
+		std::cerr << "Asked to make a Game with no GameScreen to populate."
+			<< std::endl;
+		throw std::runtime_error("Game constructor");
+		//screen = std::make_shared<GameScreen>("Terra Nova", 100, 100, 1024, 768);
 	}
 	try{
 		ReadAttackTypes();
@@ -21,7 +24,7 @@ Game::Game(std::shared_ptr<GameWindow> window): win(window) {
 		std::cerr << e.what() << std::endl;
 		throw;
 	}
-	win->AddEndTurnButton(EndTurnButton(win->Renderer()));
+	screen->AddEndTurnButton(EndTurnButton(screen->Renderer()));
 
 	std::vector<Event> events = Event::ReadEventDirectory("1");
 	for(auto& event : events) {
@@ -37,7 +40,7 @@ Game::Game(std::shared_ptr<GameWindow> window): win(window) {
 void Game::Begin(){
 	for(auto& event : mapStartEvents) ExecuteEvent(event);
 	StartTurn();
-	win->MapScreen(maps[0].get(), 4, 8);
+	screen->MapScreen(maps[0].get(), 4, 8);
 }
 
 bool Game::Tick(){
@@ -318,7 +321,7 @@ void Game::ReadMap(const std::string& MapName){
 					runAgain = true;
 					continue;
 				}
-				newMap = std::make_shared<Map>(Window()->Renderer(), 
+				newMap = std::make_shared<Map>(Screen()->Renderer(), 
 						ParseMap(TileDict, ExtractMapSection(lines, i)) );
 				maps.push_back(newMap);
 			}
@@ -389,7 +392,7 @@ std::vector<std::vector<std::shared_ptr<Tile>>> Game::ParseMap(
 			if(mapAsStrings[i].size() == 0) std::cerr << "Tile alias error!" << std::endl;
 			newTiles[newTiles.size()-1][2*i + (newTiles.size()-1)%2]
 				= std::make_shared<Tile>(
-						TileDict.find(mapAsStrings[i][0])->second.get(), Window()->Renderer(),
+						TileDict.find(mapAsStrings[i][0])->second.get(), Screen()->Renderer(),
 						newTiles.size()-1, 2*i + (newTiles.size()-1)%2);
 			//std::cout << " survived." << std::endl;
 		}
@@ -553,7 +556,7 @@ std::shared_ptr<Unit> Game::CreatePerson(Map* theMap, const int row,
 			<< "have been loaded." << std::endl;
 		return nullptr;
 	}
-	std::shared_ptr<Unit> newPerson(std::make_shared<Unit>(Window()->Renderer(),
+	std::shared_ptr<Unit> newPerson(std::make_shared<Unit>(Screen()->Renderer(),
 				spec, faction));
 	//units.push_back(newPerson);
 	theMap->AddRoamer(newPerson, row, colm);
@@ -567,7 +570,7 @@ void Game::CreateColony(std::shared_ptr<Map> parentMap,
 		std::cerr << "Error: attempted to create a Colony out of bounds.";
 		return;
 	}
-	//std::shared_ptr<Colony> newColony(std::make_shared<Colony>(Window()->Renderer(),
+	//std::shared_ptr<Colony> newColony(std::make_shared<Colony>(Screen()->Renderer(),
 				//parentMap->SurroundingTerrain(row, colm), faction));
 	//newColony->SetBuildingTypes(buildingTypes);
 	//newColony->ChangeName(name);
@@ -579,7 +582,7 @@ void Game::CreateColony(std::shared_ptr<Map> parentMap,
 
 std::shared_ptr<Map> Game::CreateMap(){
 	ReadTileTypes();
-	std::shared_ptr<Map> newMap(std::make_shared<Map>(Window()->Renderer(),
+	std::shared_ptr<Map> newMap(std::make_shared<Map>(Screen()->Renderer(),
 			tileTypes));
 	maps.push_back(newMap);
 	return newMap;
@@ -616,13 +619,13 @@ void Game::StartTurn(){
 	// I don't think we should actually be doing this here
 	for(auto& aip : aiPlayers) aip.GiveOrders();
 
-	win->StartTurn();
+	screen->StartTurn();
 }
 
 void Game::EndTurn(){
 	for(auto& m : maps) m->EndTurn();
 	for(auto& aip : aiPlayers) aip.EndTurn();
-	win->EndTurn();
+	screen->EndTurn();
 }
 
 void Game::ClearDeadUnits(){
@@ -661,7 +664,7 @@ bool Game::ExecuteEventIfTriggered(Event& event) {
 
 // Return false if event is repeatable and should not be cleared.
 bool Game::ExecuteEvent(Event& event) {
-	if(event.HasLinkedDialogue()) win->PlayDialogue(event.LinkedDialogue());
+	if(event.HasLinkedDialogue()) screen->PlayDialogue(event.LinkedDialogue());
 	if(!event.Repeatable()) event.SetFinished();
 	return true;
 }

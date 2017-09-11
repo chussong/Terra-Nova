@@ -1,34 +1,30 @@
-#include "gamewindow.hpp"
+#include "gamescreen.hpp"
 
-GameWindow::GameWindow(const std::string&, const int, const int,
-		const int, const int): playerNumber(1), selected(nullptr) {
-	/*if((SDL_WasInit(SDL_INIT_EVERYTHING) & SDL_INIT_EVERYTHING) == 0){
-		if(!InitSDL()) return;
-	}
-	win = SDL_CreateWindow(title.c_str(), x, y, w, h, SDL_WINDOW_SHOWN);
-	if(win == nullptr){
-		LogSDLError(std::cout, "CreateWindow");
-	} else {
-		ren = SDL_CreateRenderer(win, -1,
-			SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-		if(ren == nullptr){
-			LogSDLError(std::cout, "CreateRenderer");
-		}
-	}
-	GFXManager::Initialize(ren);*/
+GameScreen::GameScreen(SDL_Renderer* ren): playerNumber(1), selected(nullptr) {
+	this->ren = ren;
 }
 
-GameWindow::~GameWindow(){
-	SDL_Cleanup(ren, win);
-}
-
-void GameWindow::AddEndTurnButton(std::unique_ptr<Button> newButton){
+void GameScreen::AddEndTurnButton(std::unique_ptr<Button> newButton){
 	endTurnButton = std::move(newButton);
 	endTurnButton->SetVisible(false);
 }
 
-void GameWindow::Render(){
-	SDL_RenderClear(ren);
+void GameScreen::Render(){
+	// change view if necessary
+	theMap->CenterViewOn(viewCenterRow, viewCenterCol);
+	if(currentFocusColony && !newFocusColony){
+		BreakFocusOnColony();
+	}
+	if(newFocusColony && newFocusColony != currentFocusColony) FocusOnColony();
+	ClearOutOfBounds();
+	if(selected && selected->IsUnit()){
+		if(dynamic_cast<Unit*>(selected)->Dead()){
+			ClearSelected();
+		}
+	}
+	//FillHoverText(e.button.x, e.button.y);
+
+	// render everything
 	for(auto& thing : background) thing->Render();
 	for(auto& thing : objects	) thing->Render();
 	for(auto& thing : clickables) thing->Render();
@@ -37,14 +33,13 @@ void GameWindow::Render(){
 	if(endTurnButton) endTurnButton->Render();
 	if(dialogueBox) dialogueBox->Render();
 	if(hoverTextBox) hoverTextBox->Render();
-	SDL_RenderPresent(ren);
 }
 
-SDL_Renderer* GameWindow::Renderer() const{
+SDL_Renderer* GameScreen::Renderer() const{
 	return ren;
 }
 
-GFXObject* GameWindow::Object(const int num){
+GFXObject* GameScreen::Object(const int num){
 	if(num > static_cast<long>(objects.size()) || num < 0){
 		std::cout << "Error: tried to access UIElement " << num <<
 			", which does not exist." << std::endl;
@@ -53,7 +48,7 @@ GFXObject* GameWindow::Object(const int num){
 	return objects[num];
 }
 
-GFXObject* GameWindow::ClickedObject(const int x, const int y){
+GFXObject* GameScreen::ClickedObject(const int x, const int y){
 	for(unsigned int i = UI.size()-1; i < UI.size(); --i){
 		if(UI[i]->InsideQ(x, y)) return UI[i].get();
 	}
@@ -69,7 +64,7 @@ GFXObject* GameWindow::ClickedObject(const int x, const int y){
 	return nullptr;
 }
 
-void GameWindow::ClickObject(GFXObject* toClick){
+void GameScreen::ClickObject(GFXObject* toClick){
 	if(!toClick){
 		std::cerr << "Error: somehow asked to ClickObject a nullptr." << std::endl;
 		return;
@@ -79,7 +74,7 @@ void GameWindow::ClickObject(GFXObject* toClick){
 	if(dynamic_cast<Unit*>(toClick)) ClickUnit(dynamic_cast<Unit*>(toClick));
 }
 
-void GameWindow::ClickTile(Tile* clickedTile){
+void GameScreen::ClickTile(Tile* clickedTile){
 	//std::cout << "Clicked a tile at (" << clickedTile->Row() << ","
 		//<< clickedTile->Colm() << ")." << std::endl;
 	viewCenterRow = clickedTile->Row();
@@ -98,11 +93,11 @@ void GameWindow::ClickTile(Tile* clickedTile){
 	}
 }
 
-void GameWindow::ClickUnit(Unit*){
+void GameScreen::ClickUnit(Unit*){
 }
 
 // this iterates through stuff backwards so that the most recent thing is on top
-GFXObject* GameWindow::SelectedObject(const int x, const int y){
+GFXObject* GameScreen::SelectedObject(const int x, const int y){
 	if(endTurnButton->InsideQ(x, y)){
 		if(endTurnButton->Click()) return selected;
 		return endTurnButton.get();
@@ -134,35 +129,37 @@ GFXObject* GameWindow::SelectedObject(const int x, const int y){
 	return nullptr;
 }
 
-std::array<int, 4> GameWindow::Layout() const{
+/*std::array<int, 4> GameScreen::Layout() const{
 	std::array<int, 4> layout;
 	SDL_GetWindowPosition(win, &layout[0], &layout[1]);
 	SDL_GetWindowSize(win, &layout[2], &layout[3]);
 	return layout;
-}
+}*/
 
-bool GameWindow::Ready() const{
+/*bool GameScreen::Ready() const{
 	if(win == nullptr || ren == nullptr) return false;
 	return true;
-}
+}*/
 
-void GameWindow::ClearSelected(){
-	if(!selected) return;
-	selected->Deselect();
+void GameScreen::ClearSelected(){
+	if(selected) {
+		selected->Deselect();
+		selected = nullptr;
+	}
 	RemoveInfoPanel();
 	RemoveOrderPanel();
 }
 
-void GameWindow::ResetBackground(std::unique_ptr<UIElement> newThing){
+void GameScreen::ResetBackground(std::unique_ptr<UIElement> newThing){
 	background.clear();
 	background.push_back(std::move(newThing));
 }
 
-void GameWindow::AddToBackground(std::unique_ptr<UIElement> newThing){
+void GameScreen::AddToBackground(std::unique_ptr<UIElement> newThing){
 	background.push_back(std::move(newThing));
 }
 
-void GameWindow::ResetObjects(){
+void GameScreen::ResetObjects(){
 	weakObjects.clear();
 	objects.clear();
 	weakClickables.clear();
@@ -171,23 +168,23 @@ void GameWindow::ResetObjects(){
 	topLevelUI.clear();
 }
 
-void GameWindow::AddTopLevelUI(std::shared_ptr<UIAggregate> newThing){
+void GameScreen::AddTopLevelUI(std::shared_ptr<UIAggregate> newThing){
 	topLevelUI.push_back(newThing);
 }
 
-void GameWindow::AddUI(std::unique_ptr<GFXObject> newThing){
+void GameScreen::AddUI(std::unique_ptr<GFXObject> newThing){
 	UI.push_back(std::move(newThing));
 }
 
-void GameWindow::AddClickable(std::shared_ptr<GFXObject> newThing){
+void GameScreen::AddClickable(std::shared_ptr<GFXObject> newThing){
 	weakClickables.push_back(newThing);
 }
 
-void GameWindow::AddObject(std::shared_ptr<GFXObject> newThing){
+void GameScreen::AddObject(std::shared_ptr<GFXObject> newThing){
 	weakObjects.push_back(newThing);
 }
 
-signal_t GameWindow::HandleKeyPress(SDL_Keycode key){
+signal_t GameScreen::HandleKeyPress(SDL_Keycode key){
 	if(dialogueBox){
 		switch(key){
 			case SDLK_1:
@@ -247,13 +244,13 @@ signal_t GameWindow::HandleKeyPress(SDL_Keycode key){
 	return NOTHING;
 }
 
-void GameWindow::StartTurn(){
+void GameScreen::StartTurn(){
 	if(selected) UpdateInfoPanel(selected);
 	clickables = CheckAndLock(weakClickables);
 	objects = CheckAndLock(weakObjects);
 }
 
-void GameWindow::EndTurn(){
+void GameScreen::EndTurn(){
 	clickables.clear();
 	objects.clear();
 	if(selected && dynamic_cast<Unit*>(selected) && dynamic_cast<Unit*>(selected)->Dead()){
@@ -261,14 +258,14 @@ void GameWindow::EndTurn(){
 	}
 }
 
-/*void GameWindow::ChangeSelected(GFXObject* newSelected){
+/*void GameScreen::ChangeSelected(GFXObject* newSelected){
 	if(newSelected != selected){
 		if(selected) selected->Deselect();
 	}
 	selected = newSelected;
 }*/
 
-void GameWindow::FocusOnColony(){
+void GameScreen::FocusOnColony(){
 	if(!newFocusColony){
 		std::cerr << "Error: told to focus on a colony, but newFocusColony was "
 			<< "set to nullptr." << std::endl;
@@ -295,7 +292,7 @@ void GameWindow::FocusOnColony(){
 	currentFocusColony = newFocusColony;
 }
 
-void GameWindow::BreakFocusOnColony(){
+void GameScreen::BreakFocusOnColony(){
 	if(!currentFocusColony){
 		std::cerr << "Error: asked to break focus on a colony, but was not "
 			<< "focusing on one to begin with." << std::endl;
@@ -308,7 +305,7 @@ void GameWindow::BreakFocusOnColony(){
 	currentFocusColony = nullptr;
 }
 
-void GameWindow::DrawResources(const Colony* col){
+void GameScreen::DrawResources(const Colony* col){
 	for(unsigned int i = 0; i < col->NumberOfResources(); ++i){
 		auto newPanel = std::make_unique<UIElement>(ren, 
 					Colony::ResourceName(static_cast<resource_t>(i)) + "_panel",
@@ -319,7 +316,7 @@ void GameWindow::DrawResources(const Colony* col){
 	}
 }
 
-void GameWindow::DrawColonyMisc(const Colony* col){
+void GameScreen::DrawColonyMisc(const Colony* col){
 	int gridLeftEdge = SCREEN_WIDTH - 50 - 
 		BUILDING_GRID_COLUMNS*(BUILDING_WIDTH + 2*BUILDING_GRID_PADDING);
 	int gridTopEdge = 350;
@@ -342,11 +339,11 @@ void GameWindow::DrawColonyMisc(const Colony* col){
 
 	std::unique_ptr<Button> leaveColonyButton = std::make_unique<Button>(ren,
 			"leavecolony", SCREEN_WIDTH-200, 100, 
-			std::function<void()>(std::bind(&GameWindow::LeaveColony, this)));
+			std::function<void()>(std::bind(&GameScreen::LeaveColony, this)));
 	AddUI(std::move(leaveColonyButton));
 }
 
-void GameWindow::ClearOutOfBounds(){
+void GameScreen::ClearOutOfBounds(){
 	if(currentFocusColony){
 		int centerRow = currentFocusColony->Row();
 		int centerCol = currentFocusColony->Column();
@@ -369,7 +366,7 @@ void GameWindow::ClearOutOfBounds(){
 	}
 }
 
-void GameWindow::SelectNew(const int clickX, const int clickY){
+void GameScreen::SelectNew(const int clickX, const int clickY){
 	GFXObject* newSelected = SelectedObject(clickX, clickY);
 	if(!newSelected && selected){
 		selected->Deselect();
@@ -392,7 +389,7 @@ void GameWindow::SelectNew(const int clickX, const int clickY){
 	selected = newSelected;
 }
 
-void GameWindow::FillHoverText(const int hoverX, const int hoverY){
+void GameScreen::FillHoverText(const int hoverX, const int hoverY){
 	if(SearchForHoverText(UI, hoverX, hoverY)) return;
 	if(SearchForHoverText(clickables, hoverX, hoverY)) return;
 	//if(SearchForHoverText(objects, hoverX, hoverY)) return;
@@ -400,7 +397,7 @@ void GameWindow::FillHoverText(const int hoverX, const int hoverY){
 }
 
 // this should Resize(int,int) the box to be slightly larger than the text
-void GameWindow::SetHoverText(const GFXObject& textSource){
+void GameScreen::SetHoverText(const GFXObject& textSource){
 	if(!hoverTextBox){
 		std::cerr << "Error: asked to set the text in the hover text box, but "
 			<< "the box was a nullptr." << std::endl;
@@ -412,125 +409,82 @@ void GameWindow::SetHoverText(const GFXObject& textSource){
 	hoverTextBox->AddText(textSource.HoverText(), textBound, uiFont);
 }
 
-/*void GameWindow::PlayDialogue(const std::string& dialoguePath) {
+/*void GameScreen::PlayDialogue(const std::string& dialoguePath) {
 	Dialogue newDialogue(dialoguePath);
 	dialogueBox = std::make_unique<DialogueBox>(ren, &testDialogue);
 }*/
 
-void GameWindow::PlayDialogue(Dialogue* dialogue) {
+void GameScreen::PlayDialogue(Dialogue* dialogue) {
 	if(!dialogue) {
-		std::cerr << "Error: GameWindow was asked to play a null dialogue."
+		std::cerr << "Error: GameScreen was asked to play a null dialogue."
 			<< std::endl;
 		return;
 	}
 	dialogueBox = std::make_unique<DialogueBox>(ren, dialogue);
 }
 
-signal_t GameWindow::MapScreen(Map* baseMap, int centerRow,
+void GameScreen::KeyPress(const SDL_Keycode key) {
+	signal_t keySig = HandleKeyPress(key);
+	switch(keySig/100){
+		//case SCREEN_CHANGE/100:
+			//return SCREEN_CHANGE;
+		case NEXT_TURN/100:
+			endTurnButton->Click();
+			break;
+			//return NEXT_TURN;
+		case QUIT/100:
+			quit = true;
+			break;
+		case SIG_GIVE_ORDER/100:
+			if(selected && selected->IsUnit()){
+				switch(keySig%100){
+					case ORDER_PATROL:
+						dynamic_cast<Unit*>(selected)->OrderPatrol();
+						break;
+					case ORDER_HARVEST:
+						dynamic_cast<Unit*>(selected)->OrderHarvest();
+						break;
+				}
+			}
+			break;
+		default:
+			break;
+	}
+}
+
+void GameScreen::LeftClick(const int x, const int y) {
+	SelectNew(x, y);
+}
+
+void GameScreen::RightClick(const int x, const int y) {
+	GFXObject* obj = ClickedObject(x, y);
+	Tile* clickedTile = dynamic_cast<Tile*>(obj);
+	if (selected->IsUnit() && clickedTile) {
+		/*std::cout << "This character will now attempt to "
+			"construct a Path to that Tile." << std::endl;*/
+		Unit* selectedUnit = dynamic_cast<Unit*>(selected);
+		selectedUnit->OrderMove(theMap->PathTo(
+				selectedUnit->Row(), selectedUnit->Colm(),
+				clickedTile->Row(), clickedTile->Colm(),
+				selectedUnit->MoveCosts()));
+	}
+	Unit* clickedUnit = dynamic_cast<Unit*>(obj);
+	if (clickedUnit && selected->IsUnit()) {
+		Unit* selectedUnit = dynamic_cast<Unit*>(selected);
+		selectedUnit->OrderMove(theMap->PathTo(
+				selectedUnit->Row(), selectedUnit->Colm(),
+				clickedUnit->Row(), clickedUnit->Colm(),
+				selectedUnit->MoveCosts()));
+	}
+}
+
+void GameScreen::MapScreen(Map* baseMap, int centerRow,
 		int centerColm){
 	theMap = baseMap;
 	MapScreenCenteredOn(centerRow, centerColm);
-
-	//Dialogue testDialogue("chapters/1/dialogues/1.txt");
-	/*testDialogue.AddCharacter("commander");
-	testDialogue.AddLine("@active=0@This is a test dialogue.");
-	testDialogue.AddLine("It contains three lines of varying lengths, intended "
-			"to test the robustness of the dialogue display system.");
-	testDialogue.AddLine("This is the third of those lines.");
-	std::vector<std::string> decOpts {"First option", "Second option", "Third option"};
-	std::vector<size_t> decJumps {0, 1, 2};
-
-	Dialogue::DecisionPoint decPt(1, decOpts, decJumps);
-	testDialogue.AddDecisionPoint(decPt);*/
-	//dialogueBox = std::make_unique<DialogueBox>(ren, &testDialogue);
-
-	SDL_Event e;
-	bool quit = false;
-	while(!quit){
-		while(SDL_PollEvent(&e)){
-			switch(e.type){
-				case SDL_QUIT:{
-					quit = true;
-					break;
-							  }
-				case SDL_KEYUP:{
-					signal_t keySig = HandleKeyPress(e.key.keysym.sym);
-					switch(keySig/100){
-						//case SCREEN_CHANGE/100:
-							//return SCREEN_CHANGE;
-						case NEXT_TURN/100:
-							endTurnButton->Click();
-							break;
-							//return NEXT_TURN;
-						case QUIT/100:
-							quit = true;
-							break;
-						case SIG_GIVE_ORDER/100:
-							if(selected && selected->IsUnit()){
-								switch(keySig%100){
-									case ORDER_PATROL:
-										dynamic_cast<Unit*>(selected)->OrderPatrol();
-										break;
-									case ORDER_HARVEST:
-										dynamic_cast<Unit*>(selected)->OrderHarvest();
-										break;
-								}
-							}
-							break;
-						default:
-							break;
-					}
-					break;
-							   }
-				case SDL_MOUSEBUTTONDOWN:{
-					if(e.button.button == SDL_BUTTON_LEFT){
-						SelectNew(e.button.x, e.button.y);
-					}
-					if(selected && e.button.button == SDL_BUTTON_RIGHT){
-						GFXObject* obj =
-							ClickedObject(e.button.x, e.button.y);
-						Tile* clickedTile = dynamic_cast<Tile*>(obj);
-						if(selected->IsUnit() && clickedTile){
-							/*std::cout << "This character will now attempt to "
-								"construct a Path to that Tile." << std::endl;*/
-							Unit* selectedUnit = dynamic_cast<Unit*>(selected);
-							selectedUnit->OrderMove(theMap->PathTo(
-									selectedUnit->Row(), selectedUnit->Colm(),
-									clickedTile->Row(), clickedTile->Colm(),
-									selectedUnit->MoveCosts()));
-						}
-						Unit* clickedUnit = dynamic_cast<Unit*>(obj);
-						if(clickedUnit && selected->IsUnit()){
-							Unit* selectedUnit = dynamic_cast<Unit*>(selected);
-							selectedUnit->OrderMove(theMap->PathTo(
-									selectedUnit->Row(), selectedUnit->Colm(),
-									clickedUnit->Row(), clickedUnit->Colm(),
-									selectedUnit->MoveCosts()));
-						}
-					}
-					break;
-										 }
-			}
-		}
-		theMap->CenterViewOn(viewCenterRow, viewCenterCol);
-		if(currentFocusColony && !newFocusColony){
-			BreakFocusOnColony();
-		}
-		if(newFocusColony && newFocusColony != currentFocusColony) FocusOnColony();
-		ClearOutOfBounds();
-		if(selected && selected->IsUnit()){
-			if(dynamic_cast<Unit*>(selected)->Dead()){
-				ClearSelected();
-			} else {
-			}
-		}
-		FillHoverText(e.button.x, e.button.y);
-		Render();
-	}
-	return QUIT;
 }
 
-void GameWindow::MapScreenCenteredOn(const int centerRow, const int centerColm){
+void GameScreen::MapScreenCenteredOn(const int centerRow, const int centerColm){
 	std::unique_ptr<UIElement> colonyBackground = 
 		std::make_unique<UIElement>(ren, COLONY_BACKGROUND, 0, 0);
 	ResetBackground(std::move(colonyBackground));
@@ -555,7 +509,7 @@ void GameWindow::MapScreenCenteredOn(const int centerRow, const int centerColm){
 
 // warning: this function moves all of the tiles to be centered on centerRow
 // and centerColm, regardless of where the view was before!
-void GameWindow::CenterMapTiles(const int centerRow, const int centerColm){
+void GameScreen::CenterMapTiles(const int centerRow, const int centerColm){
 	/*std::cout << "Constructing a Map centered on [" << centerRow << "," 
 		<< centerColm << "]." << std::endl;*/
 	for(unsigned int i = 0; i < theMap->NumberOfRows(); ++i){
@@ -575,7 +529,7 @@ void GameWindow::CenterMapTiles(const int centerRow, const int centerColm){
 	}
 }
 
-void GameWindow::AddMapTiles(){
+void GameScreen::AddMapTiles(){
 	for(unsigned int i = 0; i < theMap->NumberOfRows(); ++i){
 		for(unsigned int j = i%2; j < theMap->NumberOfColumns(); j+=2){
 			if(theMap->Terrain(i,j)->HasColony()){
@@ -592,13 +546,13 @@ void GameWindow::AddMapTiles(){
 	}
 }
 
-void GameWindow::MakeInfoPanel(const GFXObject* source){
+void GameScreen::MakeInfoPanel(const GFXObject* source){
 	if(!(source && source->IsUnit())) return;
 	AddTopLevelUI(std::make_shared<UnitInfoPanel>(ren, 
 				dynamic_cast<const Unit*>(source)));
 }
 
-void GameWindow::SwapInfoPanel(const GFXObject* source){
+void GameScreen::SwapInfoPanel(const GFXObject* source){
 	if(!(source && source->IsUnit())) return;
 	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
 		if(std::dynamic_pointer_cast<UnitInfoPanel>(topLevelUI[i])){
@@ -608,7 +562,7 @@ void GameWindow::SwapInfoPanel(const GFXObject* source){
 	}
 }
 
-void GameWindow::UpdateInfoPanel(const GFXObject* source){
+void GameScreen::UpdateInfoPanel(const GFXObject* source){
 	if(!(source && source->IsUnit())) return;
 	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
 		if(std::dynamic_pointer_cast<UnitInfoPanel>(topLevelUI[i])){
@@ -618,7 +572,7 @@ void GameWindow::UpdateInfoPanel(const GFXObject* source){
 	}
 }
 
-void GameWindow::RemoveInfoPanel(){
+void GameScreen::RemoveInfoPanel(){
 	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
 		if(std::dynamic_pointer_cast<UnitInfoPanel>(topLevelUI[i])){
 			topLevelUI.erase(topLevelUI.begin() + i);
@@ -626,7 +580,7 @@ void GameWindow::RemoveInfoPanel(){
 	}
 }
 
-void GameWindow::MakeOrderPanel(GFXObject* source){
+void GameScreen::MakeOrderPanel(GFXObject* source){
 	if(!(source && source->IsUnit())) return;
 	auto panel = std::make_unique<UnitOrderPanel>(ren, 
 			dynamic_cast<Unit*>(source));
@@ -637,7 +591,7 @@ void GameWindow::MakeOrderPanel(GFXObject* source){
 }
 
 // need Build Colony button handed over from Map
-void GameWindow::SwapOrderPanel(GFXObject* source){
+void GameScreen::SwapOrderPanel(GFXObject* source){
 	if(!(source && source->IsUnit())) return;
 	for(unsigned int i = 0; i < UI.size(); ++i){
 		if(dynamic_cast<UnitOrderPanel*>(UI[i].get())){
@@ -651,7 +605,7 @@ void GameWindow::SwapOrderPanel(GFXObject* source){
 	}
 }
 
-void GameWindow::RemoveOrderPanel(){
+void GameScreen::RemoveOrderPanel(){
 	for(unsigned int i = 0; i < UI.size(); ++i){
 		if(dynamic_cast<UnitOrderPanel*>(UI[i].get())){
 			UI.erase(UI.begin() + i);

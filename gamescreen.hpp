@@ -1,5 +1,5 @@
-#ifndef GAMEWINDOW_HPP
-#define GAMEWINDOW_HPP
+#ifndef GAMESCREEN_HPP
+#define GAMESCREEN_HPP
 
 #include <string>
 #include <vector>
@@ -8,10 +8,13 @@
 #include <memory>     // std::shared_ptr, std::unique_ptr
 #include <typeinfo>
 #include <functional> // std::function, std::bind
+
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
+
 #include "gamevars.hpp"
+#include "screen.hpp"
 #include "gfxobject.hpp"
 #include "ui.hpp"
 #include "unit.hpp"
@@ -21,10 +24,12 @@
 #include "map.hpp"
 #include "dialogue.hpp"
 
-class GameWindow {
+// this is currently set to be owned by an instance of Game, but I think it 
+// should actually be the other way, and we should spawn a Game when a 
+// GameScreen is constructed.
+
+class GameScreen : public Screen {
 	protected:
-		SDL_Window* win;
-		SDL_Renderer* ren;
 		Map* theMap = nullptr;
 		int playerNumber;
 
@@ -52,7 +57,7 @@ class GameWindow {
 			return false;
 		}
 
-		// GameWindow owns the pure UI stuff; the others are pointers to
+		// GameScreen owns the pure UI stuff; the others are pointers to
 		// objects owned by someone else, e.g. Map owns Tiles, Game owns Units
 		std::vector<std::shared_ptr<UIAggregate>> topLevelUI;
 		std::vector<std::unique_ptr<GFXObject>> UI;
@@ -88,18 +93,20 @@ class GameWindow {
 		void ClickUnit(Unit* clickedUnit);
 
 	public:
-		GameWindow() = delete;
-		explicit GameWindow(const std::string& title, const int x, const int y,
-			const int w, const int h);
-		~GameWindow();
+		explicit GameScreen(SDL_Renderer* ren);
+		~GameScreen() = default;
 
-		GameWindow(const GameWindow& other) = delete;
-//		GameWindow(GameWindow&& other);
-		GameWindow& operator=(const GameWindow other) = delete;
+		//GameScreen(const GameScreen& other) = delete;
+		//GameScreen(GameScreen&& other);
+		//GameScreen& operator=(const GameScreen other) = delete;
 
 		void AddEndTurnButton(std::unique_ptr<Button> newButton);
 		void Clean();
 		void Render();
+
+		void KeyPress(const SDL_Keycode key);
+		void LeftClick(const int x, const int y);
+		void RightClick(const int x, const int y);
 
 		SDL_Renderer* Renderer() const;
 		GFXObject* Object(const int num);
@@ -137,7 +144,7 @@ class GameWindow {
 
 		// Map screen ---------------------------------------------------------
 
-		signal_t MapScreen(Map* baseMap, int centerRow,
+		void MapScreen(Map* baseMap, int centerRow,
 				int centerColm);
 
 		void MapScreenCenteredOn(const int centerRow, const int centerColm);

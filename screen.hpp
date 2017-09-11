@@ -3,9 +3,14 @@
 
 #include <SDL.h>
 
+enum ScreenID { SAME_SCREEN, MENU_SCREEN, GAME_SCREEN };
+
 class Screen {
 	public:
+		SDL_Renderer* ren;
+
 		bool quit = false;
+		ScreenID wantScreen = SAME_SCREEN;
 
 		virtual void KeyPress(const SDL_Keycode) {}
 		virtual void LeftClick(const int, const int) {}

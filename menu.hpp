@@ -18,8 +18,6 @@
 // I feel like this and GameWindow should be implemented as inheriting from
 // a generic Window class, but I don't care enough to actually do it yet.
 class Menu : public Screen {
-	SDL_Renderer* ren;
-
 	std::vector<std::unique_ptr<UIElement>> background;
 	std::vector<std::unique_ptr<Button>> buttons;
 
@@ -39,8 +37,6 @@ class Menu : public Screen {
 
 	public:
 		Menu(SDL_Renderer* ren);
-
-		void InputLoop();
 
 		void Render();
 

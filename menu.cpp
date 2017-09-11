@@ -14,7 +14,8 @@ namespace {
 	constexpr int QUIT_BUTTON_Y = 500;
 } // anonymous namespace
 
-Menu::Menu(SDL_Renderer* ren): ren(ren) {
+Menu::Menu(SDL_Renderer* ren) {
+	this->ren = ren;
 	SetBackground(MENU_BACKGROUND);
 	PopulateButtons();
 	Audio::Play(MENU_BGM, -1);
@@ -70,7 +71,7 @@ void Menu::Render() {
 }
 
 void Menu::StartGame() {
-	std::cout << "A game would start now if it were hooked up." << std::endl;
+	wantScreen = GAME_SCREEN;
 }
 
 std::function<void()> Menu::StartBtnFunc(Menu* menuPtr) {

@@ -24,7 +24,7 @@ Window::Window(const std::string& title, const int x, const int y,
 	}
 	++numberOfWindows;
 
-	MenuScreen();
+	SwitchToMenuScreen();
 }
 
 Window::~Window() {
@@ -69,6 +69,8 @@ void Window::QuitSDL(){
 void Window::InputLoop() {
 	SDL_Event event;
 	while(!quit && !(screen && screen->quit)){
+		ChangeScreenIfNeeded();
+
 		while(SDL_PollEvent(&event)){
 			ProcessEvent(event);
 		}
@@ -130,15 +132,36 @@ void Window::Render() {
 	SDL_RenderPresent(ren);
 }
 
-void Window::MenuScreen() {
+void Window::ChangeScreenIfNeeded() {
+	if (screen) {
+		switch (screen->wantScreen) {
+			case SAME_SCREEN: {
+								  return;
+							  }
+			case MENU_SCREEN: {
+								  SwitchToMenuScreen();
+								  return;
+							  }
+			case GAME_SCREEN: {
+								  SwitchToGameScreen();
+								  return;
+							  }
+		}
+	}
+}
+
+void Window::SwitchToMenuScreen() {
 	screen = std::make_unique<Menu>(ren);
 }
 
-void Window::OptionScreen() {
+void Window::SwitchToOptionScreen() {
 }
 
-void Window::CampaignScreen() {
+void Window::SwitchToCampaignScreen() {
 }
 
-void Window::GameScreen() {
+void Window::SwitchToGameScreen() {
+	screen = std::make_unique<GameScreen>(ren);
+	game = std::make_unique<Game>(dynamic_cast<GameScreen*>(screen.get()));
+	game->Begin();
 }

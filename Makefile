@@ -7,11 +7,11 @@ CXXFLAGS = -Wall -Wextra -pedantic -g -c -std=c++14 $(SDL_INCLUDE)
 LDFLAGS = $(SDL_LIB) -lboost_system -lboost_filesystem
 EXECUTABLE = TerraNova
 
-SOURCES = main.cpp unit.cpp colony.cpp map.cpp game.cpp gamewindow.cpp \
+SOURCES = main.cpp unit.cpp colony.cpp map.cpp game.cpp gamescreen.cpp \
 		  sprite.cpp gfxobject.cpp ui.cpp tile.cpp building.cpp path.cpp \
 		  dialogue.cpp ai.cpp random.cpp file.cpp event.cpp menu.cpp \
 		  window.cpp audio.cpp
-OBJECTS = main.o unit.o colony.o map.o game.o gamewindow.o sprite.o \
+OBJECTS = main.o unit.o colony.o map.o game.o gamescreen.o sprite.o \
 		  gfxobject.o ui.o tile.o building.o path.o dialogue.o ai.o random.o \
 		  file.o event.o menu.o window.o audio.o
 
@@ -34,17 +34,17 @@ map.o: map.cpp map.hpp templates.hpp gamevars.hpp tile.hpp path.hpp random.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 game.o: game.cpp game.hpp templates.hpp exceptions.hpp unit.hpp building.hpp \
-		colony.hpp map.hpp gamewindow.hpp gamevars.hpp ai.hpp
+		colony.hpp map.hpp gamescreen.hpp gamevars.hpp ai.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-gamewindow.o: gamewindow.cpp gamewindow.hpp gfxobject.hpp ui.hpp unit.hpp \
+gamescreen.o: gamescreen.cpp gamescreen.hpp gfxobject.hpp ui.hpp unit.hpp \
 		building.hpp tile.hpp colony.hpp map.hpp gamevars.hpp dialogue.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 sprite.o: sprite.cpp sprite.hpp templates.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-gfxobject.o: gfxobject.cpp gfxobject.hpp sprite.hpp gamewindow.hpp gamevars.hpp
+gfxobject.o: gfxobject.cpp gfxobject.hpp sprite.hpp gamescreen.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 ui.o: ui.cpp ui.hpp gfxobject.hpp gamevars.hpp unit.hpp

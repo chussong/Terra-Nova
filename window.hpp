@@ -13,6 +13,8 @@
 #include "audio.hpp"
 #include "screen.hpp"
 #include "menu.hpp"
+#include "gamescreen.hpp"
+#include "game.hpp" // want to let gamescreen handle this
 
 class Window {
 	SDL_Renderer* ren;
@@ -20,6 +22,7 @@ class Window {
 	SDL_AudioSpec audioSpec;
 
 	std::unique_ptr<Screen> screen;
+	std::unique_ptr<Game> game; // want to delegate this to gamescreens
 
 	bool quit = false;
 
@@ -28,8 +31,6 @@ class Window {
 	void ProcessEvent(const SDL_Event& event);
 	void ProcessKeyPress(const SDL_Event& event);
 	void ProcessMouseClick(const SDL_Event& event);
-
-	void StartGame();
 
 	static int numberOfWindows;
 	static bool InitSDL();
@@ -47,10 +48,11 @@ class Window {
 
 		void Render();
 
-		void MenuScreen();
-		void OptionScreen();
-		void CampaignScreen();
-		void GameScreen();
+		void ChangeScreenIfNeeded();
+		void SwitchToMenuScreen();
+		void SwitchToOptionScreen();
+		void SwitchToCampaignScreen();
+		void SwitchToGameScreen();
 
 		~Window();
 };

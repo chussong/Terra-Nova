@@ -20,12 +20,16 @@ namespace Audio {
 	bool Initialize();
 	void Deactivate();
 
-	void Play(const std::string& filename, const int loops = 0);
-	void Load(const std::string& filename);
+	void PlayMusic(const std::string& filename);
+	Mix_Music* LoadMusic(const std::string& filename);
+	void TurnOffMusic();
+	void FreeMusic();
+	void ReplaceMusic(Mix_Music* newMusic);
+	void ReplaceMusicCallback();
+	void PlaySound(const std::string& filename, const int loops = 0);
+	Mix_Chunk* LoadSound(const std::string& filename);
 	void Pause();
 	void Resume(const int loops = 0);
-
-	void FreeIfStopped();
 };
 
 #endif

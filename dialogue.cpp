@@ -201,7 +201,10 @@ const std::vector<std::string>& Dialogue::Characters() const{
 DialogueBox::DialogueBox(SDL_Renderer* ren, Dialogue* dialogue):
 	UIElement(ren, "dialogue_box_background", DIALOGUE_BOX_X,
 			DIALOGUE_BOX_Y), 
-	advanceArrow(ren, "dialogue_box_arrow", 
+	backstepArrow(ren, "dialogue_box_back_arrow", 
+			DIALOGUE_BOX_X + 8*DIALOGUE_BOX_WIDTH/10,
+			DIALOGUE_BOX_Y + 7*DIALOGUE_BOX_HEIGHT/10),
+	advanceArrow(ren, "dialogue_box_forward_arrow", 
 			DIALOGUE_BOX_X + 9*DIALOGUE_BOX_WIDTH/10,
 			DIALOGUE_BOX_Y + 7*DIALOGUE_BOX_HEIGHT/10),
 	closeBox(ren, "dialogue_box_close",
@@ -236,7 +239,7 @@ void DialogueBox::SetDialogue(Dialogue* newDialogue){
 	Advance();
 }
 
-// return true if the dialogue is over the box should be closed
+// return true if the dialogue is over so the box should be closed
 bool DialogueBox::Advance(){
 	if(currentDecision){
 		DisplayDecision();
@@ -253,6 +256,13 @@ bool DialogueBox::Advance(){
 		//<< "decision: " << currentDecision << std::endl;
 	DisplayLine();
 	return false;
+}
+
+void DialogueBox::Backstep() {
+	if(!CanBackstep()) return;
+	currentLineNumber -= 1;
+	currentLine = LoadLine();
+	DisplayLine();
 }
 
 void DialogueBox::DisplayLine(){
@@ -338,8 +348,12 @@ const std::string& DialogueBox::CurrentLine() const{
 	return currentLine;
 }
 
-bool DialogueBox::CanAdvance() const{
+bool DialogueBox::CanAdvance() const {
 	return !endAfterCurrentLine && !makingDecision;
+}
+
+bool DialogueBox::CanBackstep() const {
+	return currentLineNumber != backstopLineNumber;
 }
 
 void DialogueBox::DisplayDecision(){
@@ -375,6 +389,7 @@ bool DialogueBox::MakeDecision(const unsigned int n){
 			<< "address: " << currentLineNumber << " out of " << dialogue->Length()
 			<< "." << std::endl;
 	}
+	backstopLineNumber = currentLineNumber;
 	currentDecision = nullptr;
 	currentLine = LoadLine();
 	DisplayLine();
@@ -387,5 +402,6 @@ void DialogueBox::Render() const{
 	UIElement::Render();
 	if(speakerName) speakerName->Render();
 	if(CanAdvance()) advanceArrow.Render();
+	if(CanBackstep()) backstepArrow.Render();
 	if(endAfterCurrentLine) closeBox.Render();
 }

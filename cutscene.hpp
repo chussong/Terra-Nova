@@ -1,5 +1,5 @@
-#ifndef MENU_HPP
-#define MENU_HPP
+#ifndef CUTSCENE_HPP
+#define CUTSCENE_HPP
 
 #include <vector>
 #include <string>
@@ -14,25 +14,25 @@
 #include "sprite.hpp"
 #include "ui.hpp"
 #include "audio.hpp"
+#include "dialogue.hpp"
 
-class Menu : public Screen {
+class CutsceneScreen : public Screen {
 	std::vector<std::unique_ptr<UIElement>> background;
-	std::vector<std::unique_ptr<Button>> buttons;
+	std::unique_ptr<Dialogue> dialogue;
+	std::unique_ptr<DialogueBox> dialogueBox;
+
+	ScreenID nextScreen;
 
 	void SetBackground(const std::string& filename);
-	void PopulateButtons();
 
 	void Click(const int x, const int y);
 
-	void PlayCutscene();
-	static std::function<void()> CutsceneBtnFunc(Menu* menuPtr);
-	void StartGame();
-	static std::function<void()> StartBtnFunc(Menu* menuPtr);
-	void Quit();
-	static std::function<void()> QuitBtnFunc(Menu* menuPtr);
+	void AdvanceDialogue();
+	void BackstepDialogue();
+	void ScreenHandoff();
 
 	public:
-		Menu(SDL_Renderer* ren);
+		CutsceneScreen(SDL_Renderer* ren);
 
 		void Render();
 
@@ -40,7 +40,7 @@ class Menu : public Screen {
 		void LeftClick(const int x, const int y);
 		void RightClick(const int x, const int y);
 
-		~Menu();
+		~CutsceneScreen();
 };
 
 #endif

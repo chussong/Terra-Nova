@@ -5,6 +5,10 @@ namespace {
 
 	const std::string MENU_BGM = "menu_bgm.ogg";
 
+	const std::string PLAY_SCENE_BUTTON_NAME = "play_movie_button";
+	constexpr int PLAY_SCENE_BUTTON_X = 300;
+	constexpr int PLAY_SCENE_BUTTON_Y = 100;
+
 	const std::string START_GAME_BUTTON_NAME = "start_game_button";
 	constexpr int START_GAME_BUTTON_X = 300;
 	constexpr int START_GAME_BUTTON_Y = 300;
@@ -18,7 +22,7 @@ Menu::Menu(SDL_Renderer* ren) {
 	this->ren = ren;
 	SetBackground(MENU_BACKGROUND);
 	PopulateButtons();
-	Audio::Play(MENU_BGM, -1);
+	Audio::PlayMusic(MENU_BGM);
 	//std::cout << "Menu screen constructed with renderer at " << ren << "." 
 		//<< std::endl;
 }
@@ -34,6 +38,8 @@ void Menu::SetBackground(const std::string& filename) {
 
 void Menu::PopulateButtons() {
 	buttons.clear();
+	buttons.push_back(std::make_unique<Button>(ren, PLAY_SCENE_BUTTON_NAME,
+				PLAY_SCENE_BUTTON_X, PLAY_SCENE_BUTTON_Y, CutsceneBtnFunc(this)));
 	buttons.push_back(std::make_unique<Button>(ren, START_GAME_BUTTON_NAME,
 				START_GAME_BUTTON_X, START_GAME_BUTTON_Y, StartBtnFunc(this)));
 	buttons.push_back(std::make_unique<Button>(ren, QUIT_BUTTON_NAME,
@@ -68,6 +74,14 @@ void Menu::Render() {
 		//<< std::endl;
 	for (auto& bg : background) bg->Render();
 	for (auto& button : buttons) button->Render();
+}
+
+void Menu::PlayCutscene() {
+	wantScreen = CUTSCENE_SCREEN;
+}
+
+std::function<void()> Menu::CutsceneBtnFunc(Menu* menuPtr) {
+	return std::bind(&Menu::PlayCutscene, menuPtr);
 }
 
 void Menu::StartGame() {

@@ -14,6 +14,7 @@
 #include "screen.hpp"
 #include "menu.hpp"
 #include "gamescreen.hpp"
+#include "cutscene.hpp"
 #include "game.hpp" // want to let gamescreen handle this
 
 class Window {
@@ -53,6 +54,7 @@ class Window {
 		void SwitchToOptionScreen();
 		void SwitchToCampaignScreen();
 		void SwitchToGameScreen();
+		void SwitchToCutsceneScreen();
 
 		~Window();
 };

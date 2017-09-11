@@ -3,7 +3,7 @@
 
 #include <SDL.h>
 
-enum ScreenID { SAME_SCREEN, MENU_SCREEN, GAME_SCREEN };
+enum ScreenID { SAME_SCREEN, MENU_SCREEN, GAME_SCREEN, CUTSCENE_SCREEN };
 
 class Screen {
 	public:

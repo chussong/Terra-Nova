@@ -119,6 +119,8 @@ class DialogueBox : public UIElement {
 
 	Dialogue* dialogue = nullptr;
 	size_t currentLineNumber = 0;
+	size_t backstopLineNumber = 0;
+	UIElement backstepArrow;
 	UIElement advanceArrow;
 	UIElement closeBox;
 
@@ -135,10 +137,12 @@ class DialogueBox : public UIElement {
 
 		void SetDialogue(Dialogue* newDialogue);
 		bool Advance();
+		void Backstep();
 		void DisplayLine();
 		const std::string& CurrentLine() const;
 
 		bool CanAdvance() const;
+		bool CanBackstep() const;
 		void DisplayDecision();
 		bool MakeDecision(const unsigned int n);
 

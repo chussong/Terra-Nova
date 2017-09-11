@@ -41,11 +41,11 @@ std::vector<std::string> ReadFromFullPath(const fs::path& fullPath){
 }
 
 std::vector<std::string> Read(const std::string& relativePath){
-	return ReadFromFullPath(basePath.append(relativePath));
+	return ReadFromFullPath(basePath / relativePath);
 }
 
 std::vector<std::vector<std::string>> ReadAll(const std::string& relativePath) {
-	fs::path path = basePath.append(relativePath);
+	fs::path path = basePath / relativePath;
 	std::vector<std::vector<std::string>> ret;
 
 	for(auto& file : fs::directory_iterator(path)) {

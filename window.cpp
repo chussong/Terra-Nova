@@ -75,7 +75,6 @@ void Window::InputLoop() {
 			ProcessEvent(event);
 		}
 		Render();
-		//Audio::FreeIfStopped(); // not sure that this is necessary
 		SDL_Delay(17); // should really measure how long the other stuff takes
 	}
 }
@@ -135,17 +134,21 @@ void Window::Render() {
 void Window::ChangeScreenIfNeeded() {
 	if (screen) {
 		switch (screen->wantScreen) {
-			case SAME_SCREEN: {
-								  return;
-							  }
-			case MENU_SCREEN: {
-								  SwitchToMenuScreen();
-								  return;
-							  }
-			case GAME_SCREEN: {
-								  SwitchToGameScreen();
-								  return;
-							  }
+			case SAME_SCREEN: 	  {
+								  	  return;
+							  	  }
+			case MENU_SCREEN: 	  {
+								  	  SwitchToMenuScreen();
+								  	  return;
+							  	  }
+			case GAME_SCREEN: 	  {
+								  	  SwitchToGameScreen();
+									  return;
+								  }
+			case CUTSCENE_SCREEN: {
+									  SwitchToCutsceneScreen();
+									  return;
+								  }
 		}
 	}
 }
@@ -164,4 +167,8 @@ void Window::SwitchToGameScreen() {
 	screen = std::make_unique<GameScreen>(ren);
 	game = std::make_unique<Game>(dynamic_cast<GameScreen*>(screen.get()));
 	game->Begin();
+}
+
+void Window::SwitchToCutsceneScreen() {
+	screen = std::make_unique<CutsceneScreen>(ren);
 }

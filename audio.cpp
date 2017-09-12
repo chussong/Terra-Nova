@@ -54,7 +54,8 @@ void PlayMusic(const std::string& filename) {
 
 // load and return a pointer to music, *not* other sounds!
 Mix_Music* LoadMusic(const std::string& filename) {
-	Mix_Music* loadedMusic = Mix_LoadMUS(File::AbsolutePath(filename).c_str());
+	Mix_Music* loadedMusic = Mix_LoadMUS(File::AbsolutePath(
+				"music/" + filename + ".ogg").c_str());
 
 	if (loadedMusic == nullptr) {
 		std::cerr << "Error: failed to loud music file at " << filename

@@ -1,6 +1,6 @@
 % characters present at the start of the dialogue
 [Characters]
-commander
+commander: Lin
 
 [Lines]
 -@hook=first@@active=0@This is a test dialogue.@decision=dec_pt1@

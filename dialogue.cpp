@@ -2,7 +2,7 @@
 
 Dialogue::Dialogue(const std::string& filePath){
 	std::vector<std::string> file = File::Read(filePath);
-	characters = File::GetSection(file, "Characters");
+	characters = ParseCharacters(File::GetSection(file, "Characters"));
 	lines = ParseLines(File::GetSection(file, "Lines"));
 	hooks = ExtractHooks(lines);
 	decisionPoints = ParseDecisions(File::GetSection(file, "Decisions"), hooks);
@@ -10,10 +10,51 @@ Dialogue::Dialogue(const std::string& filePath){
 
 Dialogue::Dialogue(const File::fs::path& filePath) {
 	std::vector<std::string> file = File::ReadFromFullPath(filePath);
-	characters = File::GetSection(file, "Characters");
+	characters = ParseCharacters(File::GetSection(file, "Characters"));
 	lines = ParseLines(File::GetSection(file, "Lines"));
 	hooks = ExtractHooks(lines);
 	decisionPoints = ParseDecisions(File::GetSection(file, "Decisions"), hooks);
+}
+
+Dialogue::~Dialogue() {
+	//std::cout << "Destroying a dialogue. Here are its data fields:"<< std::endl;
+	//std::cout << "characters: size " << characters.size() << std::endl;
+	//std::cout << "lines: size " << lines.size() << std::endl;
+	//std::cout << "decisionPoints: size " << decisionPoints.size() << std::endl;
+	//std::cout << "hooks: size " << hooks.size() << std::endl;
+}
+
+std::vector<Dialogue::Character> Dialogue::ParseCharacters(
+		const std::vector<std::string>& source) {
+	std::vector<Dialogue::Character> ret;
+	for (auto line : source) {
+		bool showAtStart;
+		if (line.front() == '(' && line.back() == ')') {
+			showAtStart = false;
+			line.erase(line.end()-1);
+			line.erase(line.begin());
+		} else {
+			showAtStart = true;
+		}
+
+		std::string spriteName, displayName;
+		if (line.find(':') == std::string::npos) {
+			spriteName = boost::trim_copy(line);
+			displayName = spriteName;
+		} else {
+			std::vector<std::string> halves;
+			boost::split(halves, line, boost::is_any_of(":"));
+			if (halves.size() != 2) {
+				std::cerr << "Error: attempted to split this line by colons: <<"
+					<< line << ">> but it did not return 2 results." 
+					<< std::endl;
+			}
+			spriteName = boost::trim_copy(halves.front());
+			displayName = boost::trim_copy(halves.back());
+		}
+		ret.emplace_back(spriteName, displayName, showAtStart);
+	}
+	return ret;
 }
 
 std::vector<std::string> Dialogue::ParseLines(
@@ -190,11 +231,16 @@ const Dialogue::DecisionPoint* Dialogue::DecisionNamed(const std::string& name) 
 	return nullptr;
 }
 
-void Dialogue::AddCharacter(const std::string& name){
-	characters.push_back(name);
+/*void Dialogue::AddCharacter(const std::string& spriteName, 
+		const std::string& displayName, const bool showAtStart) {
+	characters.emplace_back(spriteName, displayName, showAtStart);
 }
 
-const std::vector<std::string>& Dialogue::Characters() const{
+void Dialogue::AddCharacter(const Character& toAdd) {
+	characters.push_back(toAdd);
+}*/
+
+const std::vector<Dialogue::Character>& Dialogue::Characters() const{
 	return characters;
 }
 
@@ -222,8 +268,14 @@ void DialogueBox::SetDialogue(Dialogue* newDialogue){
 	dialogue = newDialogue;
 	portraits.clear();
 	int position = 0;
-	for(auto& charName : dialogue->Characters()){
-		portraits.emplace_back(ren, charName, position);
+	for(auto& character : dialogue->Characters()){
+		if (character.showAtStart) {
+			portraits.push_back(std::make_unique<DialoguePortrait>(ren, 
+						character.spriteName, character.displayName, position));
+		} else {
+			portraitsForLater.push_back(std::make_unique<DialoguePortrait>(ren, 
+						character.spriteName, character.displayName, position));
+		}
 		switch(position){
 			case 0: position = 3;
 					break;
@@ -261,6 +313,7 @@ bool DialogueBox::Advance(){
 void DialogueBox::Backstep() {
 	if(!CanBackstep()) return;
 	currentLineNumber -= 1;
+	endAfterCurrentLine = false;
 	currentLine = LoadLine();
 	DisplayLine();
 }
@@ -286,6 +339,20 @@ void DialogueBox::DisplayLine(){
 	AddText(displayLine, boundingBox, dialogueFont);
 }
 
+void DialogueBox::ShowCharacter(const std::string& characterName) {
+	for (auto it = portraitsForLater.begin(); it != portraitsForLater.end();
+			++it) {
+		if ((*it)->Name() == characterName) {
+			portraits.push_back(std::move(*it));
+			portraitsForLater.erase(it);
+			return;
+		}
+	}
+	std::cerr << "Error: asked to show a character named " << characterName
+		<< " but could not find it among the following portraits:" << std::endl;
+	for (auto& p : portraitsForLater) std::cerr << p->Name() << std::endl;
+}
+
 void DialogueBox::ActivateSpeaker(const size_t speakerNumber){
 	currentSpeaker = speakerNumber;
 	speakerName = std::make_unique<UIElement>(ren, "dialogue_speaker_name",
@@ -295,7 +362,7 @@ void DialogueBox::ActivateSpeaker(const size_t speakerNumber){
 	boundingBox.y = layout.h/10;
 	boundingBox.w = layout.w/5;
 	boundingBox.h = layout.w/5;
-	speakerName->AddText(portraits[currentSpeaker].Name(), boundingBox,
+	speakerName->AddText(portraits[currentSpeaker]->Name(), boundingBox,
 			dialogueFont);
 }
 
@@ -340,6 +407,18 @@ void DialogueBox::ParseCommand(const std::string& command){
 	}
 	if(command.compare(0, 5, "@end@") == 0){
 		endAfterCurrentLine = true;
+		return;
+	}
+	if (command.compare(0, 7, "@cs:bg=") == 0) {
+		backgroundName = command.substr(7, command.length()-8);
+		return;
+	}
+	if (command.compare(0, 5, "@bgm=") == 0) {
+		bgmName = command.substr(5, command.length()-6);
+		return;
+	}
+	if (command.compare(0, 9, "@addchar=") == 0) {
+		ShowCharacter(command.substr(9, command.length()-10));
 		return;
 	}
 }
@@ -398,7 +477,7 @@ bool DialogueBox::MakeDecision(const unsigned int n){
 }
 
 void DialogueBox::Render() const{
-	for(auto& portrait : portraits) portrait.Render();
+	for(auto& portrait : portraits) portrait->Render();
 	UIElement::Render();
 	if(speakerName) speakerName->Render();
 	if(CanAdvance()) advanceArrow.Render();

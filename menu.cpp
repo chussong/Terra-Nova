@@ -3,7 +3,7 @@
 namespace {
 	const std::string MENU_BACKGROUND = "space-colony";
 
-	const std::string MENU_BGM = "menu_bgm.ogg";
+	const std::string MENU_BGM = "menu_bgm";
 
 	const std::string PLAY_SCENE_BUTTON_NAME = "play_movie_button";
 	constexpr int PLAY_SCENE_BUTTON_X = 300;
@@ -32,7 +32,8 @@ Menu::~Menu() {
 
 void Menu::SetBackground(const std::string& filename) {
 	background.clear();
-	background.push_back(std::make_unique<UIElement>(ren, filename, 0, 0));
+	background.push_back(std::make_unique<UIElement>(ren, 
+				"backgrounds/" + filename, 0, 0));
 	//std::cout << "Menu screen background set." << std::endl;
 }
 

@@ -1,5 +1,5 @@
 [Characters]
-commander
+commander: Lin
 
 [Lines]
 -This "dialogue" should play when a unit enters one of the designated spaces.

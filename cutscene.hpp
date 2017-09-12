@@ -31,6 +31,9 @@ class CutsceneScreen : public Screen {
 	void BackstepDialogue();
 	void ScreenHandoff();
 
+	std::string backgroundName;
+	std::string bgmName;
+
 	public:
 		CutsceneScreen(SDL_Renderer* ren);
 

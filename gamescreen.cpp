@@ -206,6 +206,9 @@ signal_t GameScreen::HandleKeyPress(SDL_Keycode key){
 			case SDLK_RETURN:
 				if(dialogueBox->Advance()) dialogueBox.reset();
 				return NOTHING;
+			case SDLK_LEFT:
+				dialogueBox->Backstep();
+				return NOTHING;
 			default:
 				break;
 		}
@@ -486,7 +489,7 @@ void GameScreen::MapScreen(Map* baseMap, int centerRow,
 
 void GameScreen::MapScreenCenteredOn(const int centerRow, const int centerColm){
 	std::unique_ptr<UIElement> colonyBackground = 
-		std::make_unique<UIElement>(ren, COLONY_BACKGROUND, 0, 0);
+		std::make_unique<UIElement>(ren, "backgrounds/" + COLONY_BACKGROUND, 0, 0);
 	ResetBackground(std::move(colonyBackground));
 
 	ResetObjects();

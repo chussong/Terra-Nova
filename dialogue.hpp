@@ -5,6 +5,7 @@
 #include <string>
 #include <regex>
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include "ui.hpp"
 #include "unit.hpp"
@@ -42,12 +43,24 @@ class Dialogue {
 				lineNumber(lineNumber) {}
 		};
 
+		struct Character {
+			std::string spriteName;
+			std::string displayName;
+			bool showAtStart;
+
+			Character(std::string spriteName, std::string displayName,
+					bool showAtStart): spriteName(spriteName),
+				displayName(displayName), showAtStart(showAtStart) {}
+		};
+
 	private:
-		std::vector<std::string> characters;
+		std::vector<Character> characters;
 		std::vector<std::string> lines;
 		std::vector<DecisionPoint> decisionPoints;
 		std::vector<Hook> hooks;
 
+		static std::vector<Character> ParseCharacters(
+				const std::vector<std::string>& source);
 		static std::vector<std::string> ParseLines(
 				const std::vector<std::string>& source);
 		static std::vector<Hook> ExtractHooks(std::vector<std::string>& lines);
@@ -61,6 +74,7 @@ class Dialogue {
 		Dialogue() = default;
 		explicit Dialogue(const std::string& filePath);
 		explicit Dialogue(const File::fs::path& filePath);
+		~Dialogue();
 
 		void AddLine(std::string line);
 		void AddDecisionPoint(DecisionPoint dp);
@@ -70,8 +84,10 @@ class Dialogue {
 		const DecisionPoint* DecisionNamed(const std::string& name) const;
 		bool JumpTo(const size_t destLine);
 
-		void AddCharacter(const std::string& name);
-		const std::vector<std::string>& Characters() const;
+		/*void AddCharacter(const std::string& spriteName, 
+				const std::string& displayName, const bool showAtStart);
+		void AddCharacter(const Character& toAdd);*/
+		const std::vector<Character>& Characters() const;
 };
 
 // note: portraits can be mirrored by retooling their Render() to use
@@ -104,51 +120,71 @@ class DialoguePortrait : public GFXObject {
 	std::string name = "CHARACTER_NAME";
 
 	public:
-		DialoguePortrait(SDL_Renderer* ren, const std::string& name, 
-				const int position): GFXObject(ren, "units/" + name + "/dialogue",
+		DialoguePortrait(SDL_Renderer* ren, const std::string& spriteName, 
+				const std::string& displayName, const int position): 
+			GFXObject(ren, "units/" + spriteName + "/dialogue",
 					DialoguePortraitX(position), DialoguePortraitY(position)),
-				name(name) {layout.w = 280; layout.h = 400;}
+				name(displayName) {layout.w = 280; layout.h = 400;}
 
 		const std::string& Name() const { return name; }
 };
 
 class DialogueBox : public UIElement {
-	std::vector<DialoguePortrait> portraits;
-	size_t currentSpeaker = 0;
-	std::unique_ptr<UIElement> speakerName = nullptr;
+	public:
+		struct CutsceneFlag {
+			enum FlagType { CHANGE_MUSIC, CHANGE_BACKGROUND };
+			size_t lineNumber;
+			FlagType type;
+			std::string newValue;
+		};
 
-	Dialogue* dialogue = nullptr;
-	size_t currentLineNumber = 0;
-	size_t backstopLineNumber = 0;
-	UIElement backstepArrow;
-	UIElement advanceArrow;
-	UIElement closeBox;
+	private:
+		std::vector<std::unique_ptr<DialoguePortrait>> portraits;
+		std::vector<std::unique_ptr<DialoguePortrait>> portraitsForLater;
+		size_t currentSpeaker = 0;
+		std::unique_ptr<UIElement> speakerName = nullptr;
 
-	std::string currentLine = "";
-	Dialogue::DecisionPoint const* currentDecision = nullptr;
-	bool makingDecision = false;
-	bool endAfterCurrentLine = false;
+		Dialogue* dialogue = nullptr;
+		size_t currentLineNumber = 0;
+		size_t backstopLineNumber = 0;
+		UIElement backstepArrow;
+		UIElement advanceArrow;
+		UIElement closeBox;
 
-	std::string LoadLine();
-	void ParseCommand(const std::string& command);
+		std::string currentLine = "";
+		Dialogue::DecisionPoint const* currentDecision = nullptr;
+		bool makingDecision = false;
+		bool endAfterCurrentLine = false;
+
+		std::string backgroundName = "";
+		std::string bgmName = "";
+
+		std::string LoadLine();
+		void ParseCommand(const std::string& command);
 
 	public:
 		DialogueBox(SDL_Renderer* ren, Dialogue* dialogue = nullptr);
 
 		void SetDialogue(Dialogue* newDialogue);
+
 		bool Advance();
+		bool CanAdvance() const;
 		void Backstep();
+		bool CanBackstep() const;
 		void DisplayLine();
 		const std::string& CurrentLine() const;
 
-		bool CanAdvance() const;
-		bool CanBackstep() const;
 		void DisplayDecision();
 		bool MakeDecision(const unsigned int n);
 
+		void ShowCharacter(const std::string& characterName);
 		void ActivateSpeaker(const size_t speakerNumber);
 
 		void Render() const;
+
+		std::vector<CutsceneFlag> CutsceneFlags() const;
+		const std::string& BackgroundName() const { return backgroundName; }
+		const std::string& BGMName() const { return bgmName; }
 };
 
 

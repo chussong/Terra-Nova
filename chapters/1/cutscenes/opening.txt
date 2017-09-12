@@ -1,0 +1,42 @@
+% characters used in this dialogue. Characters in parentheses are not present
+% at the start but can be added later. If a colon is used, the model's name is
+% to the left and the displayed character name is to the right. If no colon is
+% used, the unit's default name is displayed instead.
+[Characters]
+(commander: Lin)
+
+[Lines]
+-@cs:bg=war@@bgm=intro@It is said that long ago, before human feet had felt
+the ground of distant stars, Earth was a dangerous place ruled by 
+short-tempered warlords.
+-As the centuries passed, the methods of these warlords' selection evolved,
+but they remained short-sighted and belligerent even as their destructive power
+grew ever greater.
+-Eventually, they became powerful enough to end humanity altogether.
+Generations were born, lived, worked, and died under the shadow of the
+potential annihilation of their entire species.
+-@cs:bg=launch_site@To counteract this threat, a group of scientists and 
+engineers launched a secret project.
+-They guarded the existence of this project closely for decades in order to
+prevent the warlords from attempting to take control and use it to their own
+advantage.
+-At last, after lifetimes of collective labor, it was completed. In a sudden,
+coordinated action, lightly guarded satellite launch facilities all over the
+planet were captured.
+-Before the world realized what was happening, trucks full of machinery swept
+into the captured sites. Within hours, their contents assembled themselves into
+massive space ships.
+-Earth's warlords naturally all suspected each other of sabotage, and many
+moved to destroy these mysterious ships before they could escape the planet.
+Several were successfully intercepted.
+-@cs:bg=planet@The survivors entered hibernation as their ships navigated them
+toward their decades-distant destinations. Their new homes.
+-If all went according to plan, they were to use local resources to construct
+hyperspace beacons, allowing instantaneous transportation between the newly
+settled planets.
+-Once they were self-sufficient and in contact, they would open a beacon back
+to Earth, allowing its inhabitants to flee to a new world if they were willing
+to leave the old one behind.
+-Seldom, of course, does all go according to plan.
+
+-@cs:bg=ship@@bgm=lin@@addchar=Lin@@active=0@ETAOIN SHRDLU@end@

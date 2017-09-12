@@ -71,8 +71,8 @@ std::vector<std::string> GetSection(const std::vector<std::string>& source,
 			return std::vector<std::string>();
 		}
 	}
-	std::cerr << "Warning: asked to get the section " << sectionName << " from "
-		<< "a file but could not find it." << std::endl;
+	//std::cerr << "Warning: asked to get the section " << sectionName << " from "
+		//<< "a file but could not find it." << std::endl;
 	return std::vector<std::string>();
 }
 

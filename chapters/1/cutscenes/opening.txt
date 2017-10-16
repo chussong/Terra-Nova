@@ -4,6 +4,8 @@
 % used, the unit's default name is displayed instead.
 [Characters]
 (commander: Lin)
+(engineer: Peralta)
+(biologist: Yezhova)
 
 [Lines]
 -@cs:bg=war@@bgm=intro@It is said that long ago, before human feet had felt
@@ -39,4 +41,42 @@ to Earth, allowing its inhabitants to flee to a new world if they were willing
 to leave the old one behind.
 -Seldom, of course, does all go according to plan.
 
--@cs:bg=ship@@bgm=lin@@addchar=Lin@@active=0@ETAOIN SHRDLU@end@
+-@cs:bg=bedroom@@bgm=lin@@addchar=Lin@@active=Lin@@expression=pained@Damn, it's
+cold in here all of a sudden.
+-@expression=thinking@Wait, no; it's not sudden at all, is it? We made it out of
+the atmosphere, and then...
+-So either we've made it or something's gone horribly wrong and I'm going to die
+in space.
+-I think the protocol we settled on was to go to the common room and see who
+else woke up.
+-@active=x@Lin forces her stiff muscles to stand and, eventually, floats to the 
+common room at the end of the hall.
+
+-@cs:bg=commonroom@@active=Lin@What, just you?
+-@active=x@A short man floats gently from one side of the room to the other,
+doing what can only be described as zero-G shadowboxing.
+-@addchar=Peralta@@active=Peralta@Seems that way so far.
+-@active=Lin@As I recall, there were supposed to be four of us up for the first
+wave. You must be Peralta, the civil engineer?
+-@active=Peralta@Ignacio Peralta, yes. And I recall from the previous two times
+we've met that you're Interim Commander Lin.
+-@active=Lin@@expression=pained@Ah, I thought you looked familiar. Sorry.
+-@active=Peralta@It's fine. I'm sure you've had to meet hundreds of new people
+over the past few months.
+-The other two are Lyudmila Yezhova from bioengineering and Lukas Klein from 
+agriculture. I haven't seen any sign of either one yet.
+-@active=?@Well, I can fix half of that problem.
+-@active=Peralta@Ah, I see you've survived as well.
+-@addchar=Yezhova@@active=Yezhova@Looks like it, unless hell for me is just
+what I was planning to do anyway.
+-@active=Lin@@expression=neutral@Yezhova, would you mind waiting here for Klein
+while Peralta and I check the instruments? We need to find out if we've really 
+arrived.
+-@active=Yezhova@Actually, I think I'll go and check on him directly. His pod
+was in the first bank with ours, so if he's not here already he should be in the
+fourth recovery room.
+-@active=Lin@Perfect. We'll try to get the internal communications online, but 
+if that doesn't work, plan to meet us on the bridge.
+-@active=Yezhova@You got it.
+
+-@cs:bg=bridge@ETAOIN SHRDLU@end@

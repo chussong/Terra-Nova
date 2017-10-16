@@ -1,9 +1,21 @@
 #include "sprite.hpp"
 
+namespace TerraNova {
+
 //TTF_Font* Sprite::defaultFont;
 SDL_Renderer* GFXManager::ren;
 std::vector<std::string> GFXManager::loadedSpriteNames;
 std::vector<std::shared_ptr<Sprite>> GFXManager::loadedSprites;
+
+SDL_Rect MakeSDLRect(const int x, const int y, const unsigned int w,
+		const unsigned int h) {
+	SDL_Rect ret;
+	ret.x = x;
+	ret.y = y;
+	ret.w = w;
+	ret.h = h;
+	return ret;
+}
 
 SDL_Color Sprite::SDLifyTextColor(const textcolor_t color){
 	SDL_Color colorCode;
@@ -130,7 +142,15 @@ std::string GFXManager::GetSpritePath(const std::string& subDir){
 	return subDir.empty() ? baseSpriteDir : baseSpriteDir + subDir + PATH_SEP;
 }
 
-std::shared_ptr<Sprite> GFXManager::LoadSprite(const std::string& name){
+std::shared_ptr<Sprite> GFXManager::LoadSprite(std::string name){
+	if (name.empty()) {
+		std::cerr << "Error: asked to load a sprite with an empty name."
+			<< std::endl;
+		return nullptr;
+	}
+	boost::replace_all(name, " ", "_");
+	boost::to_lower(name);
+
 	SDL_Rect layout;
 	std::shared_ptr<Sprite> sprite = std::make_shared<Sprite>(ren, 
 			GetSpritePath() + name + ".png", layout);
@@ -155,3 +175,5 @@ std::shared_ptr<Sprite> GFXManager::RequestSprite(std::string name){
 	}
 	return LoadSprite(name);
 }
+
+} // namespace TerraNova

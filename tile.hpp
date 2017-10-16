@@ -13,6 +13,8 @@
 #include "unit.hpp"
 #include "colony.hpp"
 
+namespace TerraNova {
+
 class TileType {
 	const std::string name;
 	const std::array<int, LAST_RESOURCE> yield;
@@ -118,5 +120,7 @@ class Tile : public GFXObject {
 		static unsigned int MoveCost(const Tile& destination,
 			const MoveCostTable moveCosts);
 };
+
+} // namespace TerraNova
 
 #endif

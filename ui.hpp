@@ -7,6 +7,9 @@
 #include "gamevars.hpp"
 #include "gfxobject.hpp"
 #include "unit.hpp"
+#include "building.hpp"
+
+namespace TerraNova{
 
 class UIElement : public GFXObject {
 	std::unique_ptr<Sprite> textSprite = nullptr;
@@ -83,26 +86,91 @@ class UIAggregate {
 	public:
 		UIAggregate(SDL_Renderer* ren, const int x, const int y): ren(ren),
 			x(x), y(y){}
+		virtual ~UIAggregate() = default;
 
-		virtual void Render() const
-			{ std::cerr << "UIAggregate::Render() shouldn't run!" << std::endl;}
+		virtual void Render() const;
+
+		virtual bool IsInfoPanel() const { return false; }
+		virtual bool IsUnitInfoPanel() const { return false; }
 };
 
-class UnitInfoPanel : public UIAggregate {
-	std::unique_ptr<UIElement> background;
-	std::unique_ptr<UIElement> portrait;
-	std::unique_ptr<UIElement> factionIcon;
-	std::unique_ptr<UIElement> healthIcon;
-	std::unique_ptr<UIElement> attackIcon;
-
+class InfoPanel : public UIAggregate {
 	public:
-		UnitInfoPanel(SDL_Renderer* ren, const Unit* source);
+		SDL_Renderer* Renderer() const { return ren; }
+
+		InfoPanel(SDL_Renderer* ren, const int x, const int y):
+			UIAggregate(ren, x, y) {}
+		virtual ~InfoPanel() = default; // should be protected or pure virtual?
+
+		virtual void Render() const;
+
+		bool IsInfoPanel() const { return true; }
+
+		static void UpdateFromSource(InfoPanel& toUpdate, 
+				const GFXObject& source);
+
+	protected:
+		virtual bool Update(const GFXObject& source);
+};
+
+class UnitInfoPanel : public InfoPanel {
+	public:
+		UnitInfoPanel(SDL_Renderer* ren, const Unit& source);
+		~UnitInfoPanel() = default;
 
 		void Render() const;
+		bool Update(const GFXObject& source);
 
-		void Update(const Unit* source);
 		// should use dynamic text instead of doing UpdateHealth explicitly
-		void UpdateHealth(const Unit* source);
+		void UpdateHealth(const Unit& source);
+		static void UpdateHealthFromSource(UnitInfoPanel& toUpdate, 
+				const Unit& source);
+
+		bool IsUnitInfoPanel() const { return true; }
+
+	private:
+		std::unique_ptr<UIElement> background;
+		std::unique_ptr<UIElement> portrait;
+		std::unique_ptr<UIElement> factionIcon;
+		std::unique_ptr<UIElement> healthIcon;
+		std::unique_ptr<UIElement> attackIcon;
+
+		void UpdateFromUnit(const Unit& source);
+};
+
+class BuildingInfoPanel : public InfoPanel {
+	public:
+		BuildingInfoPanel(SDL_Renderer* ren, const Building& source);
+		BuildingInfoPanel(SDL_Renderer* ren, const BuildingPrototype& source);
+		~BuildingInfoPanel() = default;
+
+		void Render() const;
+		bool Update(const GFXObject& source);
+
+	private:
+		std::unique_ptr<UIElement> background;
+		std::unique_ptr<UIElement> portrait;
+		std::unique_ptr<UIElement> factionIcon;
+		std::unique_ptr<UIElement> powerIcon;
+		std::unique_ptr<std::array<UIElement,LAST_RESOURCE>> costIcons;
+
+		void UpdateFromBuilding(const Building& source);
+		void UpdateFromBuildingPrototype(const BuildingPrototype& source);
+
+		static std::unique_ptr<UIElement> MakeBackground(SDL_Renderer* ren, 
+				const std::array<int,2>& panelCoords);
+		static std::unique_ptr<UIElement> MakePortrait(SDL_Renderer* ren, 
+				const std::string& name, const std::array<int,2>& panelCoords);
+		static std::unique_ptr<UIElement> MakeFactionIcon(SDL_Renderer* ren, 
+				char faction, const std::array<int,2>& panelCoords);
+		static std::unique_ptr<UIElement> MakePowerIcon(SDL_Renderer* ren, 
+				const Building& source, const std::array<int,2>& panelCoords);
+		static std::unique_ptr<UIElement> MakePowerIcon(SDL_Renderer* ren, 
+				const BuildingPrototype& source, 
+				const std::array<int,2>& panelCoords);
+		static std::unique_ptr<std::array<UIElement,LAST_RESOURCE>> MakeCostIcons(
+				SDL_Renderer* ren, const std::array<int,LAST_RESOURCE>& costs,
+				const std::array<int,2>& panelCoords);
 };
 
 class UnitOrderPanel : public GFXObject {
@@ -115,7 +183,7 @@ class UnitOrderPanel : public GFXObject {
 
 		void Render() const;
 
-		void Update(Unit* source);
+		void Update(Unit& source);
 		void AddButton(Button&& newButton);
 		bool InsideQ(const int x, const int y); 
 		bool Click();
@@ -124,4 +192,5 @@ class UnitOrderPanel : public GFXObject {
 
 };
 
+} // namespace TerraNova
 #endif

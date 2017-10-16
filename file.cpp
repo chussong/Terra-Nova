@@ -1,5 +1,7 @@
 #include "file.hpp"
 
+namespace TerraNova {
+
 namespace File {
 
 namespace {
@@ -16,6 +18,15 @@ const fs::path& BasePath() {
 
 std::string AbsolutePath(const std::string& relativePath) {
 	return (basePath / relativePath).native();
+}
+
+std::string JoinPaths(const std::vector<std::string>& paths) {
+	if (paths.size() == 0) return "";
+	fs::path pathForm(paths.front());
+	for (auto it = paths.begin()+1; it != paths.end(); ++it) {
+		pathForm /= *it;
+	}
+	return pathForm.native();
 }
 
 std::vector<std::string> ReadFromFullPath(const fs::path& fullPath){
@@ -108,4 +119,6 @@ std::vector<std::string> GetField(const std::vector<std::string>& source,
 	throw(std::runtime_error("File::GetField -- could not find '}' in input."));
 }
 
-} // File namespace
+} // namespace File
+
+} // namespace TerraNova

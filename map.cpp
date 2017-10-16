@@ -1,5 +1,7 @@
 #include "map.hpp"
 
+namespace TerraNova {
+
 Map::Map(SDL_Renderer* ren, std::vector<std::shared_ptr<TileType>> types):
 	ren(ren){
 	height = DEFAULT_HEIGHT;
@@ -660,3 +662,5 @@ unsigned int Map::DistanceBetween(const std::array<unsigned int, 2>& locA,
 		const std::array<unsigned int, 2>& locB, const MoveCostTable& moveCosts){
 	return DistanceBetween(locA[0], locA[1], locB[0], locB[1], moveCosts);
 }
+
+} // namespace TerraNova

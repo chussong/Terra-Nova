@@ -13,6 +13,8 @@
 #include "faction.hpp"
 #include "random.hpp"
 
+namespace TerraNova {
+
 class Map {
 	enum MoveStatus { MS_UNCHECKED, MS_CLEAR, MS_BOUNCE, MS_ASSAULT, 
 		MS_ASSAULTED, MS_FRIENDCLASH, MS_FOECLASH, MS_TARGETMOVING, 
@@ -131,4 +133,6 @@ class Map {
 				const std::array<unsigned int, 2>& locB, 
 				const MoveCostTable& moveCosts);
 };
+
+} // namespace TerraNova
 #endif

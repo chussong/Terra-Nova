@@ -12,6 +12,8 @@
 #include "gamevars.hpp"
 #include "faction.hpp"
 
+namespace TerraNova {
+
 class Colony {
 	SDL_Renderer* ren;
 
@@ -59,4 +61,5 @@ class Colony {
 		static std::string ResourceName(const resource_t resource);
 };
 
+} // namespace TerraNova
 #endif

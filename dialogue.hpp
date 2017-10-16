@@ -11,6 +11,8 @@
 #include "unit.hpp"
 #include "file.hpp"
 
+namespace TerraNova {
+
 class Dialogue {
 	public:
 		struct DecisionPoint {
@@ -178,7 +180,7 @@ class DialogueBox : public UIElement {
 		bool MakeDecision(const unsigned int n);
 
 		void ShowCharacter(const std::string& characterName);
-		void ActivateSpeaker(const size_t speakerNumber);
+		void ActivateSpeaker(const std::string& speakerName);
 
 		void Render() const;
 
@@ -187,5 +189,6 @@ class DialogueBox : public UIElement {
 		const std::string& BGMName() const { return bgmName; }
 };
 
+} // namespace TerraNova
 
 #endif

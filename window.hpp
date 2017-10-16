@@ -15,7 +15,9 @@
 #include "menu.hpp"
 #include "gamescreen.hpp"
 #include "cutscene.hpp"
-#include "game.hpp" // want to let gamescreen handle this
+#include "game.hpp" // want to let gamescreen handle all interaction with game
+
+namespace TerraNova {
 
 class Window {
 	SDL_Renderer* ren;
@@ -58,5 +60,7 @@ class Window {
 
 		~Window();
 };
+
+} // namespace TerraNova
 
 #endif

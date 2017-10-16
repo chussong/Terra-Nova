@@ -1,5 +1,6 @@
 #include "gfxobject.hpp"
 
+namespace TerraNova {
 
 GFXObject::GFXObject(SDL_Renderer* ren, const std::string& spriteFile,
 		const int x, const int y, const bool selectable): ren(ren),
@@ -117,3 +118,5 @@ bool GFXObject::InsideQ(const int x, const int y){
 			y >= layout.y + layout.h) return false;
 	return true;
 }
+
+} // namespace TerraNova

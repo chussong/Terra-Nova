@@ -1,5 +1,7 @@
 #include "path.hpp"
 
+namespace TerraNova {
+
 void Path::SpritifyPath(){
 	/*std::cout << "Path:";
 	for(auto& step : steps) std::cout << "(" << step[0] << "," << step[1] << "), ";
@@ -110,3 +112,5 @@ bool Path::Advance(){
 	sprites.erase(sprites.begin());
 	return steps.size() == 1;
 }
+
+} // namespace TerraNova

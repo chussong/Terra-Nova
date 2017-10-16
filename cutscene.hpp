@@ -15,6 +15,9 @@
 #include "ui.hpp"
 #include "audio.hpp"
 #include "dialogue.hpp"
+#include "file.hpp"
+
+namespace TerraNova {
 
 class CutsceneScreen : public Screen {
 	std::vector<std::unique_ptr<UIElement>> background;
@@ -45,5 +48,7 @@ class CutsceneScreen : public Screen {
 
 		~CutsceneScreen();
 };
+
+} // namespace TerraNova
 
 #endif

@@ -10,6 +10,8 @@
 #include "colony.hpp"
 #include "random.hpp"
 
+namespace TerraNova {
+
 enum AIPlan_t { PLAN_ATTACK = 0, PLAN_DEFEND = 1, PLAN_ECONOMY = 2,
 	PLAN_BUILDARMY = 3};
 
@@ -83,5 +85,7 @@ class AIPlayer {
 
 		void GiveOrders();
 };
+
+} // namespace TerraNova
 
 #endif

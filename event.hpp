@@ -11,6 +11,8 @@
 #include "file.hpp"
 #include "dialogue.hpp"
 
+namespace TerraNova {
+
 class EventTrigger { 
 	public:
 		virtual std::string TriggerType() const { return "InvalidTrigger"; }
@@ -66,5 +68,7 @@ class Event {
 		static std::unique_ptr<LocationTrigger> MakeLocationTrigger(
 				const std::vector<std::string>& source);
 };
+
+} // namespace TerraNova
 
 #endif

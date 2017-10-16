@@ -1,5 +1,7 @@
 #include "gamescreen.hpp"
 
+namespace TerraNova {
+
 GameScreen::GameScreen(SDL_Renderer* ren): playerNumber(1), selected(nullptr) {
 	this->ren = ren;
 }
@@ -168,8 +170,8 @@ void GameScreen::ResetObjects(){
 	topLevelUI.clear();
 }
 
-void GameScreen::AddTopLevelUI(std::shared_ptr<UIAggregate> newThing){
-	topLevelUI.push_back(newThing);
+void GameScreen::AddTopLevelUI(std::unique_ptr<UIAggregate> newThing){
+	topLevelUI.push_back(std::move(newThing));
 }
 
 void GameScreen::AddUI(std::unique_ptr<GFXObject> newThing){
@@ -375,10 +377,10 @@ void GameScreen::SelectNew(const int clickX, const int clickY){
 		selected->Deselect();
 		RemoveInfoPanel();
 		RemoveOrderPanel();
-	} else if(selected != newSelected) {
+	} else if (selected != newSelected) {
 		if(selected) selected->Deselect();
 		newSelected->Select();
-		if(newSelected->IsUnit()){
+		//if (newSelected->IsUnit()) {
 			// below condition should be "if panels are up"
 			if(selected && selected->IsUnit() && !dynamic_cast<Unit*>(selected)->Dead()){
 				SwapInfoPanel(newSelected);
@@ -387,7 +389,7 @@ void GameScreen::SelectNew(const int clickX, const int clickY){
 				MakeInfoPanel(newSelected);
 				MakeOrderPanel(newSelected);
 			}
-		}
+		//}
 	}
 	selected = newSelected;
 }
@@ -460,6 +462,7 @@ void GameScreen::LeftClick(const int x, const int y) {
 }
 
 void GameScreen::RightClick(const int x, const int y) {
+	if (selected == nullptr) return;
 	GFXObject* obj = ClickedObject(x, y);
 	Tile* clickedTile = dynamic_cast<Tile*>(obj);
 	if (selected->IsUnit() && clickedTile) {
@@ -550,17 +553,27 @@ void GameScreen::AddMapTiles(){
 }
 
 void GameScreen::MakeInfoPanel(const GFXObject* source){
-	if(!(source && source->IsUnit())) return;
-	AddTopLevelUI(std::make_shared<UnitInfoPanel>(ren, 
-				dynamic_cast<const Unit*>(source)));
+	if (!source) return;
+	if (source->IsUnit()) {
+		AddTopLevelUI(std::make_unique<UnitInfoPanel>(ren, 
+					dynamic_cast<const Unit&>(*source)));
+	} else if (source->IsBuilding()) {
+		AddTopLevelUI(std::make_unique<BuildingInfoPanel>(ren, 
+					dynamic_cast<const Building&>(*source)));
+	} else if (source->IsBuildingPrototype()) {
+		AddTopLevelUI(std::make_unique<BuildingInfoPanel>(ren, 
+					dynamic_cast<const BuildingPrototype&>(*source)));
+	}
 }
 
 void GameScreen::SwapInfoPanel(const GFXObject* source){
+	if (!source) return;
 	if(!(source && source->IsUnit())) return;
 	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
-		if(std::dynamic_pointer_cast<UnitInfoPanel>(topLevelUI[i])){
-			std::dynamic_pointer_cast<UnitInfoPanel>(topLevelUI[i])->Update(
-					dynamic_cast<const Unit*>(source));
+		if(topLevelUI[i]->IsInfoPanel()){
+			InfoPanel::UpdateFromSource(dynamic_cast<InfoPanel&>(*topLevelUI[i]),
+					*source);
+			return;
 		}
 	}
 }
@@ -568,16 +581,17 @@ void GameScreen::SwapInfoPanel(const GFXObject* source){
 void GameScreen::UpdateInfoPanel(const GFXObject* source){
 	if(!(source && source->IsUnit())) return;
 	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
-		if(std::dynamic_pointer_cast<UnitInfoPanel>(topLevelUI[i])){
-			std::dynamic_pointer_cast<UnitInfoPanel>(topLevelUI[i])->UpdateHealth(
-					dynamic_cast<const Unit*>(source));
+		if(topLevelUI[i]->IsUnitInfoPanel()){
+			UnitInfoPanel::UpdateHealthFromSource(
+					dynamic_cast<UnitInfoPanel&>(*topLevelUI[i]), 
+					dynamic_cast<const Unit&>(*source));
 		}
 	}
 }
 
 void GameScreen::RemoveInfoPanel(){
 	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
-		if(std::dynamic_pointer_cast<UnitInfoPanel>(topLevelUI[i])){
+		if(topLevelUI[i]->IsInfoPanel()){
 			topLevelUI.erase(topLevelUI.begin() + i);
 		}
 	}
@@ -599,7 +613,7 @@ void GameScreen::SwapOrderPanel(GFXObject* source){
 	for(unsigned int i = 0; i < UI.size(); ++i){
 		if(dynamic_cast<UnitOrderPanel*>(UI[i].get())){
 			dynamic_cast<UnitOrderPanel*>(UI[i].get())->Update(
-					dynamic_cast<Unit*>(source));
+					dynamic_cast<Unit&>(*source));
 			if(!dynamic_cast<Unit*>(source)->Unique()){
 				dynamic_cast<UnitOrderPanel*>(UI[i].get())->AddButton(
 					theMap->MakeBuildColonyButton(*dynamic_cast<Unit*>(source)));
@@ -615,3 +629,5 @@ void GameScreen::RemoveOrderPanel(){
 		}
 	}
 }
+
+} // namespace TerraNova

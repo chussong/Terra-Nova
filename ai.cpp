@@ -1,5 +1,7 @@
 #include "ai.hpp"
 
+namespace TerraNova {
+
 void TacticalAI::AddUnit(std::shared_ptr<Unit> newUnit){
 	if(!newUnit){
 		std::cerr << "Warning: attempted to add a nullptr Unit to a TacticalAI."
@@ -98,3 +100,5 @@ void AIPlayer::EndTurn(){
 void AIPlayer::GiveOrders(){
 	for(auto& tai : tacticalAIs) tai.GiveOrders();
 }
+
+} // namespace TerraNova

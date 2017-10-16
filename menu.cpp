@@ -1,5 +1,7 @@
 #include "menu.hpp"
 
+namespace TerraNova {
+
 namespace {
 	const std::string MENU_BACKGROUND = "space-colony";
 
@@ -100,3 +102,5 @@ void Menu::Quit() {
 std::function<void()> Menu::QuitBtnFunc(Menu* menuPtr) {
 	return std::bind(&Menu::Quit, menuPtr);
 }
+
+} // namespace TerraNova

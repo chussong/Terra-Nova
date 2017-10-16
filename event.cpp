@@ -1,5 +1,7 @@
 #include "event.hpp"
 
+namespace TerraNova {
+
 LocationTrigger::LocationTrigger(const std::vector<std::array<unsigned int,2>>& locations): 
 		locations(locations) {
 }
@@ -114,3 +116,5 @@ std::unique_ptr<LocationTrigger> Event::MakeLocationTrigger(
 	}
 	return std::make_unique<LocationTrigger>(std::move(parsedLocations));
 }
+
+} // namespace TerraNova

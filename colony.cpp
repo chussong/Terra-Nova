@@ -1,5 +1,7 @@
 #include "colony.hpp"
 
+namespace TerraNova {
+
 Colony::Colony(SDL_Renderer* ren, const int faction): 
 		ren(ren), name(Faction::GenerateColonyName(faction)), faction(faction)
 {
@@ -177,3 +179,5 @@ std::string Colony::ResourceName(const resource_t resource){
 		default:			return "RESOURCE NOT FOUND";
 	}
 }
+
+} // namespace TerraNova

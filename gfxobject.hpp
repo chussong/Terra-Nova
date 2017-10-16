@@ -4,17 +4,9 @@
 #include <memory>
 #include "sprite.hpp"
 
+namespace TerraNova {
+
 class GFXObject : public std::enable_shared_from_this<GFXObject> {
-	protected:
-		std::shared_ptr<Sprite> sprite;
-		std::shared_ptr<Sprite> selectedSprite;
-		SDL_Renderer* ren;
-
-		SDL_Rect layout;
-		bool visible = true;
-		bool selectable = false;
-		bool selected = false;
-
 	public:
 		template <typename Derived>
 		std::shared_ptr<Derived> shared_from_base(){
@@ -32,6 +24,7 @@ class GFXObject : public std::enable_shared_from_this<GFXObject> {
 		// Click() represents a thing something does when you click on it which
 		// does not result in the selection of the object; if Click() returns
 		// true, then no selection is attempted.
+		SDL_Renderer* Renderer() const { return ren; }
 		virtual void ChangeSprite(const std::string& spriteName);
 		virtual void Render() const;
 		virtual int Select();
@@ -61,7 +54,19 @@ class GFXObject : public std::enable_shared_from_this<GFXObject> {
 		virtual bool IsUnit() const { return false; }
 		virtual bool IsTile() const { return false; }
 		virtual bool IsBuildingPrototype() const { return false; }
-		virtual bool IsButton() const { return false; }
+		virtual bool IsBuilding() const { return false; }
+	 	virtual bool IsButton() const { return false; }
+
+	protected:
+		std::shared_ptr<Sprite> sprite;
+		std::shared_ptr<Sprite> selectedSprite;
+		SDL_Renderer* ren;
+
+		SDL_Rect layout;
+		bool visible = true;
+		bool selectable = false;
+		bool selected = false;
 };
 
+} // namespace TerraNova
 #endif

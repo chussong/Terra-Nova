@@ -15,6 +15,8 @@
 #include "ui.hpp"
 #include "audio.hpp"
 
+namespace TerraNova {
+
 class Menu : public Screen {
 	std::vector<std::unique_ptr<UIElement>> background;
 	std::vector<std::unique_ptr<Button>> buttons;
@@ -43,4 +45,5 @@ class Menu : public Screen {
 		~Menu();
 };
 
+} // namespace TerraNova
 #endif

@@ -1,5 +1,7 @@
 #include "tile.hpp"
 
+namespace TerraNova {
+
 Tile::Tile(TileType* type, SDL_Renderer* ren,
 		const int row, const int colm): GFXObject(ren, type->Path(), 0, 0),
 		type(type), row(row), colm(colm) {}
@@ -326,3 +328,4 @@ unsigned int Tile::MoveCost(const Tile& destination,
 	return cost;
 }
 
+} // namespace TerraNova

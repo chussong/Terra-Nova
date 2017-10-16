@@ -1,5 +1,7 @@
 #include "window.hpp"
 
+namespace TerraNova {
+
 int Window::numberOfWindows = 0;
 
 Window::Window(const std::string& title, const int x, const int y,
@@ -172,3 +174,5 @@ void Window::SwitchToGameScreen() {
 void Window::SwitchToCutsceneScreen() {
 	screen = std::make_unique<CutsceneScreen>(ren);
 }
+
+} // namespace TerraNova

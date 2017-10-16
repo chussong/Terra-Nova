@@ -17,11 +17,12 @@
 #include "building.hpp"
 #include "colony.hpp"
 #include "map.hpp"
-//#include "gamewindow.hpp"
 #include "gamescreen.hpp"
 #include "faction.hpp"
 #include "ai.hpp"
 #include "event.hpp"
+
+namespace TerraNova {
 
 class Game {
 	std::vector<BuildingType> buildingTypes;
@@ -106,4 +107,5 @@ class Game {
 		void NextTurn();
 };
 
+} // namespace TerraNova
 #endif

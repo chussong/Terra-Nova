@@ -28,6 +28,8 @@
 // should actually be the other way, and we should spawn a Game when a 
 // GameScreen is constructed.
 
+namespace TerraNova {
+
 class GameScreen : public Screen {
 	protected:
 		Map* theMap = nullptr;
@@ -59,7 +61,7 @@ class GameScreen : public Screen {
 
 		// GameScreen owns the pure UI stuff; the others are pointers to
 		// objects owned by someone else, e.g. Map owns Tiles, Game owns Units
-		std::vector<std::shared_ptr<UIAggregate>> topLevelUI;
+		std::vector<std::unique_ptr<UIAggregate>> topLevelUI;
 		std::vector<std::unique_ptr<GFXObject>> UI;
 		std::vector<std::weak_ptr<GFXObject>> weakClickables;
 		std::vector<GFXObject*> clickables;
@@ -124,7 +126,7 @@ class GameScreen : public Screen {
 		void ResetBackground(std::unique_ptr<UIElement> newThing);
 		void AddToBackground(std::unique_ptr<UIElement> newThing);
 		void ResetObjects();
-		void AddTopLevelUI(std::shared_ptr<UIAggregate> newThing);
+		void AddTopLevelUI(std::unique_ptr<UIAggregate> newThing);
 		void AddUI(std::unique_ptr<GFXObject> newThing);
 		void AddClickable(std::shared_ptr<GFXObject> newThing);
 		void AddObject(std::shared_ptr<GFXObject> newThing);
@@ -159,4 +161,5 @@ class GameScreen : public Screen {
 		void RemoveOrderPanel();
 };
 
+} // namespace TerraNova
 #endif

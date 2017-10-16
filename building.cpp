@@ -1,5 +1,7 @@
 #include "building.hpp"
 
+namespace TerraNova {
+
 int BuildingType::ID() const{
 	return id;
 }
@@ -57,6 +59,22 @@ unsigned int BuildingType::MaxOccupants() const{
 	return maxOccupants;
 }
 
+void BuildingType::SetPowerProduction(const int val) {
+	powerConsumption = -val;
+}
+
+int BuildingType::PowerProduction() const {
+	return std::max(-powerConsumption, 0);
+}
+
+void BuildingType::SetPowerConsumption(const int val) {
+	powerConsumption = val;
+}
+
+int BuildingType::PowerConsumption() const {
+	return std::max(powerConsumption, 0);
+}
+
 void BuildingType::SetBonusResources(const std::array<int, LAST_RESOURCE>& val){
 	bonusResources = val;
 }
@@ -84,6 +102,14 @@ std::string BuildingPrototype::Name() const{
 
 std::array<int, LAST_RESOURCE> BuildingPrototype::Cost() const{
 	return type->Cost();
+}
+
+int BuildingPrototype::PowerProduction() const {
+	return type->PowerProduction();
+}
+
+int BuildingPrototype::PowerConsumption() const {
+	return type->PowerConsumption();
 }
 
 int BuildingPrototype::BuildTime() const{
@@ -124,6 +150,30 @@ bool Building::Finished() const{
 
 bool Building::CanHarvest() const{
 	return turnsLeft == 0 && type->CanHarvest();
+}
+
+int Building::PowerProduction() const {
+	//if (!crewed) return 0;
+	return type->PowerProduction();
+}
+
+int Building::PowerConsumption() const {
+	return type->PowerConsumption();
+}
+
+bool Building::PoweredOn() const {
+	return poweredOn;
+}
+
+// return true if building actually was powered on
+bool Building::PowerOn() {
+	//if (!crewed) return false;
+	poweredOn = true;
+	return true;
+}
+
+void Building::PowerOff() {
+	poweredOn = false;
 }
 
 bool Building::Automatic() const{
@@ -167,3 +217,5 @@ void Building::TrainingTurn(){
 void Building::FinishTraining(){
 	nowTraining.reset();
 }
+
+} // namespace TerraNova

@@ -17,14 +17,7 @@ constexpr std::array<std::array<int, 2>, 18> twoHexAdj{{
 		{{0, -4}}, {{1, -3}}, {{2, -2}}, {{2, 0}}, {{2, 2}}, {{1, 3}}
 }};
 
-/*template<typename T>
-class matrix {
-	std::vector<std::vector<T>> m;
-
-	public:
-		// put operator[] and all the std::vector member functions in here
-		// we can enforce squareness in the constructor and resizing function
-};*/
+// weak_ptr observer vectors --------------------------------------------------
 
 // if an element is expired, remove it; if not, lock and add to returned vector
 template<class T>
@@ -41,6 +34,19 @@ std::vector<T*> CheckAndLock(std::vector<std::weak_ptr<T>>& in){
 		}
 	}
 	return ret;
+}
+
+// just remove all expired weak_ptrs from a vector without the vector<T*> stuff
+template<class T>
+void CleanExpired(std::vector<std::weak_ptr<T>>& vec){
+	typename std::vector<std::weak_ptr<T>>::iterator it = vec.begin();
+	while(it != vec.end()){
+		if(it->expired()) {
+			vec.erase(it);
+		} else {
+			++it;
+		}
+	}
 }
 
 // This class can be used to hold pointers to objects which might expire.
@@ -74,8 +80,10 @@ class WeakVector{
 		void push_back(const std::shared_ptr<T> newEl) { weak.push_back(newEl); }
 };
 
+// FindByName -----------------------------------------------------------------
+
 // beware: this is NOT case sensitive!
-template<class T>
+/*template<class T>
 std::shared_ptr<T> FindByName(std::vector<std::shared_ptr<T>> vec,
 		std::string name){
 	boost::trim(name);
@@ -90,7 +98,60 @@ std::shared_ptr<T> FindByName(std::vector<std::shared_ptr<T>> vec,
 			<< std::endl;
 	}
 	return nullptr;
+}*/
+
+// Find an object inside a container using its Name() function; you should call
+// this using the below FindByName templates, but you can of course call the 
+// body directly if you want. Note that this throws a std::runtime_error if no
+// object can be found with the specified name, so if that's a possibility you
+// should be prepared to catch it.
+//
+// beware: this is NOT case sensitive
+template<class T>
+T& FindByName_Body(std::vector<T>& vector, std::string name, 
+		std::function<std::string(const T&)> fetchName) {
+	boost::trim(name);
+	for (T& element : vector) {
+		if (boost::iequals(name, fetchName(element))) {
+			return element;
+		}
+	}
+	if(!boost::iequals(name, "none")){
+		std::cout << "Failed to find an object named \"" << name << "\"." 
+			<< std::endl;
+	}
+	throw(std::runtime_error("FindByName(" + name + ")"));
 }
+
+// find in a vector of objects T, using T.Name()
+template<class T>
+T& FindByName(const std::vector<T>& vector, std::string name) {
+	return FindByName_Body(vector, name, [](const T& t){ return t.Name(); });
+}
+
+// find in a vector of raw pointers T*, using T->Name()
+template<class T>
+T*& FindByName(const std::vector<T*>& vector, std::string name) {
+	return FindByName_Body(vector, name, [](const T*& t){ return t->Name(); });
+}
+
+// find in a vector of shared_ptr<T>s, using shared_ptr<T>->Name()
+template<class T>
+std::shared_ptr<T>& FindByName(std::vector<std::shared_ptr<T>>& vector, 
+		std::string name) {
+	return FindByName_Body<std::shared_ptr<T>>(vector, name, 
+			[](const std::shared_ptr<T>& t){ return t->Name(); } );
+}
+
+// find in a vector of unique_ptr<T>s, using unique_ptr<T>->Name()
+template<class T>
+std::unique_ptr<T>& FindByName(std::vector<std::unique_ptr<T>>& vector, 
+		std::string name) {
+	return FindByName_Body(vector, name, [](const std::unique_ptr<T>& t)
+			{ return t->Name(); });
+}
+
+// Tile batch operations ------------------------------------------------------
 
 template<typename T, typename U>
 std::array<U,6> GetSurrounding(const T& container, const int centerRow,
@@ -149,17 +210,7 @@ void ForTwoSurrounding(std::function<T(int,int)> Fetch, const int centerRow,
 	}
 }
 
-template<class T>
-void CleanExpired(std::vector<std::weak_ptr<T>> vec){
-	typename std::vector<std::weak_ptr<T>>::iterator it = vec.begin();
-	while(it != vec.end()){
-		if(it->expired()) {
-			vec.erase(it);
-		} else {
-			++it;
-		}
-	}
-}
+// SDL ------------------------------------------------------------------------
 
 inline void LogSDLError(std::ostream& os, const std::string &msg){
 	os << msg << " error: " << SDL_GetError() << std::endl;

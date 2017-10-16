@@ -80,7 +80,7 @@ menu.o: menu.cpp menu.hpp screen.hpp sprite.hpp ui.hpp audio.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 cutscene.o: cutscene.cpp cutscene.hpp screen.hpp sprite.hpp ui.hpp audio.hpp \
-		dialogue.hpp
+		dialogue.hpp file.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 window.o: window.cpp window.hpp audio.hpp screen.hpp menu.hpp gamescreen.hpp \

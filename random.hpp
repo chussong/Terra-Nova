@@ -5,6 +5,7 @@
 #include <random>
 #include <iostream>
 
+namespace TerraNova {
 namespace Random {
 
 void Initialize();
@@ -15,6 +16,7 @@ double Percentage(); // return something between 0.0 and 100.0
 bool Bool();
 int Int(const int min, const int max);
 
-}
+} // namespace Random
+} // namespace TerraNova
 
 #endif

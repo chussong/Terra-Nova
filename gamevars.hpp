@@ -71,7 +71,7 @@ constexpr int MAPDISP_ORIGIN_X = 300;
 constexpr int MAPDISP_ORIGIN_Y = 300;
 constexpr int RES_PANEL_WIDTH = 90;
 constexpr int RES_PANEL_HEIGHT = 90;
-constexpr int RES_PANEL_X = SCREEN_WIDTH - LAST_RESOURCE*RES_PANEL_WIDTH;
+constexpr int RES_PANEL_X = 200;
 constexpr int RES_PANEL_Y = SCREEN_HEIGHT - RES_PANEL_HEIGHT;
 
 constexpr int BUILDING_WIDTH = 74;
@@ -108,6 +108,10 @@ constexpr int UNIT_ATTACK_Y = 25;
 constexpr int UNIT_ATTACK_W = 199;
 constexpr int UNIT_ATTACK_H = 48;
 
+constexpr int BUILDING_INFO_PORTRAIT_WIDTH = 150;
+constexpr int BUILDING_INFO_ICON_WIDTH = 50;
+constexpr int BUILDING_INFO_ROW_HEIGHT = 50;
+
 constexpr int ORDER_PANEL_WIDTH = 155;
 constexpr int ORDER_PANEL_HEIGHT = 155;
 constexpr int ORDER_BUTTON_WIDTH = 45;
@@ -124,5 +128,7 @@ enum button_t { END_TURN = 0, BUILDING = 1, LEAVE_COLONY = 2 };
 
 enum textcolor_t { BLACK = 0, RED = 1, BLUE = 2, GREEN = 3,
 	LAST_COLOR = 4 };
+
+constexpr char NO_FACTION = 0;
 
 #endif

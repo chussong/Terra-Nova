@@ -13,6 +13,8 @@
 // automatically, then another channel for incidental noise with its own 
 // functions which do not loop.
 
+// namespace TerraNova::Audio { ////// change to this in C++17
+namespace TerraNova {
 namespace Audio {
 
 	void FillAudio(void* udata, Uint8* stream, int len);
@@ -30,6 +32,7 @@ namespace Audio {
 	Mix_Chunk* LoadSound(const std::string& filename);
 	void Pause();
 	void Resume(const int loops = 0);
-};
+} // namespace Audio
+} // namespace TerraNova
 
 #endif

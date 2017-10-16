@@ -4,6 +4,10 @@
 #include <vector>
 #include <string>
 
+#include "building.hpp"
+
+namespace TerraNova {
+
 class Faction {
 	static std::vector<BuildingType*> defaultBuildingTypes;
 
@@ -16,5 +20,7 @@ class Faction {
 		static void SetDefaultBuildingTypes(std::vector<BuildingType*> types)
 			{ defaultBuildingTypes = std::move(types); }
 };
+
+} // namespace TerraNova
 
 #endif

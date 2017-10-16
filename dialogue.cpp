@@ -1,5 +1,7 @@
 #include "dialogue.hpp"
 
+namespace TerraNova {
+
 Dialogue::Dialogue(const std::string& filePath){
 	std::vector<std::string> file = File::Read(filePath);
 	characters = ParseCharacters(File::GetSection(file, "Characters"));
@@ -353,16 +355,22 @@ void DialogueBox::ShowCharacter(const std::string& characterName) {
 	for (auto& p : portraitsForLater) std::cerr << p->Name() << std::endl;
 }
 
-void DialogueBox::ActivateSpeaker(const size_t speakerNumber){
-	currentSpeaker = speakerNumber;
-	speakerName = std::make_unique<UIElement>(ren, "dialogue_speaker_name",
+void DialogueBox::ActivateSpeaker(const std::string& speakerName){
+	for (auto i = 0u; i < portraits.size(); ++i) {
+		if (portraits[i]->Name() == speakerName) {
+			currentSpeaker = i;
+			break;
+		}
+	}
+
+	this->speakerName = std::make_unique<UIElement>(ren, "dialogue_speaker_name",
 			layout.x + layout.w/20, layout.y + layout.h/20);
 	SDL_Rect boundingBox;
 	boundingBox.x = layout.w/10;
 	boundingBox.y = layout.h/10;
 	boundingBox.w = layout.w/5;
 	boundingBox.h = layout.w/5;
-	speakerName->AddText(portraits[currentSpeaker]->Name(), boundingBox,
+	this->speakerName->AddText(portraits[currentSpeaker]->Name(), boundingBox,
 			dialogueFont);
 }
 
@@ -385,19 +393,7 @@ std::string DialogueBox::LoadLine(){
 
 void DialogueBox::ParseCommand(const std::string& command){
 	if(command.compare(0, 8, "@active=") == 0){
-		try{
-			ActivateSpeaker(std::stoul(command.substr(8, command.length()-9)));
-		}
-		catch(std::invalid_argument){
-			std::cerr << "Error: got an @active=#@ dialogue command but could not read "
-				<< "the number which was supposed to be made active." << std::endl;
-			return;
-		}
-		catch(std::out_of_range){
-			std::cerr << "Error: got an @active=#@ dialogue command but the "
-				<< "number was out of range." << std::endl;
-			return;
-		}
+		ActivateSpeaker(command.substr(8, command.length()-9));
 		return;
 	}
 	if(command.compare(0, 10, "@decision=") == 0){
@@ -484,3 +480,5 @@ void DialogueBox::Render() const{
 	if(CanBackstep()) backstepArrow.Render();
 	if(endAfterCurrentLine) closeBox.Render();
 }
+
+} // namespace TerraNova

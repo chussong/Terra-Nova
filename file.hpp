@@ -16,6 +16,8 @@
 // use std::filesystem instead. In that case, can likely unlink boost_system
 // and boost_filesystem in the Makefile.
 
+namespace TerraNova {
+
 namespace File {
 
 namespace fs = boost::filesystem;
@@ -25,6 +27,7 @@ void Initialize();
 
 const fs::path& BasePath();
 std::string AbsolutePath(const std::string& relativePath);
+std::string JoinPaths(const std::vector<std::string>& paths);
 std::vector<std::string> ReadFromFullPath(const fs::path& fullPath);
 std::vector<std::string> Read(const std::string& relativePath);
 std::vector<std::vector<std::string>> ReadAll(const std::string& relativePath);
@@ -44,5 +47,7 @@ std::vector<Result> ForEachFile(const fs::path& location,
 }
 
 } // namespace File
+
+} // namespace TerraNova
 
 #endif

@@ -1,5 +1,7 @@
 #include "unit.hpp"
 
+namespace TerraNova {
+
 std::string Unit::GenerateGivenName(){
 	return std::string("Urist");
 }
@@ -334,3 +336,5 @@ void Unit::Fight(Unit* attacker, Unit* target){
 		target->Attack(attacker);
 	}
 }
+
+} // namespace TerraNova

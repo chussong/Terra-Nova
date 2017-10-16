@@ -6,6 +6,8 @@
 #include "gfxobject.hpp"
 #include "unit.hpp"
 
+namespace TerraNova {
+
 constexpr std::array<int, LAST_RESOURCE> defaultCost{};
 
 class BuildingType{
@@ -21,6 +23,7 @@ class BuildingType{
 	bool canHarvest = true;
 	bool automatic = false;	// i.e. automatically harvests resources on its Tile
 	unsigned int maxOccupants = 1;
+	int powerConsumption = 0; // set to negative value for power producers
 	std::array<int, LAST_RESOURCE> bonusResources = {{0}};
 	std::vector<std::shared_ptr<UnitType>> canTrain;
 	
@@ -51,6 +54,10 @@ class BuildingType{
 		bool Automatic() const;
 		void SetMaxOccupants(const int val);
 		unsigned int MaxOccupants() const;
+		void SetPowerProduction(const int val);
+		int PowerProduction() const;
+		void SetPowerConsumption(const int val);
+		int PowerConsumption() const;
 		void SetBonusResources(const std::array<int, LAST_RESOURCE>& val);
 		std::array<int, LAST_RESOURCE> BonusResources() const;
 		void SetCanTrain(const std::vector<std::shared_ptr<UnitType>>& val);
@@ -80,6 +87,8 @@ class BuildingPrototype : public GFXObject {
 
 		std::string Name() const;
 		std::array<int, LAST_RESOURCE>	Cost() const;
+		int PowerProduction() const;
+		int PowerConsumption() const;
 		int BuildTime() const;
 		const BuildingType* Type() const;
 };
@@ -87,6 +96,8 @@ class BuildingPrototype : public GFXObject {
 class Building : public GFXObject {
 	const BuildingType* type;
 	int turnsLeft;
+	bool poweredOn = false;
+	char faction;
 	//int health = 100;
 	//int upgradeLevel = 1;
 	//std::vector<std::shared_ptr<Unit>> occupants;
@@ -109,15 +120,25 @@ class Building : public GFXObject {
 			turnsLeft(std::move(other.turnsLeft)) {}
 		Building& operator=(const Building& other) = delete;
 
+		bool IsBuilding() const { return true; }
+
 		std::string Name() const;
 		std::array<int, LAST_RESOURCE>	Cost() const;
 		int BuildTime() const;
+		char Faction() const { return faction; }
+		void SetFaction(const char newFaction) { faction = newFaction; }
 
 		void StartConstruction();
 		int TurnsLeft() const;
 		void BuildTurn();
 		bool Finished() const;
+
 		bool CanHarvest() const;
+		int PowerProduction() const;
+		int PowerConsumption() const;
+		bool PoweredOn() const;
+		bool PowerOn();
+		void PowerOff();
 
 		bool Automatic() const;
 		unsigned int MaxOccupants() const;
@@ -131,4 +152,5 @@ class Building : public GFXObject {
 		void FinishTraining();
 };
 
+} // namespace TerraNova
 #endif

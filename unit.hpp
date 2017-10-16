@@ -12,6 +12,8 @@
 #include "gfxobject.hpp"
 #include "path.hpp"
 
+namespace TerraNova {
+
 struct MoveCostTable {
 	int base = 1;
 	int aquatic = -1;
@@ -51,19 +53,6 @@ class AttackType {
 };
 
 class UnitType {
-	private:
-
-	const std::string name;
-	
-	const int maxHealth;
-	const int moveSpeed;
-	const MoveCostTable moveCosts;
-	const std::vector<std::shared_ptr<AttackType>> attacks;
-
-	const int trainingTime;
-
-	bool canRespec = true;
-
 	public:
 	// ultimately we want to construct this from a line of text as std::string
 		UnitType() = delete;
@@ -86,6 +75,18 @@ class UnitType {
 		std::vector<std::shared_ptr<AttackType>> Attacks() const {return attacks;}
 		std::shared_ptr<AttackType> Attack(const int num) const 
 			{if(num >= (int)attacks.size()) return nullptr; return attacks[num];}
+
+	private:
+		const std::string name;
+		
+		const int maxHealth;
+		const int moveSpeed;
+		const MoveCostTable moveCosts;
+		const std::vector<std::shared_ptr<AttackType>> attacks;
+
+		const int trainingTime;
+
+		bool canRespec = true;
 };
 
 class Unit : public GFXObject {
@@ -168,6 +169,7 @@ class Unit : public GFXObject {
 		void OrderPatrol();
 		void OrderHarvest();
 		//std::shared_ptr<Colony> OrderFoundColony();
+		// below function is not const because the buttons can make *this act
 		std::vector<Order> AvailableOrders();
 
 		void MarkUnique()				{unique = true;}
@@ -186,4 +188,5 @@ class Unit : public GFXObject {
 		static void Fight(Unit* attacker, Unit* target);
 };
 
+} // namespace TerraNova
 #endif

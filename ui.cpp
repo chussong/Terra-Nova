@@ -1,5 +1,7 @@
 #include "ui.hpp"
 
+namespace TerraNova {
+
 /*void UIElement::AddValue(const int val){
 	values.push_back(val);
 }*/
@@ -159,17 +161,52 @@ void UIElement::MoveTo(SDL_Rect newLayout){
 	MoveTo(newLayout.x, newLayout.y);
 }
 
-UnitInfoPanel::UnitInfoPanel(SDL_Renderer* ren, const Unit* source):
-	UIAggregate(ren, SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH, 
+//UIAggregate::~UIAggregate() {}
+void UIAggregate::Render() const {
+	std::cerr << "UIAggregate::Render() shouldn't run!" << std::endl;
+}
+
+void InfoPanel::Render() const {
+}
+
+void InfoPanel::UpdateFromSource(InfoPanel& toUpdate, const GFXObject& source) {
+	// if it can be updated without reconstructing it, do that
+	if (toUpdate.Update(source)) return;
+
+	// otherwise, we have to make a new one and swap it in
+	std::unique_ptr<InfoPanel> newPanel;
+	if (source.IsUnit()) {
+		newPanel = std::make_unique<UnitInfoPanel>(toUpdate.Renderer(), 
+				dynamic_cast<const Unit&>(source) );
+	} else if (source.IsBuilding()) {
+		newPanel = std::make_unique<BuildingInfoPanel>(toUpdate.Renderer(),
+				dynamic_cast<const Building&>(source) );
+	} else if (source.IsBuildingPrototype()) {
+		newPanel = std::make_unique<BuildingInfoPanel>(toUpdate.Renderer(),
+				dynamic_cast<const BuildingPrototype&>(source) );
+	}
+	//std::swap(*newPanel, toUpdate);
+}
+
+// this just returns false because if the base function gets called it means 
+// that the panel definitely needs to be reconstructed
+bool InfoPanel::Update(const GFXObject&) {
+	std::cerr << "Warning: base InfoPanel::Update called. How?" << std::endl;
+	return false;
+}
+
+//InfoPanel::~InfoPanel() {}
+
+UnitInfoPanel::UnitInfoPanel(SDL_Renderer* ren, const Unit& source):
+	InfoPanel(ren, SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH, 
 			SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT) {
 	int panelX = SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH;
 	int panelY = SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT;
 	background = std::make_unique<UIElement>(ren,
 			"unit_info_panel",
 			panelX, panelY);
-	Update(source);
+	UpdateFromUnit(source);
 }
-
 
 void UnitInfoPanel::Render() const{
 	background->Render();
@@ -179,50 +216,62 @@ void UnitInfoPanel::Render() const{
 	attackIcon->Render();
 }
 
-void UnitInfoPanel::Update(const Unit* source){
+// return true if update was successful; return false if unsuccessful, either
+// from having a null pointer or needing to change the type of the object
+bool UnitInfoPanel::Update(const GFXObject& source) {
+	if (source.IsUnit()) {
+		UpdateFromUnit(dynamic_cast<const Unit&>(source));
+		return true;
+	} else {
+		InfoPanel::Update(source);
+		return false;
+	}
+}
+
+void UnitInfoPanel::UpdateFromUnit(const Unit& source) {
 	int panelX = SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH;
 	int panelY = SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT;
 	portrait = std::make_unique<UIElement>(ren,
-			"units/" + source->Spec()->Name() + "/portrait",
+			"units/" + source.Spec()->Name() + "/portrait",
 			panelX + PORTRAIT_X, panelY + PORTRAIT_Y);
 	factionIcon = std::make_unique<UIElement>(ren,
-			"factioncolor_p" + std::to_string(source->Faction()),
+			"factioncolor_p" + std::to_string(source.Faction()),
 			panelX + FACTIONCOLOR_X, panelY + FACTIONCOLOR_Y);
 	SDL_Rect textBox;
 	textBox.x = UNIT_NAME_X;
 	textBox.y = UNIT_NAME_Y;
 	textBox.w = UNIT_NAME_W;
 	textBox.h = UNIT_NAME_H;
-	factionIcon->AddText(source->Name(), textBox);
+	factionIcon->AddText(source.Name(), textBox);
 	if(healthIcon){
 		UpdateHealth(source);
 	} else {
 		healthIcon = std::make_unique<UIElement>(ren,
-				"healthicon_" + source->Species(),
+				"healthicon_" + source.Species(),
 				panelX + HEALTHICON_X, panelY + HEALTHICON_Y);
 		textBox.x = UNIT_HEALTH_X;
 		textBox.y = UNIT_HEALTH_Y;
 		textBox.w = UNIT_HEALTH_W;
 		textBox.h = UNIT_HEALTH_H;
 		healthIcon->AddText(
-				std::to_string(source->Health()) + "/" + 
-						std::to_string(source->MaxHealth()), textBox);
+				std::to_string(source.Health()) + "/" + 
+						std::to_string(source.MaxHealth()), textBox);
 	}
 	textBox.x = UNIT_ATTACK_X;
 	textBox.y = UNIT_ATTACK_Y;
 	textBox.w = UNIT_ATTACK_W+10;
 	textBox.h = UNIT_ATTACK_H;
-	if(source->Spec()->Attack(0)){
-		std::string attackName = source->Spec()->Attack(0)->Name();
+	if(source.Spec()->Attack(0)){
+		std::string attackName = source.Spec()->Attack(0)->Name();
 		std::replace(attackName.begin(), attackName.end(), ' ', '_');
 		attackIcon = std::make_unique<UIElement>(ren,
 				attackName + "_icon",
 				panelX + WEAPONICON_X, panelY + WEAPONICON_Y);
 		attackIcon->AddText(std::to_string(
-				static_cast<int>(std::floor(100*source->Accuracy()))) + "% | " 
-				+ std::to_string(source->AttackRate()) + "x "
-				+ std::to_string(source->Damage()) + " "
-				+ source->DamageType(), textBox);
+				static_cast<int>(std::floor(100*source.Accuracy()))) + "% | " 
+				+ std::to_string(source.AttackRate()) + "x "
+				+ std::to_string(source.Damage()) + " "
+				+ source.DamageType(), textBox);
 	} else {
 		attackIcon = std::make_unique<UIElement>(ren,
 				"null_attack_icon",
@@ -231,14 +280,164 @@ void UnitInfoPanel::Update(const Unit* source){
 	}
 }
 
-void UnitInfoPanel::UpdateHealth(const Unit* source){
+void UnitInfoPanel::UpdateHealth(const Unit& source){
 	healthIcon->SetText(
-			std::to_string(source->Health()) + "/" + std::to_string(source->MaxHealth()));
+			std::to_string(source.Health()) + "/" 
+			+ std::to_string(source.MaxHealth()) );
+}
+
+void UnitInfoPanel::UpdateHealthFromSource(UnitInfoPanel& toUpdate, 
+		const Unit& source) {
+	toUpdate.UpdateHealth(source);
+}
+
+//UnitInfoPanel::~UnitInfoPanel() {}
+
+BuildingInfoPanel::BuildingInfoPanel(SDL_Renderer* ren, const Building& source):
+	InfoPanel(ren, SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH,
+			SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT) {
+	// portrait, name, owner, power use, cost
+	std::array<int,2> panelCoords = {{SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH,
+		SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT}};
+	background = MakeBackground(ren, panelCoords);
+	portrait = MakePortrait(ren, source.Name(), panelCoords);
+	factionIcon = MakeFactionIcon(ren, source.Faction(), panelCoords);
+	powerIcon = MakePowerIcon(ren, source, panelCoords);
+	costIcons = MakeCostIcons(ren, source.Cost(), panelCoords);
+}
+
+BuildingInfoPanel::BuildingInfoPanel(SDL_Renderer* ren, 
+		const BuildingPrototype& source):
+	InfoPanel(ren, SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH,
+			SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT) {
+	// portrait, name, owner, power use, cost
+	std::array<int,2> panelCoords = {{SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH,
+		SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT}};
+	background = MakeBackground(ren, panelCoords);
+	portrait = MakePortrait(ren, source.Name(), panelCoords);
+	factionIcon = MakeFactionIcon(ren, NO_FACTION, panelCoords);
+	powerIcon = MakePowerIcon(ren, source, panelCoords);
+	costIcons = MakeCostIcons(ren, source.Cost(), panelCoords);
+}
+
+std::unique_ptr<UIElement> BuildingInfoPanel::MakeBackground(SDL_Renderer* ren, 
+		const std::array<int,2>& panelCoords) {
+	return std::make_unique<UIElement>(ren, "info_panel_building", 
+			panelCoords[0], panelCoords[1]);
+}
+
+std::unique_ptr<UIElement> BuildingInfoPanel::MakePortrait(SDL_Renderer* ren, 
+		const std::string& name, const std::array<int,2>& panelCoords) {
+	std::unique_ptr<UIElement> ret;
+	int xOffset = 5;
+	int yOffset = 5;
+	ret = std::make_unique<UIElement>(ren, "buildings/" + name + "/portrait",
+			panelCoords[0] + xOffset, panelCoords[1] + yOffset);
+	// add name as text to the portrait with some offset
+	SDL_Rect textBox = MakeSDLRect(BUILDING_INFO_PORTRAIT_WIDTH + 
+			5*BUILDING_INFO_ICON_WIDTH/2, 1 + BUILDING_INFO_ROW_HEIGHT/2,
+			5*BUILDING_INFO_ICON_WIDTH, BUILDING_INFO_ROW_HEIGHT);
+	ret->AddText(name, textBox);
+	return ret;
+}
+
+std::unique_ptr<UIElement> BuildingInfoPanel::MakeFactionIcon(SDL_Renderer* ren, 
+		char faction, const std::array<int,2>& panelCoords) {
+	int xOffset = 5 + BUILDING_INFO_PORTRAIT_WIDTH + 1;
+	int yOffset = 5 + BUILDING_INFO_ROW_HEIGHT + 1;
+	return std::make_unique<UIElement>(ren, 
+			"factioncolor_p" + std::to_string(faction),
+			panelCoords[0] + xOffset, panelCoords[1] + yOffset);
+}
+
+std::unique_ptr<UIElement> BuildingInfoPanel::MakePowerIcon(SDL_Renderer* ren, 
+		const Building& source, const std::array<int,2>& panelCoords) {
+	int xOffset = 5 + BUILDING_INFO_PORTRAIT_WIDTH + 2*BUILDING_INFO_ICON_WIDTH/2;
+	int yOffset = 5 + 2*BUILDING_INFO_ROW_HEIGHT/2;
+	std::unique_ptr<UIElement> ret;
+	int powerUse = 0;
+	std::string iconName = "power_off";
+	if (source.PoweredOn()) {
+		powerUse = source.PowerConsumption();
+		iconName = "power_on";
+	}
+	ret = std::make_unique<UIElement>(ren, "buildings/" + iconName,
+			panelCoords[0] + xOffset, panelCoords[1] + yOffset);
+	// add text showing { poweredOn ? powerConsumption : 0 } & maybe avail. pwr?
+	SDL_Rect textBox = MakeSDLRect(3*BUILDING_INFO_ICON_WIDTH/2,
+			BUILDING_INFO_ROW_HEIGHT/2, 3*BUILDING_INFO_ICON_WIDTH,
+			BUILDING_INFO_ROW_HEIGHT);
+	ret->AddText(std::to_string(powerUse), textBox);
+	return ret;
+}
+
+std::unique_ptr<UIElement> BuildingInfoPanel::MakePowerIcon(SDL_Renderer* ren, 
+		const BuildingPrototype& source, const std::array<int,2>& panelCoords) {
+	int xOffset = 5 + BUILDING_INFO_PORTRAIT_WIDTH + 2*BUILDING_INFO_ICON_WIDTH/2;
+	int yOffset = 5 + 2*BUILDING_INFO_ROW_HEIGHT/2;
+	std::unique_ptr<UIElement> ret;
+	ret = std::make_unique<UIElement>(ren, "buildings/power_on",
+			panelCoords[0] + xOffset, panelCoords[1] + yOffset);
+	// add text showing power consumption and available power
+	SDL_Rect textBox = MakeSDLRect(3*BUILDING_INFO_ICON_WIDTH/2,
+			BUILDING_INFO_ROW_HEIGHT/2, 3*BUILDING_INFO_ICON_WIDTH,
+			BUILDING_INFO_ROW_HEIGHT);
+	std::string powerUse;
+	if (source.PowerProduction() == 0) {
+		powerUse = std::to_string(source.PowerConsumption());
+	} else {
+		powerUse = "+" + std::to_string(source.PowerProduction());
+		// should also change the text color here
+	}
+	ret->AddText(powerUse, textBox);
+	return ret;
+}
+
+std::unique_ptr<std::array<UIElement,LAST_RESOURCE>> BuildingInfoPanel::MakeCostIcons(
+		SDL_Renderer* ren, const std::array<int, LAST_RESOURCE>& costs,
+		const std::array<int,2>& panelCoords) {
+	std::array<std::string, LAST_RESOURCE> resourceNames{{"food_cost", 
+		"carbon_cost", "iron_cost", "silicon_cost"}};
+	std::array<int, LAST_RESOURCE> xCoords;
+	for (auto i = 0u; i < xCoords.size(); ++i) {
+		xCoords[i] = panelCoords[0] + 5 + BUILDING_INFO_PORTRAIT_WIDTH + 1 + 
+			i*BUILDING_INFO_ICON_WIDTH;
+	}
+	int yCoord = panelCoords[1] + 5 + 2*BUILDING_INFO_ROW_HEIGHT + 1;
+	std::unique_ptr<std::array<UIElement, LAST_RESOURCE>> ret;
+	std::array<UIElement,LAST_RESOURCE> contents({{
+			UIElement{ren, resourceNames[0], xCoords[0], yCoord},
+			UIElement{ren, resourceNames[1], xCoords[1], yCoord},
+			UIElement{ren, resourceNames[2], xCoords[2], yCoord},
+			UIElement{ren, resourceNames[3], xCoords[3], yCoord}
+			}});
+	SDL_Rect textBox = MakeSDLRect(BUILDING_INFO_ICON_WIDTH/2, 
+			3*BUILDING_INFO_ROW_HEIGHT/5, 
+			BUILDING_INFO_ICON_WIDTH, BUILDING_INFO_ROW_HEIGHT);
+	for (auto i = 0u; i < LAST_RESOURCE; ++i) {
+		contents[i].AddText(std::to_string(costs[i]), textBox);
+	}
+	ret = std::make_unique<std::array<UIElement, LAST_RESOURCE>>(std::move(contents));
+	// add text to each component of ret
+	return ret;
+}
+
+void BuildingInfoPanel::Render() const {
+	background->Render();
+	portrait->Render();
+	factionIcon->Render();
+	powerIcon->Render();
+	for (const auto& costIcon : *costIcons) costIcon.Render();
+}
+//BuildingInfoPanel::~BuildingInfoPanel() {}
+bool BuildingInfoPanel::Update(const GFXObject& source) {
+	std::cout << "Updating BuildingInfoPanel." << std::endl;
+	return false;
 }
 
 UnitOrderPanel::UnitOrderPanel(SDL_Renderer* ren, Unit* source):
 	GFXObject(ren, "unit_order_panel", 0, SCREEN_HEIGHT - ORDER_PANEL_HEIGHT){
-	Update(source);
+	Update(*source);
 	activeButton = -1u;
 }
 
@@ -247,15 +446,14 @@ void UnitOrderPanel::Render() const{
 	for(auto& button : buttons) button.Render();
 }
 
-void UnitOrderPanel::Update(Unit* source){
+// the source argument is not const because the buttons can make it do stuff
+void UnitOrderPanel::Update(Unit& source){
 	buttons.clear();
-	if(source){
-		for(auto order : source->AvailableOrders()){
-			int buttonX = X() + 5 + (ORDER_BUTTON_WIDTH+5)*(buttons.size()%3);
-			int buttonY = Y() + 5 + (ORDER_BUTTON_HEIGHT+5)*(buttons.size()/3);
-			buttons.emplace_back(ren, "button_" + order.name, buttonX, buttonY,
-					order.func);
-		}
+	for(auto order : source.AvailableOrders()){
+		int buttonX = X() + 5 + (ORDER_BUTTON_WIDTH+5)*(buttons.size()%3);
+		int buttonY = Y() + 5 + (ORDER_BUTTON_HEIGHT+5)*(buttons.size()/3);
+		buttons.emplace_back(ren, "button_" + order.name, buttonX, buttonY,
+				order.func);
 	}
 }
 
@@ -293,3 +491,5 @@ void UnitOrderPanel::MoveTo(int x, int y){
 				y + 5 + (ORDER_BUTTON_HEIGHT+5)*(i/3));
 	}
 }
+
+} // namespace TerraNova

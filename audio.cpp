@@ -1,5 +1,8 @@
 #include "audio.hpp"
 
+//namespace TerraNova::Audio {  ////// this is the C++17 version
+
+namespace TerraNova {
 namespace Audio {
 
 namespace {
@@ -141,4 +144,5 @@ void Resume(const int) {
 	//Mix_PlayChannel(0, soundChunk, loops);
 }
 
-} // Audio namespace
+} // namespace Audio
+} // namespace TerraNova

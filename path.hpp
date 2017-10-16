@@ -9,6 +9,8 @@
 #include "templates.hpp"
 #include "sprite.hpp"
 
+namespace TerraNova {
+
 class Path {
 	std::vector<std::array<unsigned int, 2>> steps;	// each entry is the actual
 											// coords of a Tile, not increments
@@ -31,5 +33,7 @@ class Path {
 				const int startY, const int startRow, const int startColm,
 				const int endRow, const int endColm, const bool firstSegment);
 };
+
+} // namespace TerraNova
 
 #endif

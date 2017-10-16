@@ -1,5 +1,6 @@
 #include "random.hpp"
 
+namespace TerraNova {
 namespace Random {
 
 // anonymous namespace containing PRNG variables
@@ -49,3 +50,4 @@ int Int(const int min, const int max) {
 }
 
 } // namespace Random
+} // namespace TerraNova

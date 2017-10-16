@@ -1,5 +1,7 @@
 #include "cutscene.hpp"
 
+namespace TerraNova {
+
 namespace {
 	//const std::string CUTSCENE_BACKGROUND = "space-colony";
 
@@ -36,7 +38,7 @@ CutsceneScreen::~CutsceneScreen() {
 void CutsceneScreen::SetBackground(const std::string& filename) {
 	background.clear();
 	background.push_back(std::make_unique<UIElement>(ren, 
-				"backgrounds/" + filename, 0, 0));
+				File::JoinPaths({"backgrounds", filename}), 0, 0));
 	//std::cout << "Menu screen background set." << std::endl;
 }
 
@@ -106,3 +108,5 @@ void CutsceneScreen::BackstepDialogue() {
 void CutsceneScreen::ScreenHandoff() {
 	wantScreen = nextScreen;
 }
+
+} // namespace TerraNova

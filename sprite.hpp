@@ -7,12 +7,20 @@
 #include <iostream>
 #include <memory>
 #include <algorithm>
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 
 #include "templates.hpp"
 #include "gamevars.hpp"
+
+namespace TerraNova {
+
+// basically a 4-parameter constructor for SDL_Rect
+SDL_Rect MakeSDLRect(const int x, const int y, const unsigned int w,
+		const unsigned int h);
 
 class Sprite {
 	SDL_Texture* image;
@@ -48,7 +56,7 @@ class GFXManager {
 	static std::vector<std::shared_ptr<Sprite>> loadedSprites;
 
 	static std::string GetSpritePath(const std::string& subDir = "");
-	static std::shared_ptr<Sprite> LoadSprite(const std::string& name);
+	static std::shared_ptr<Sprite> LoadSprite(std::string name);
 
 	public:
 		GFXManager() = delete;
@@ -58,4 +66,5 @@ class GFXManager {
 		static SDL_Renderer* Ren() { return ren; }
 };
 
+} // namespace TerraNova
 #endif

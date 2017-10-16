@@ -1,5 +1,7 @@
 #include "game.hpp"
 
+namespace TerraNova {
+
 std::vector<BuildingType*> Faction::defaultBuildingTypes;
 
 Game::Game(): Game(nullptr){
@@ -149,7 +151,13 @@ void Game::ReadUnitTypes(){
 		boost::split(atkNames, entries[3], boost::is_any_of(","));
 		atks.clear();
 		for(auto& name : atkNames){
-			if((atk = FindByName(attackTypes, name)) != nullptr) atks.push_back(atk);
+			try {
+				atk = FindByName(attackTypes, name);
+			}
+			catch (const std::runtime_error&) {
+				continue;
+			}
+			atks.push_back(atk);
 		}
 
 		try{
@@ -181,19 +189,28 @@ void Game::ReadBuildingTypes(){
 	costs = {{0,60,40,40}};
 	BuildingType factoryFarm(idsUsed++, "Factory Farm", costs, 3);
 	factoryFarm.SetBonusResources({{4,0,0,0}});
+	factoryFarm.SetPowerConsumption(6);
 	buildingTypes.push_back(std::move(factoryFarm));
 
 	costs = {{0,20,60,80}};
 	BuildingType autoMine(idsUsed++, "Automated Mine", costs, 4);
 	autoMine.SetMaxOccupants(0);
 	autoMine.SetAutomatic(true);
+	autoMine.SetPowerConsumption(16);
 	buildingTypes.push_back(std::move(autoMine));
 
 	costs = {{0,20,20,40}};
 	BuildingType academy(idsUsed++, "Academy", costs, 4);
 	academy.SetCanHarvest(false);
 	academy.SetCanTrain(unitTypes[1]);
+	academy.SetPowerConsumption(10);
 	buildingTypes.push_back(std::move(academy));
+
+	costs = {{0,40,40,60}};
+	BuildingType powerStation(idsUsed++, "Power Station", costs, 5);
+	powerStation.SetMaxOccupants(0);
+	powerStation.SetPowerProduction(20);
+	buildingTypes.push_back(std::move(powerStation));
 
 	std::vector<BuildingType*> factionBuildingTypes;
 	for(auto& bt : buildingTypes) factionBuildingTypes.push_back(&bt);
@@ -668,3 +685,5 @@ bool Game::ExecuteEvent(Event& event) {
 	if(!event.Repeatable()) event.SetFinished();
 	return true;
 }
+
+} // namespace TerraNova

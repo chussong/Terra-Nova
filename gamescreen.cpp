@@ -116,16 +116,18 @@ GFXObject* GameScreen::SelectedObject(const int x, const int y){
 				ClickObject(clickables[i]);
 				return selected;
 			}
-			return clickables[i];
+			return clickables[i]->SelectAt(x, y);
 		}
 	}
-	// object isn't selectable so it can never be returned
+	// object isn't selectable so it can never be returned, but it could have
+	// a selectable thing on it which will be returned by SelectAt
 	for(unsigned int i = objects.size()-1; i < objects.size(); --i){
 		if(objects[i]->InsideQ(x, y)){
 			if(objects[i]->Click()){
 				ClickObject(objects[i]);
 				return selected;
 			}
+			return objects[i]->SelectAt(x, y);
 		}
 	}
 	return nullptr;
@@ -334,7 +336,7 @@ void GameScreen::DrawColonyMisc(const Colony* col){
 	for(unsigned int i = 0; i < 9; ++i){
 		if(i >= buildingTypes.size()) break;
 		
-		AddUI(std::make_unique<BuildingPrototype>(ren, "building",
+		AddUI(std::make_unique<BuildingPrototype>(ren, 
 					gridLeftEdge + (2*(i%3) + 1)*BUILDING_GRID_PADDING
 						+ (i%3)*BUILDING_WIDTH,
 					gridTopEdge + (2*(i/3) + 1)*BUILDING_GRID_PADDING
@@ -463,24 +465,59 @@ void GameScreen::LeftClick(const int x, const int y) {
 
 void GameScreen::RightClick(const int x, const int y) {
 	if (selected == nullptr) return;
-	GFXObject* obj = ClickedObject(x, y);
-	Tile* clickedTile = dynamic_cast<Tile*>(obj);
-	if (selected->IsUnit() && clickedTile) {
+	GFXObject* clickedObject = ClickedObject(x, y);
+	if (selected->IsUnit()) {
+		RightClick_Unit(clickedObject);
+	} else if (selected->IsBuildingPrototype()) {
+		RightClick_BuildingPrototype(clickedObject);
+	}
+}
+
+void GameScreen::RightClick_Unit(GFXObject* clickedObject) {
+	Unit* selectedUnit = dynamic_cast<Unit*>(selected);
+
+	Tile* clickedTile = dynamic_cast<Tile*>(clickedObject);
+	if (clickedTile) {
 		/*std::cout << "This character will now attempt to "
 			"construct a Path to that Tile." << std::endl;*/
-		Unit* selectedUnit = dynamic_cast<Unit*>(selected);
 		selectedUnit->OrderMove(theMap->PathTo(
 				selectedUnit->Row(), selectedUnit->Colm(),
 				clickedTile->Row(), clickedTile->Colm(),
 				selectedUnit->MoveCosts()));
+		return;
 	}
-	Unit* clickedUnit = dynamic_cast<Unit*>(obj);
+
+	Unit* clickedUnit = dynamic_cast<Unit*>(clickedObject);
 	if (clickedUnit && selected->IsUnit()) {
-		Unit* selectedUnit = dynamic_cast<Unit*>(selected);
 		selectedUnit->OrderMove(theMap->PathTo(
 				selectedUnit->Row(), selectedUnit->Colm(),
 				clickedUnit->Row(), clickedUnit->Colm(),
 				selectedUnit->MoveCosts()));
+		return;
+	}
+}
+
+void GameScreen::RightClick_BuildingPrototype(GFXObject* clickedObject) {
+	BuildingPrototype* selectedPrototype = 
+		dynamic_cast<BuildingPrototype*>(selected);
+
+	Tile* clickedTile = dynamic_cast<Tile*>(clickedObject);
+	if (clickedTile) {
+		Colony* payingColony = currentFocusColony;
+		if (!payingColony) {
+			payingColony = clickedTile->LinkedColony();
+		}
+		if (payingColony) {
+			if (selectedPrototype->CanBuyWith(payingColony->Resources())) {
+				payingColony->TakeResources(selectedPrototype->Cost());
+				clickedTile->AddBuilding(selectedPrototype->Type());
+			} else {
+				std::cout << "Insufficient resources in " 
+					<< payingColony->Name() << " to construct " 
+					<< selectedPrototype->Name() << "." << std::endl;
+			}
+		}
+		return;
 	}
 }
 

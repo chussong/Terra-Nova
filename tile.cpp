@@ -28,9 +28,10 @@ void Tile::StartTurn(){
 		std::cout << "The Tile at (" << row << "," << colm << ") has "
 			<< occupants.size() << " occupants." << std::endl;
 	}*/
-	if(linkedColony && (Faction() == linkedColony->Faction())){
+	if (linkedColony /*&& (Faction() == linkedColony->Faction())*/) {
 		linkedColony->AddResources(this->Income());
 	}
+	if (bldg && bldg->TurnsLeft() > 0) bldg->BuildTurn();
 }
 
 void Tile::EndTurn(){
@@ -82,10 +83,11 @@ bool Tile::InsideQ(const int x, const int y){
 	return true;
 }
 
-/*int Tile::Select() {
-	if(hasColony) return SCREEN_CHANGE;
-	return NOTHING;
-}*/
+GFXObject* Tile::SelectAt(const int x, const int y) {
+	if (bldg && bldg->InsideQ(x, y)) return bldg.get();
+	if (InsideQ(x, y)) return this;
+	return nullptr;
+}
 
 bool Tile::Click() {
 	/*if(HasColony()){
@@ -174,6 +176,10 @@ void Tile::AddBuilding(std::shared_ptr<Building> newBldg){
 	bldgLayout.x += MAPDISP_ORIGIN_X + (TILE_WIDTH - BUILDING_WIDTH)/2;
 	bldgLayout.y += MAPDISP_ORIGIN_Y + (4*TILE_HEIGHT/3 - BUILDING_HEIGHT)/2;
 	bldg->MoveTo(bldgLayout);
+}
+
+void Tile::AddBuilding(const BuildingType* type) {
+	AddBuilding(std::make_shared<Building>(ren, 0, 0, type));
 }
 
 void Tile::RemoveBuilding(){

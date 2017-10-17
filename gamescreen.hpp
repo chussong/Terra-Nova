@@ -109,6 +109,8 @@ class GameScreen : public Screen {
 		void KeyPress(const SDL_Keycode key);
 		void LeftClick(const int x, const int y);
 		void RightClick(const int x, const int y);
+		void RightClick_Unit(GFXObject* clickedObject);
+		void RightClick_BuildingPrototype(GFXObject* clickedObject);
 
 		SDL_Renderer* Renderer() const;
 		GFXObject* Object(const int num);

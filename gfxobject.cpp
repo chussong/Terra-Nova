@@ -112,11 +112,16 @@ int GFXObject::BottomEdge() const{
 	return layout.y + layout.h - 1;
 }
 
-bool GFXObject::InsideQ(const int x, const int y){
+bool GFXObject::InsideQ(const int x, const int y) {
 	if(!visible) return false;
 	if(x < layout.x || y < layout.y || x >= layout.x + layout.w || 
 			y >= layout.y + layout.h) return false;
 	return true;
+}
+
+GFXObject* GFXObject::SelectAt(const int x, const int y) {
+	if (InsideQ(x, y)) return this;
+	return nullptr;
 }
 
 } // namespace TerraNova

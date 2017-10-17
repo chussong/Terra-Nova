@@ -83,6 +83,7 @@ class Tile : public GFXObject {
 		void Resize(SDL_Rect newLayout);
 
 		bool InsideQ(const int x, const int y);
+		GFXObject* SelectAt(const int x, const int y);
 		//int Select();
 		bool Click();
 		TileType* Type() const;
@@ -104,6 +105,7 @@ class Tile : public GFXObject {
 		int Colm() const;
 
 		void AddBuilding(std::shared_ptr<Building> newBldg);
+		void AddBuilding(const BuildingType* type);
 		void RemoveBuilding();
 
 		bool AddOccupant(std::shared_ptr<Unit> newOccupant);

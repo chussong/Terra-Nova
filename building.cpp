@@ -14,6 +14,14 @@ std::array<int, LAST_RESOURCE> BuildingType::Cost() const{
 	return cost;
 }
 
+bool BuildingType::CanBuyWith(std::array<int, LAST_RESOURCE> availableResources) 
+		const {
+	for (auto i = 0u; i < LAST_RESOURCE; ++i) {
+		if (availableResources[i] < cost[i]) return false;
+	}
+	return true;
+}
+
 int BuildingType::BuildTime() const{
 	return buildTime;
 }
@@ -104,6 +112,11 @@ std::array<int, LAST_RESOURCE> BuildingPrototype::Cost() const{
 	return type->Cost();
 }
 
+bool BuildingPrototype::CanBuyWith(
+		std::array<int,LAST_RESOURCE> availableResources) const {
+	return type->CanBuyWith(availableResources);
+}
+
 int BuildingPrototype::PowerProduction() const {
 	return type->PowerProduction();
 }
@@ -128,6 +141,11 @@ std::array<int, LAST_RESOURCE> Building::Cost() const{
 	return type->Cost();
 }
 
+bool Building::CanBuyWith(
+		std::array<int,LAST_RESOURCE> availableResources) const {
+	return type->CanBuyWith(availableResources);
+}
+
 int Building::BuildTime() const{
 	return type->BuildTime();
 }
@@ -142,14 +160,19 @@ int Building::TurnsLeft() const{
 
 void Building::BuildTurn(){
 	turnsLeft--;
+	//std::cout << Name() << " build timer decremented, now " << turnsLeft << "."
+		//<< std::endl;
 }
 
 bool Building::Finished() const{
+	//std::cout << "Building " << Name() << " has " << turnsLeft << " turns left."
+		//<< std::endl;
 	return turnsLeft == 0;
 }
 
 bool Building::CanHarvest() const{
-	return turnsLeft == 0 && type->CanHarvest();
+	//std::cout << "Checking if " << Name() << " can harvest." << std::endl;
+	return turnsLeft == 0 && (type->CanHarvest() || type->Automatic());
 }
 
 int Building::PowerProduction() const {
@@ -177,6 +200,9 @@ void Building::PowerOff() {
 }
 
 bool Building::Automatic() const{
+	//std::cout << "Building " << Name() << " is ";
+	//if (!type->Automatic()) std::cout << "not ";
+	//std::cout << "automatic." << std::endl;
 	return type->Automatic();
 }
 

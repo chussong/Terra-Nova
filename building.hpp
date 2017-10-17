@@ -38,6 +38,7 @@ class BuildingType{
 		int								ID()		const;
 		std::string						Name()		const;
 		std::array<int, LAST_RESOURCE>	Cost()		const;
+		bool CanBuyWith(std::array<int,LAST_RESOURCE> availableResources) const;
 		int								BuildTime() const;
 
 		//void SetAllowedTerrain(const std::vector<std::shared_ptr<TileType>>& val);
@@ -71,13 +72,14 @@ class BuildingPrototype : public GFXObject {
 
 	public:
 		BuildingPrototype() = delete;
-		BuildingPrototype(SDL_Renderer* ren, const std::string spriteFile,
-				const int x, const int y, const BuildingType* type) : 
-			GFXObject(ren, spriteFile, x, y), type(type) {}
-		BuildingPrototype(SDL_Renderer* ren, const std::string spriteFile,
-				const int x, const int y,
+		BuildingPrototype(SDL_Renderer* ren, const int x, const int y, 
+				const BuildingType* type) : 
+			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y), 
+			type(type) {}
+		BuildingPrototype(SDL_Renderer* ren, const int x, const int y,
 				const std::shared_ptr<BuildingType> type) : 
-			GFXObject(ren, spriteFile, x, y), type(type.get()) {}
+			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y), 
+			type(type.get()) {}
 		BuildingPrototype(const BuildingPrototype& other) = delete;
 		BuildingPrototype(BuildingPrototype&& other) noexcept : 
 			GFXObject(std::move(other)), type(std::move(other.type)) {}
@@ -87,6 +89,7 @@ class BuildingPrototype : public GFXObject {
 
 		std::string Name() const;
 		std::array<int, LAST_RESOURCE>	Cost() const;
+		bool CanBuyWith(std::array<int,LAST_RESOURCE> availableResources) const;
 		int PowerProduction() const;
 		int PowerConsumption() const;
 		int BuildTime() const;
@@ -107,13 +110,14 @@ class Building : public GFXObject {
 
 	public:
 		Building() = delete;
-		Building(SDL_Renderer* ren, const std::string spriteFile,
-				const int x, const int y, const BuildingType* type) : 
-			GFXObject(ren, spriteFile, x, y), type(type) {}
-		Building(SDL_Renderer* ren, const std::string spriteFile,
-				const int x, const int y,
+		Building(SDL_Renderer* ren, const int x, const int y, 
+				const BuildingType* type) : 
+			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y), 
+			type(type), turnsLeft(type->BuildTime()) {}
+		Building(SDL_Renderer* ren, const int x, const int y,
 				const std::shared_ptr<BuildingType> type) : 
-			GFXObject(ren, spriteFile, x, y), type(type.get()) {}
+			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y), 
+			type(type.get()), turnsLeft(type->BuildTime()) {}
 		Building(const Building& other) = delete;
 		Building(Building&& other) noexcept : 
 			GFXObject(std::move(other)), type(std::move(other.type)),
@@ -124,6 +128,7 @@ class Building : public GFXObject {
 
 		std::string Name() const;
 		std::array<int, LAST_RESOURCE>	Cost() const;
+		bool CanBuyWith(std::array<int,LAST_RESOURCE> availableResources) const;
 		int BuildTime() const;
 		char Faction() const { return faction; }
 		void SetFaction(const char newFaction) { faction = newFaction; }

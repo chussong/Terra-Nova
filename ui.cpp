@@ -397,7 +397,7 @@ std::unique_ptr<std::array<UIElement,LAST_RESOURCE>> BuildingInfoPanel::MakeCost
 		SDL_Renderer* ren, const std::array<int, LAST_RESOURCE>& costs,
 		const std::array<int,2>& panelCoords) {
 	std::array<std::string, LAST_RESOURCE> resourceNames{{"food_cost", 
-		"carbon_cost", "iron_cost", "silicon_cost"}};
+		"carbon_cost", "silicon_cost", "iron_cost"}};
 	std::array<int, LAST_RESOURCE> xCoords;
 	for (auto i = 0u; i < xCoords.size(); ++i) {
 		xCoords[i] = panelCoords[0] + 5 + BUILDING_INFO_PORTRAIT_WIDTH + 1 + 

@@ -7,7 +7,6 @@
 #include <memory>
 #include <SDL.h>
 
-#include "building.hpp"
 #include "templates.hpp"
 #include "gamevars.hpp"
 #include "faction.hpp"
@@ -27,10 +26,6 @@ class Colony {
 	int powerSupply;
 	int powerDemand;
 
-	std::vector<std::string> buildings;
-
-	std::vector<std::shared_ptr<Building>> buildQueue;
-
 	public:
 		Colony() = delete;
 		Colony(SDL_Renderer* ren, const int faction);
@@ -40,15 +35,17 @@ class Colony {
 		void Move(const int xdist, const int ydist);
 		int  AddResource(const resource_t resource, int amount);
 		std::array<int, LAST_RESOURCE> AddResources(
-				const std::array<int, LAST_RESOURCE>& income);
+				const std::array<int, LAST_RESOURCE>& amounts);
 		int  TakeResource(const resource_t resource, int amount);
-		void AddBuilding(const std::string Building);
+		std::array<int, LAST_RESOURCE> TakeResources(
+				const std::array<int, LAST_RESOURCE>& amounts);
 
 		std::string Name() const;
 		int Column() const;
 		void SetColumn(const int newColm) { colm = newColm; }
 		int Row() const;
 		void SetRow(const int newRow) { row = newRow; }
+		const std::array<int, LAST_RESOURCE>& Resources() const;
 		const int& Resource(const resource_t resource) const;
 		const int& Resource(const int resource) const;
 		unsigned int NumberOfResources() const { return resources.size(); }

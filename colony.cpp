@@ -5,7 +5,7 @@ namespace TerraNova {
 Colony::Colony(SDL_Renderer* ren, const int faction): 
 		ren(ren), name(Faction::GenerateColonyName(faction)), faction(faction)
 {
-	resources.fill(0);
+	resources.fill(4*RESCAP/5);
 	resourceCap.fill(RESCAP);
 	powerSupply = 0;
 	powerDemand = 0;
@@ -59,6 +59,15 @@ int Colony::TakeResource(const resource_t resource, int amount){
 	return amount;
 }
 
+std::array<int, LAST_RESOURCE> Colony::TakeResources(
+		const std::array<int, LAST_RESOURCE>& amounts) {
+	std::array<int, LAST_RESOURCE> ret;
+	for (auto i = 0u; i < LAST_RESOURCE; ++i) {
+		ret[i] = TakeResource(static_cast<resource_t>(i), amounts[i]);
+	}
+	return ret;
+}
+
 std::string Colony::Name() const{
 	return name;
 }
@@ -71,100 +80,16 @@ int Colony::Column() const{
 	return colm;
 }
 
+const std::array<int, LAST_RESOURCE>& Colony::Resources() const {
+	return resources;
+}
+
 const int& Colony::Resource(const resource_t resource) const{
 	return resources[resource];
 }
 
 const int& Colony::Resource(const int resource) const{
 	return Resource(static_cast<resource_t>(resource));
-}
-
-/*void Colony::AssignWorker(Unit* worker, const Tile* location){
-	worker->SetLocation(location->Row(), location->Colm(), false);
-}*/
-
-/*void Colony::EnqueueBuilding(const BuildingType* type, Tile* clickedTile){
-	if(!type){
-		std::cerr << "Error: attempted to add a nullptr to Building queue." << std::endl;
-		return;
-	}
-	if(!clickedTile){
-		std::cerr << "Error: attempted to add a Building to a nullptr Tile." << std::endl;
-		return;
-	}
-
-	if(clickedTile->Faction() != 0 && Faction() != clickedTile->Faction()){
-		std::cout << "Can not build on occupied territory." << std::endl;
-		return;
-	}
-
-	std::vector<std::shared_ptr<TileType>> allowedTerrain = type->AllowedTerrain();
-	bool allowedToBuild = allowedTerrain.empty();
-	for(auto& terrainType : allowedTerrain){
-		if(terrainType == clickedTile->Type()){
-			allowedToBuild = true;
-			break;
-		}
-	}
-	if(!allowedToBuild){
-		std::cout << "Unable to build a(n) " << type->Name() << " on the "
-			<< "selected terrain's Tile type." << std::endl;
-		return;
-	}
-
-	std::array<bool, LAST_RESOURCE> haveEnough;
-	std::array<int, LAST_RESOURCE> cost = type->Cost();
-	bool canAfford = true;
-	for(unsigned int i = 0; i < LAST_RESOURCE; ++i){
-		if(resources[i] >= cost[i]){
-			haveEnough[i] = true;
-		} else {
-			haveEnough[i] = false;
-			canAfford = false;
-		}
-	}
-	if(canAfford){
-		for(unsigned int i = 0; i < LAST_RESOURCE; ++i){
-			TakeResource(static_cast<resource_t>(i), cost[i]);
-		}
-		std::shared_ptr<Building> newBuilding = std::make_shared<Building>
-			(ren, "Building", 0, 0, type);
-		newBuilding->StartConstruction();
-		buildQueue.push_back(newBuilding);
-		clickedTile->AddBuilding(newBuilding);
-	} else {
-		std::cout << "Unable to build a(n) " << type->Name() << " because you lack"
-			<< " the following resource(s): ";
-		for(unsigned int i = 0; i < LAST_RESOURCE; ++i){
-			if(haveEnough[i] == false){
-				std::cout << ResourceName(static_cast<resource_t>(i)) << ": " 
-					<< resources[i] << "/" << cost[i] << ", ";
-			}
-		}
-		std::cout << "\b\b." << std::endl;
-	}
-}*/
-
-/*void Colony::EnqueueBuilding(const unsigned int id, Tile* dTile){
-	if(id >= buildingTypes.size()){
-		std::cerr << "Error: asked to enqueue a Building type with an id higher \
-			than what we know (" << id << ">" << buildingTypes.size()-1 << ")."
-			<< std::endl;
-		return;
-	}
-	EnqueueBuilding(buildingTypes[id].get(), dTile);
-}*/
-
-void Colony::AdvanceQueue(){
-	if(buildQueue.size() == 0){
-		return;
-	}
-	buildQueue[0]->BuildTurn();
-	if(buildQueue[0]->TurnsLeft() < 1){
-		std::cout << "Construction of " << buildQueue[0]->Name() << " complete!"
-			<< std::endl;
-		buildQueue.erase(buildQueue.begin());
-	}
 }
 
 void Colony::ProcessTurn(){

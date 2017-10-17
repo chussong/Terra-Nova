@@ -26,8 +26,7 @@ main.o: main.cpp game.hpp gamevars.hpp window.hpp random.hpp file.hpp
 unit.o: unit.cpp unit.hpp gfxobject.hpp gamevars.hpp path.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-colony.o: colony.cpp colony.hpp templates.hpp building.hpp gamevars.hpp \
-		faction.hpp
+colony.o: colony.cpp colony.hpp templates.hpp gamevars.hpp faction.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 map.o: map.cpp map.hpp templates.hpp gamevars.hpp tile.hpp path.hpp random.hpp

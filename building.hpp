@@ -74,11 +74,11 @@ class BuildingPrototype : public GFXObject {
 		BuildingPrototype() = delete;
 		BuildingPrototype(SDL_Renderer* ren, const int x, const int y, 
 				const BuildingType* type) : 
-			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y), 
+			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y, true), 
 			type(type) {}
 		BuildingPrototype(SDL_Renderer* ren, const int x, const int y,
 				const std::shared_ptr<BuildingType> type) : 
-			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y), 
+			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y, true), 
 			type(type.get()) {}
 		BuildingPrototype(const BuildingPrototype& other) = delete;
 		BuildingPrototype(BuildingPrototype&& other) noexcept : 
@@ -112,11 +112,11 @@ class Building : public GFXObject {
 		Building() = delete;
 		Building(SDL_Renderer* ren, const int x, const int y, 
 				const BuildingType* type) : 
-			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y), 
+			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y, true), 
 			type(type), turnsLeft(type->BuildTime()) {}
 		Building(SDL_Renderer* ren, const int x, const int y,
 				const std::shared_ptr<BuildingType> type) : 
-			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y), 
+			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y, true), 
 			type(type.get()), turnsLeft(type->BuildTime()) {}
 		Building(const Building& other) = delete;
 		Building(Building&& other) noexcept : 

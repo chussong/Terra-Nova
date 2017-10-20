@@ -212,6 +212,12 @@ void Game::ReadBuildingTypes(){
 	powerStation.SetPowerProduction(20);
 	buildingTypes.push_back(std::move(powerStation));
 
+	costs = {{0,100,100,100}};
+	BuildingType revivalChamber(idsUsed++, "Revival Chamber", costs, 8);
+	revivalChamber.SetMaxOccupants(0);
+	revivalChamber.SetPowerConsumption(60);
+	buildingTypes.push_back(std::move(revivalChamber));
+
 	std::vector<BuildingType*> factionBuildingTypes;
 	for(auto& bt : buildingTypes) factionBuildingTypes.push_back(&bt);
 	Faction::SetDefaultBuildingTypes(std::move(factionBuildingTypes));

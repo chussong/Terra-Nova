@@ -31,7 +31,10 @@ void Tile::StartTurn(){
 	if (linkedColony /*&& (Faction() == linkedColony->Faction())*/) {
 		linkedColony->AddResources(this->Income());
 	}
-	if (bldg && bldg->TurnsLeft() > 0) bldg->BuildTurn();
+	if (bldg && bldg->TurnsLeft() > 0) {
+		bldg->BuildTurn();
+		if (bldg->Finished() && linkedColony) linkedColony->AddBuilding(bldg);
+	}
 }
 
 void Tile::EndTurn(){

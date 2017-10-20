@@ -10,6 +10,8 @@
 #include "templates.hpp"
 #include "gamevars.hpp"
 #include "faction.hpp"
+#include "building.hpp"
+#include "power.hpp"
 
 namespace TerraNova {
 
@@ -23,8 +25,7 @@ class Colony {
 
 	std::array<int, LAST_RESOURCE> resources;
 	std::array<int, LAST_RESOURCE> resourceCap;
-	int powerSupply;
-	int powerDemand;
+	PowerGrid powerGrid;
 
 	public:
 		Colony() = delete;
@@ -49,11 +50,13 @@ class Colony {
 		const int& Resource(const resource_t resource) const;
 		const int& Resource(const int resource) const;
 		unsigned int NumberOfResources() const { return resources.size(); }
-		std::string ResAsString(const int res) const;
+		const int& AvailablePower() const;
+		const int& MaximumPower() const;
 
-		void AdvanceQueue();
+		void AddBuilding(std::shared_ptr<Building> toAdd);
 
-		void ProcessTurn();
+		void StartTurn();
+		void EndTurn();
 
 		static std::string ResourceName(const resource_t resource);
 };

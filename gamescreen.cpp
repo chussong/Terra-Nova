@@ -324,6 +324,25 @@ void GameScreen::DrawResources(const Colony* col){
 }
 
 void GameScreen::DrawColonyMisc(const Colony* col){
+	auto namePlate = std::make_unique<UIElement>(ren, "colony_name_plate", 
+			200, 0);
+	namePlate->AddText(col->Name(), MakeSDLRect(150, 50, 300, 100));
+	AddUI(std::move(namePlate));
+
+	auto powerPanel = std::make_unique<UIElement>(ren, "colony_power_panel",
+			600, 100);
+	powerPanel->AddDynamicText(col->AvailablePower(), 50, 50);
+	AddUI(std::move(powerPanel));
+
+	DrawBuildingGrid(Faction::BuildingTypes(col->Faction()));
+
+	std::unique_ptr<Button> leaveColonyButton = std::make_unique<Button>(ren,
+			"leavecolony", SCREEN_WIDTH-200, 100, 
+			std::function<void()>(std::bind(&GameScreen::LeaveColony, this)));
+	AddUI(std::move(leaveColonyButton));
+}
+
+void GameScreen::DrawBuildingGrid(const std::vector<BuildingType*>& types) {
 	int gridLeftEdge = SCREEN_WIDTH - 50 - 
 		BUILDING_GRID_COLUMNS*(BUILDING_WIDTH + 2*BUILDING_GRID_PADDING);
 	int gridTopEdge = 350;
@@ -331,23 +350,17 @@ void GameScreen::DrawColonyMisc(const Colony* col){
 			gridLeftEdge, gridTopEdge);
 	AddUI(std::move(buildingGrid));
 
-	const std::vector<BuildingType*>& buildingTypes(Faction::BuildingTypes(col->Faction()));
-
 	for(unsigned int i = 0; i < 9; ++i){
-		if(i >= buildingTypes.size()) break;
+		if(i >= types.size()) break;
 		
 		AddUI(std::make_unique<BuildingPrototype>(ren, 
 					gridLeftEdge + (2*(i%3) + 1)*BUILDING_GRID_PADDING
 						+ (i%3)*BUILDING_WIDTH,
 					gridTopEdge + (2*(i/3) + 1)*BUILDING_GRID_PADDING
 						+ (i/3)*BUILDING_HEIGHT,
-					buildingTypes[i]));
+					types[i]));
 	}
 
-	std::unique_ptr<Button> leaveColonyButton = std::make_unique<Button>(ren,
-			"leavecolony", SCREEN_WIDTH-200, 100, 
-			std::function<void()>(std::bind(&GameScreen::LeaveColony, this)));
-	AddUI(std::move(leaveColonyButton));
 }
 
 void GameScreen::ClearOutOfBounds(){

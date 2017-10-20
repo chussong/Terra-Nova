@@ -355,10 +355,17 @@ std::unique_ptr<UIElement> BuildingInfoPanel::MakePowerIcon(SDL_Renderer* ren,
 	int xOffset = 5 + BUILDING_INFO_PORTRAIT_WIDTH + 2*BUILDING_INFO_ICON_WIDTH/2;
 	int yOffset = 5 + 2*BUILDING_INFO_ROW_HEIGHT/2;
 	std::unique_ptr<UIElement> ret;
-	int powerUse = 0;
+	std::string powerUse = "0";
 	std::string iconName = "power_off";
+	textcolor_t powerColor = BLACK;
 	if (source.PoweredOn()) {
-		powerUse = source.PowerConsumption();
+		if (source.PowerProduction() > 0) {
+			powerUse = "+" + std::to_string(source.PowerProduction());
+			powerColor = BLUE;
+		} else {
+			powerUse = std::to_string(source.PowerConsumption());
+			powerColor = BLACK;
+		}
 		iconName = "power_on";
 	}
 	ret = std::make_unique<UIElement>(ren, "buildings/" + iconName,
@@ -367,7 +374,7 @@ std::unique_ptr<UIElement> BuildingInfoPanel::MakePowerIcon(SDL_Renderer* ren,
 	SDL_Rect textBox = MakeSDLRect(3*BUILDING_INFO_ICON_WIDTH/2,
 			BUILDING_INFO_ROW_HEIGHT/2, 3*BUILDING_INFO_ICON_WIDTH,
 			BUILDING_INFO_ROW_HEIGHT);
-	ret->AddText(std::to_string(powerUse), textBox);
+	ret->AddText(powerUse, textBox, nullptr, powerColor);
 	return ret;
 }
 
@@ -383,13 +390,16 @@ std::unique_ptr<UIElement> BuildingInfoPanel::MakePowerIcon(SDL_Renderer* ren,
 			BUILDING_INFO_ROW_HEIGHT/2, 3*BUILDING_INFO_ICON_WIDTH,
 			BUILDING_INFO_ROW_HEIGHT);
 	std::string powerUse;
+	textcolor_t powerColor = BLACK;
 	if (source.PowerProduction() == 0) {
 		powerUse = std::to_string(source.PowerConsumption());
+		powerColor = BLACK;
 	} else {
 		powerUse = "+" + std::to_string(source.PowerProduction());
+		powerColor = BLUE;
 		// should also change the text color here
 	}
-	ret->AddText(powerUse, textBox);
+	ret->AddText(powerUse, textBox, nullptr, powerColor);
 	return ret;
 }
 

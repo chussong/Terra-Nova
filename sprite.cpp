@@ -20,9 +20,26 @@ SDL_Rect MakeSDLRect(const int x, const int y, const unsigned int w,
 SDL_Color Sprite::SDLifyTextColor(const textcolor_t color){
 	SDL_Color colorCode;
 	switch(color){
+enum textcolor_t { BLACK = 0, RED = 1, BLUE = 2, GREEN = 3,
+	LAST_COLOR = 4 };
 		case BLACK: 	colorCode.r = 0;
 						colorCode.g = 0;
 						colorCode.b = 0;
+						colorCode.a = 255;
+						break;
+		case RED  : 	colorCode.r = 150;
+						colorCode.g = 25;
+						colorCode.b = 50;
+						colorCode.a = 255;
+						break;
+		case BLUE : 	colorCode.r = 50;
+						colorCode.g = 25;
+						colorCode.b = 150;
+						colorCode.a = 255;
+						break;
+		case GREEN: 	colorCode.r = 25;
+						colorCode.g = 150;
+						colorCode.b = 50;
 						colorCode.a = 255;
 						break;
 		default:		colorCode.r = 0;

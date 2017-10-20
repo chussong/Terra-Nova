@@ -454,9 +454,9 @@ void DialogueBox::DisplayDecision(){
 	makingDecision = true;
 }
 
-// return true if a decision was successfully made
+// return true if a decision was completed or there was never a decision to do
 bool DialogueBox::MakeDecision(const unsigned int n){
-	if(!currentDecision) return true;
+	if(!makingDecision) return true;
 	if(n-1 >= currentDecision->options.size()) return false;
 	currentLineNumber = currentDecision->jumpTo[n-1];
 	if(currentLineNumber >= dialogue->Length()){

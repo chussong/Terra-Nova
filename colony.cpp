@@ -5,10 +5,8 @@ namespace TerraNova {
 Colony::Colony(SDL_Renderer* ren, const int faction): 
 		ren(ren), name(Faction::GenerateColonyName(faction)), faction(faction)
 {
-	resources.fill(4*RESCAP/5);
+	resources.fill(5*RESCAP/5);
 	resourceCap.fill(RESCAP);
-	powerSupply = 0;
-	powerDemand = 0;
 }
 
 void Colony::ChangeName(const std::string name){
@@ -92,7 +90,24 @@ const int& Colony::Resource(const int resource) const{
 	return Resource(static_cast<resource_t>(resource));
 }
 
-void Colony::ProcessTurn(){
+const int& Colony::AvailablePower() const {
+	return powerGrid.AvailablePower();
+}
+
+const int& Colony::MaximumPower() const {
+	return powerGrid.MaximumPower();
+}
+
+void Colony::AddBuilding(std::shared_ptr<Building> toAdd) {
+	powerGrid.AddBuilding(toAdd);
+}
+
+void Colony::StartTurn(){
+	powerGrid.StartTurn();
+}
+
+void Colony::EndTurn(){
+	powerGrid.EndTurn();
 }
 
 std::string Colony::ResourceName(const resource_t resource){

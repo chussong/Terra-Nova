@@ -79,6 +79,7 @@ class GameScreen : public Screen {
 		void BreakFocusOnColony();
 		void DrawResources(const Colony* col);
 		void DrawColonyMisc(const Colony* col);
+		void DrawBuildingGrid(const std::vector<BuildingType*>& types);
 		void LeaveColony() { std::cout << "Leaving colony." << std::endl;
 			newFocusColony = nullptr; }
 		void SetFocusColony(Colony* col) { std::cout << "Entering colony." 

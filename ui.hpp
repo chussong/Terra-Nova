@@ -25,10 +25,6 @@ class UIElement : public GFXObject {
 	mutable int dynamicTextCached = 0;
 	mutable SDL_Rect dynamicTextLayout = SDL_Rect();
 
-	// probably this should be moved to Button; it represents things like which
-	// type of Building it is, not things like how many resources are displayed
-	//std::vector<int> values;
-
 	public:
 		UIElement(SDL_Renderer* ren, const std::string spriteFile,
 				const int x, const int y) : 
@@ -43,10 +39,6 @@ class UIElement : public GFXObject {
 			//values(std::move(other.values)){}
 		UIElement(UIElement&& other) noexcept = default;
 		UIElement& operator=(const UIElement& other) = delete;
-
-		/*void AddValue(const int val);
-		void SetValue(const unsigned int entry, const int newVal);
-		int Value(const unsigned int entry) const;*/
 
 		void AddText(const std::string& text, const SDL_Rect boundingBox,
 				TTF_Font* font = nullptr, const textcolor_t color = BLACK);

@@ -13,18 +13,17 @@ GFXObject::GFXObject(SDL_Renderer* ren, const std::string& spriteFile,
 void GFXObject::ChangeSprite(const std::string& spriteName){
 	sprite = GFXManager::RequestSprite(spriteName);
 	sprite->MakeDefaultSize(layout);
-	if(selectable){
-		selectedSprite = GFXManager::RequestSprite(spriteName + "_selected");
+	if (selectable) {
+		auto firstSlash = spriteName.find_first_of("/");
+		selectedSprite = GFXManager::RequestSprite(
+				spriteName.substr(0, firstSlash) + "/selected" );
 	}
 }
 
 void GFXObject::Render() const{
-	if(!visible) return;
-	if(selected){
-		selectedSprite->RenderTo(ren, layout);
-	} else {
-		sprite->RenderTo(ren, layout);
-	}
+	if (!visible) return;
+	sprite->RenderTo(ren, layout);
+	if (selected) selectedSprite->RenderTo(ren, layout);
 }
 
 int GFXObject::Select(){

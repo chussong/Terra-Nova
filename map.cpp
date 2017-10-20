@@ -40,7 +40,7 @@ void Map::StartTurn(){
 	//CleanExpired(colonies);
 	roamers = CheckAndLock(weakRoamers);
 	ForAllTiles(&Tile::StartTurn);
-	for(auto& col : colonies) col->ProcessTurn();
+	for(auto& col : colonies) col->StartTurn();
 
 	ProcessMovement();
 }
@@ -48,6 +48,7 @@ void Map::StartTurn(){
 void Map::EndTurn(){
 	roamers.clear();
 	ForAllTiles(&Tile::EndTurn);
+	for(auto& col : colonies) col->EndTurn();
 }
 
 void Map::InitTerrain(std::vector<std::shared_ptr<TileType>> types){

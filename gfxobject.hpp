@@ -59,6 +59,8 @@ class GFXObject : public std::enable_shared_from_this<GFXObject> {
 	 	virtual bool IsButton() const { return false; }
 
 	protected:
+		// sprite is this object's main sprite; selectedSprite is an overlay
+		// that's rendered after sprite when the object is selected
 		std::shared_ptr<Sprite> sprite;
 		std::shared_ptr<Sprite> selectedSprite;
 		SDL_Renderer* ren;

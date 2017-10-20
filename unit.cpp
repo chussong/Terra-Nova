@@ -45,8 +45,8 @@ void Unit::ChangeGender(const std::string gender){
 void Unit::ChangeSpec(const std::shared_ptr<UnitType> spec){
 	this->spec = spec;
 	sprite = GFXManager::RequestSprite(spec->Name());
-	selectedSprite = GFXManager::RequestSprite(
-			"units/" + spec->Name() + "/sprite_selected");
+	//selectedSprite = GFXManager::RequestSprite(
+			//"units/" + spec->Name() + "/sprite_selected");
 }
 
 bool Unit::TakeDamage(const int damage){

@@ -1,5 +1,7 @@
 #include "power.hpp"
 
+namespace TerraNova {
+
 void PowerGrid::StartTurn() {
 	producers.StartTurn();
 	consumers.StartTurn();
@@ -23,6 +25,7 @@ void PowerGrid::AddBuilding(std::shared_ptr<Building> newBuilding) {
 
 	if (newBuilding->PowerProduction() > 0) {
 		producers.push_back(newBuilding); 
+		newBuilding->PowerOn();
 	} else {
 		if (newBuilding->PowerConsumption() > 0) {
 			consumers.push_back(newBuilding); 
@@ -39,22 +42,33 @@ void PowerGrid::AddBuilding(std::weak_ptr<Building> newBuilding) {
 	AddBuilding(newBuilding.lock());
 }
 
+const int& PowerGrid::AvailablePower() const {
+	return availablePower;
+}
+
+const int& PowerGrid::MaximumPower() const {
+	return maximumPower;
+}
+
 // Find out how much power is being produced, then go through the list of
 // consumers from earliest to latest, powering them up if possible and powering
 // them down if not (then moving on to the next one in line).
 void PowerGrid::BalancePower() {
-	int totalPower = 0;
+	maximumPower = 0;
 	for (const auto& producer : producers) {
-		totalPower += producer->PowerProduction();
+		maximumPower += producer->PowerProduction();
 	}
+	availablePower = maximumPower;
 
 	for (auto& consumer : consumers) {
 		int powerDraw = consumer->PowerConsumption();
-		if (powerDraw <= totalPower) {
+		if (powerDraw <= availablePower) {
 			consumer->PowerOn();
-			totalPower -= powerDraw;
+			availablePower -= powerDraw;
 		} else {
 			consumer->PowerOff();
 		}
 	}
 }
+
+} // namespace TerraNova

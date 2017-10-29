@@ -10,10 +10,10 @@ EXECUTABLE = TerraNova
 SOURCES = main.cpp unit.cpp colony.cpp map.cpp game.cpp gamescreen.cpp \
 		  sprite.cpp gfxobject.cpp ui.cpp tile.cpp building.cpp path.cpp \
 		  dialogue.cpp ai.cpp random.cpp file.cpp event.cpp menu.cpp \
-		  window.cpp audio.cpp cutscene.cpp power.cpp
+		  window.cpp audio.cpp cutscene.cpp power.cpp subwindow.cpp
 OBJECTS = main.o unit.o colony.o map.o game.o gamescreen.o sprite.o \
 		  gfxobject.o ui.o tile.o building.o path.o dialogue.o ai.o random.o \
-		  file.o event.o menu.o window.o audio.o cutscene.o power.o
+		  file.o event.o menu.o window.o audio.o cutscene.o power.o subwindow.o
 
 all: $(EXECUTABLE)
 
@@ -91,6 +91,9 @@ audio.o: audio.cpp audio.hpp file.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 power.o: power.cpp power.hpp templates.hpp building.hpp
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+subwindow.o: subwindow.cpp subwindow.hpp ui.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 clean:

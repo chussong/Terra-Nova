@@ -30,8 +30,18 @@ Game::Game(GameScreen* screen): screen(screen) {
 
 	std::vector<Event> events = Event::ReadEventDirectory("1");
 	for(auto& event : events) {
-		if(event.HasStartTrigger()) mapStartEvents.push_back(std::move(event));
-		if(event.HasLocationTrigger()) locationEvents.push_back(std::move(event));
+		if(event.HasStartTrigger()) {
+			mapStartEvents.push_back(std::move(event));
+			continue;
+		}
+		if(event.HasLocationTrigger()) {
+			locationEvents.push_back(std::move(event));
+			continue;
+		}
+		if(event.HasBuildingTrigger()) {
+			buildingEvents.push_back(std::move(event));
+			continue;
+		}
 	}
 
 	// placeholder
@@ -206,13 +216,13 @@ void Game::ReadBuildingTypes(){
 	academy.SetPowerConsumption(10);
 	buildingTypes.push_back(std::move(academy));
 
-	costs = {{0,40,40,60}};
+	costs = {{0,5,5,5}};
 	BuildingType powerStation(idsUsed++, "Power Station", costs, 5);
 	powerStation.SetMaxOccupants(0);
 	powerStation.SetPowerProduction(20);
 	buildingTypes.push_back(std::move(powerStation));
 
-	costs = {{0,100,100,100}};
+	costs = {{0,20,20,20}};
 	BuildingType revivalChamber(idsUsed++, "Revival Chamber", costs, 8);
 	revivalChamber.SetMaxOccupants(0);
 	revivalChamber.SetPowerConsumption(60);
@@ -630,6 +640,7 @@ void Game::StartTurn(){
 	ClearFinishedEvents();
 	for(auto& m : maps) m->StartTurn();
 	for(auto& event : locationEvents) ExecuteEventIfTriggered(event);
+	for(auto& map : maps) TriggerEventsInMap(*map, buildingEvents);
 	//locationEvents.erase(
 			//std::remove_if(locationEvents.begin(), locationEvents.end(),
 				//std::bind(&Game::ExecuteEventIfTriggered, this, 
@@ -643,6 +654,7 @@ void Game::StartTurn(){
 	for(auto& aip : aiPlayers) aip.GiveOrders();
 
 	screen->StartTurn();
+	if (victory) screen->ShowVictoryPopup();
 }
 
 void Game::EndTurn(){
@@ -669,6 +681,37 @@ void Game::ClearFinishedEvents(){
 			locationEvents.end() );
 }
 
+void Game::TriggerEventsInMap(const Map& map,
+		std::vector<Event>& events) {
+	/*std::cout << "Checking the following events on the map: " << std::endl;
+	for (auto& e : events) {
+		std::cout << e.Name() << " with trigger type " << e.TriggerType()
+			<< std::endl;
+	}*/
+	//for (Tile& tile : map) {
+	for (unsigned int row = 0; row < map.NumberOfRows(); ++row) {
+		for (unsigned int col = row%2; col < map.NumberOfColumns(); col += 2) {
+			for (auto it = events.begin(); it != events.end(); ++it) {
+				const std::string* triggeringBuilding = it->TriggeringBuilding();
+				if (triggeringBuilding == nullptr) {
+					std::cerr << "Error: TriggerEventsInMap is processing an "
+						<< "event without a valid building trigger." 
+						<< std::endl;
+					continue;
+				}
+				if (map.Terrain(row, col)->HasBuilding(*triggeringBuilding)) {
+					//std::cout << "Executing event " << it->Name() << std::endl;
+					if (ExecuteEvent(*it)) {
+						it = events.erase(it);
+						--it;
+					}
+				}
+			}
+		}
+	}
+	//}
+}
+
 // Return true if event was triggered and is not repeatable; false otherwise.
 //
 // this is definitely still pretty hackish. Need to specify map (or have event
@@ -688,8 +731,9 @@ bool Game::ExecuteEventIfTriggered(Event& event) {
 // Return false if event is repeatable and should not be cleared.
 bool Game::ExecuteEvent(Event& event) {
 	if(event.HasLinkedDialogue()) screen->PlayDialogue(event.LinkedDialogue());
+	if(event.Victory()) victory = true;
 	if(!event.Repeatable()) event.SetFinished();
-	return true;
+	return event.Finished();
 }
 
 } // namespace TerraNova

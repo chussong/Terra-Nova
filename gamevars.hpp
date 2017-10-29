@@ -122,6 +122,8 @@ constexpr int DIALOGUE_BOX_HEIGHT = 200;
 constexpr int DIALOGUE_BOX_X = (SCREEN_WIDTH - DIALOGUE_BOX_WIDTH)/2;
 constexpr int DIALOGUE_BOX_Y = SCREEN_HEIGHT - DIALOGUE_BOX_HEIGHT;
 
+constexpr int SUBWINDOW_BUTTON_SPACING = 25;
+
 // misc UI
 
 enum button_t { END_TURN = 0, BUILDING = 1, LEAVE_COLONY = 2 };

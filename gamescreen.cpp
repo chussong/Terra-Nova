@@ -32,9 +32,10 @@ void GameScreen::Render(){
 	for(auto& thing : clickables) thing->Render();
 	for(auto& thing : UI        ) thing->Render();
 	for(auto& thing : topLevelUI) thing->Render();
-	if(endTurnButton) endTurnButton->Render();
-	if(dialogueBox) dialogueBox->Render();
-	if(hoverTextBox) hoverTextBox->Render();
+	if (endTurnButton) endTurnButton->Render();
+	if (dialogueBox) dialogueBox->Render();
+	if (hoverTextBox) hoverTextBox->Render();
+	if (subwindow) subwindow->Render();
 }
 
 SDL_Renderer* GameScreen::Renderer() const{
@@ -100,6 +101,13 @@ void GameScreen::ClickUnit(Unit*){
 
 // this iterates through stuff backwards so that the most recent thing is on top
 GFXObject* GameScreen::SelectedObject(const int x, const int y){
+	// if there's a subwindow we only interact with that
+	if (subwindow) {
+		if (subwindow->InsideQ(x, y)) {
+			subwindow->SelectAt(x, y);
+		}
+		return nullptr;
+	}
 	if(endTurnButton->InsideQ(x, y)){
 		if(endTurnButton->Click()) return selected;
 		return endTurnButton.get();
@@ -189,6 +197,9 @@ void GameScreen::AddObject(std::shared_ptr<GFXObject> newThing){
 }
 
 signal_t GameScreen::HandleKeyPress(SDL_Keycode key){
+	if (subwindow) {
+		return NOTHING;
+	}
 	if(dialogueBox){
 		switch(key){
 			case SDLK_1:
@@ -443,6 +454,20 @@ void GameScreen::PlayDialogue(Dialogue* dialogue) {
 	dialogueBox = std::make_unique<DialogueBox>(ren, dialogue);
 }
 
+void GameScreen::ShowVictoryPopup() {
+	auto victorySubwindow = std::make_unique<Subwindow>(ren, "hover_text_background", 
+			SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+	auto returnToMenuButton = std::make_unique<Button>(ren, "return_to_menu_button",
+			0, 0, std::bind(&GameScreen::ReturnToMenu, this) );
+	victorySubwindow->AddButton(std::move(returnToMenuButton));
+	victorySubwindow->AddCaption("Victory!");
+	subwindow = std::move(victorySubwindow);
+}
+
+void GameScreen::ReturnToMenu() {
+	wantScreen = MENU_SCREEN;
+}
+
 void GameScreen::KeyPress(const SDL_Keycode key) {
 	signal_t keySig = HandleKeyPress(key);
 	switch(keySig/100){
@@ -477,7 +502,7 @@ void GameScreen::LeftClick(const int x, const int y) {
 }
 
 void GameScreen::RightClick(const int x, const int y) {
-	if (selected == nullptr) return;
+	if (selected == nullptr || subwindow != nullptr) return;
 	GFXObject* clickedObject = ClickedObject(x, y);
 	if (selected->IsUnit()) {
 		RightClick_Unit(clickedObject);

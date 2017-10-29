@@ -42,7 +42,8 @@ std::vector<std::string> ReadFromFullPath(const fs::path& fullPath){
 	std::string line;
 	do{
 		std::getline(in, line);
-		if(line.length() > 0 && line[0] != '%') ret.push_back(line);
+		boost::trim(line);
+		if(line.length() > 0 && line[0] != '%') ret.push_back(std::move(line));
 	}while((in.rdstate() & std::ifstream::eofbit) == 0);
 
 	//std::cout << "Read the following file:" << std::endl;
@@ -117,6 +118,19 @@ std::vector<std::string> GetField(const std::vector<std::string>& source,
 		}
 	}
 	throw(std::runtime_error("File::GetField -- could not find '}' in input."));
+}
+
+Entry GetEntry(const std::string& line) {
+	Entry ret;
+	auto colonPos = line.find(':');
+	if (colonPos == std::string::npos) {
+		std::cerr << "Error: failed to parse an entry from this line:" 
+			<< std::endl << line << std::endl;
+		return ret;
+	}
+	ret.name = boost::trim_copy(line.substr(0, colonPos));
+	ret.value = boost::trim_copy(line.substr(colonPos+1));
+	return ret;
 }
 
 } // namespace File

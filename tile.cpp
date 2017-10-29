@@ -189,6 +189,10 @@ void Tile::RemoveBuilding(){
 	bldg.reset();
 }
 
+bool Tile::HasBuilding(const std::string& buildingName) const {
+	return bldg != nullptr && bldg->Name() == buildingName && bldg->PoweredOn();
+}
+
 bool Tile::AddOccupant(std::shared_ptr<Unit> newOccupant){
 	if(!newOccupant){
 		std::cerr << "Error: attempted to add a blank occupant to a Tile."

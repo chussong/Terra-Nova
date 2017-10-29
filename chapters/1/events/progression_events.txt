@@ -1,0 +1,7 @@
+victory{
+	building_trigger{
+		player: 1
+		name: Revival Chamber
+	}
+	victory
+}

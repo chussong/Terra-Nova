@@ -69,6 +69,8 @@ class GameScreen : public Screen {
 		std::vector<GFXObject*> objects;
 		std::vector<std::unique_ptr<UIElement>> background;
 
+		std::unique_ptr<Subwindow> subwindow = nullptr;
+
 		GFXObject* selected;
 
 		// Colony screen -----------------------------------------------------
@@ -146,6 +148,9 @@ class GameScreen : public Screen {
 
 		//void PlayDialogue(const std::string& dialoguePath);
 		void PlayDialogue(Dialogue* dialogue);
+
+		void ShowVictoryPopup();
+		void ReturnToMenu();
 
 		// Map screen ---------------------------------------------------------
 

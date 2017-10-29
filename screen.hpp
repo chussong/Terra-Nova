@@ -3,6 +3,8 @@
 
 #include <SDL.h>
 
+#include "subwindow.hpp"
+
 namespace TerraNova {
 
 enum ScreenID { SAME_SCREEN, MENU_SCREEN, GAME_SCREEN, CUTSCENE_SCREEN };

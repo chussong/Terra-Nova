@@ -36,10 +36,12 @@ class Game {
 
 	std::vector<Event> mapStartEvents;
 	std::vector<Event> locationEvents;
+	std::vector<Event> buildingEvents;
 
 	std::vector<AIPlayer> aiPlayers;
 
 	GameScreen* screen;
+	bool victory = false;
 
 	void ClearDeadUnits();
 	void ClearFinishedEvents();
@@ -50,6 +52,7 @@ class Game {
 
 	bool ExecuteEventIfTriggered(Event& event);
 	bool ExecuteEvent(Event& event);
+	void TriggerEventsInMap(const Map& map, std::vector<Event>& events);
 
 	public:
 		Game();

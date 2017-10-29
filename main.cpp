@@ -16,7 +16,5 @@ int main(){
 	TerraNova::Window win("Terra Nova", 128, 128, SCREEN_WIDTH, SCREEN_HEIGHT);
 	win.InputLoop();
 
-	//Game Game1;
-	//Game1.Begin();
 	return EXIT_SUCCESS;
 }

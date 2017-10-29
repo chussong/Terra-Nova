@@ -12,18 +12,19 @@
 namespace TerraNova{
 
 class UIElement : public GFXObject {
-	std::unique_ptr<Sprite> textSprite = nullptr;
-	SDL_Rect textLayout;
+	protected:
+		std::unique_ptr<Sprite> textSprite = nullptr;
+		SDL_Rect textLayout;
 
-	// dynamic text should probably be a class/struct of its own that has
-	// formatting codes and knows how to render itself
-	int const* dynamicTextSource;
-	TTF_Font* dynamicTextFont;
-	SDL_Color dynamicTextColor;
-	void UpdateDynamicText() const;
-	mutable std::unique_ptr<Sprite> dynamicTextSprite = nullptr;
-	mutable int dynamicTextCached = 0;
-	mutable SDL_Rect dynamicTextLayout = SDL_Rect();
+		// dynamic text should probably be a class/struct of its own that has
+		// formatting codes and knows how to render itself
+		int const* dynamicTextSource;
+		TTF_Font* dynamicTextFont;
+		SDL_Color dynamicTextColor;
+		void UpdateDynamicText() const;
+		mutable std::unique_ptr<Sprite> dynamicTextSprite = nullptr;
+		mutable int dynamicTextCached = 0;
+		mutable SDL_Rect dynamicTextLayout = SDL_Rect();
 
 	public:
 		UIElement(SDL_Renderer* ren, const std::string spriteFile,
@@ -51,9 +52,9 @@ class UIElement : public GFXObject {
 		void SetDynamicText(const int& source, TTF_Font* font = nullptr,
 				const textcolor_t color = BLACK);
 
-		void Render() const;
-		void MoveTo(int x, int y);
-		void MoveTo(SDL_Rect newLayout);
+		virtual void Render() const;
+		virtual void MoveTo(int x, int y);
+		virtual void MoveTo(SDL_Rect newLayout);
 };
 
 class Button : public UIElement {

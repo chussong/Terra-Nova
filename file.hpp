@@ -31,10 +31,13 @@ std::string JoinPaths(const std::vector<std::string>& paths);
 std::vector<std::string> ReadFromFullPath(const fs::path& fullPath);
 std::vector<std::string> Read(const std::string& relativePath);
 std::vector<std::vector<std::string>> ReadAll(const std::string& relativePath);
+
+struct Entry { std::string name; std::string value; };
 std::vector<std::string> GetSection(const std::vector<std::string>& source,
 		const std::string& sectionName);
 std::vector<std::string> GetField(const std::vector<std::string>& source,
 		const size_t startingLine);
+Entry GetEntry(const std::string& line);
 
 template<typename Result>
 std::vector<Result> ForEachFile(const fs::path& location, 

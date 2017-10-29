@@ -15,6 +15,65 @@
 
 namespace TerraNova {
 
+/*struct Map_Iterator : std::iterator_traits<inner_range::iterator> {
+	Map_Iterator(const outer_range::iterator& outer_iterator,
+			const outer_range::iterator& outer_end): 
+		outer_iterator(outer_iterator), outer_end(outer_end) { StartNewRow(); }
+
+	Map_Iterator& operator++() {
+		++inner_iterator;
+		if (inner_iterator == inner_end) {
+			++outer_iterator;
+			StartNewRow();
+			return *this;
+		}
+		++inner_iterator;
+		if (inner_iterator == inner_end) {
+			++outer_iterator;
+			StartNewRow();
+		}
+		return *this;
+	}
+
+	Map_Iterator operator++(int) {
+		Map_Iterator ret = *this;
+		++(*this);
+		return ret;
+	}
+
+	reference operator*() const {
+		return *inner_iterator;
+	}
+
+	bool operator==(const Map_Iterator& other) const {
+		const bool thisEnd = outer_iterator == outer_end;
+		const bool otherEnd = other.outer_iterator == other.outer_end;
+		if (thisEnd && otherEnd) return true;
+		if (thisEnd != otherEnd) return false;
+		return outer_iterator == other.outer_iterator 
+			&& inner_iterator == other.inner_iterator;
+	}
+
+	private:
+		outer_range::iterator outer_iterator, outer_end;
+		inner_range::iterator inner_iterator, inner_end;
+		bool oddRow = false;
+
+		void StartNewRow() {
+			while (outer_iterator != outer_end) {
+				oddRow = !oddRow;
+				inner_iterator = (*outer_iterator)->begin();
+				inner_end = (*outer_iterator)->end();
+				if (inner_iterator == inner_end) {
+					++outer_iterator;
+				} else {
+					if (oddRow) ++inner_iterator;
+					break;
+				}
+			}
+		}
+};*/
+
 class Map {
 	enum MoveStatus { MS_UNCHECKED, MS_CLEAR, MS_BOUNCE, MS_ASSAULT, 
 		MS_ASSAULTED, MS_FRIENDCLASH, MS_FOECLASH, MS_TARGETMOVING, 

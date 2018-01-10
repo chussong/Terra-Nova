@@ -189,7 +189,10 @@ void Tile::RemoveBuilding(){
 	bldg.reset();
 }
 
+// with an empty argument or no argument, this returns whether tile has ANY
+// building or not. With an argument, it returns whether tile has THAT building
 bool Tile::HasBuilding(const std::string& buildingName) const {
+	if (buildingName.empty()) return bldg != nullptr;
 	return bldg != nullptr && bldg->Name() == buildingName && bldg->PoweredOn();
 }
 

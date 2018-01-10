@@ -541,6 +541,10 @@ void GameScreen::RightClick_BuildingPrototype(GFXObject* clickedObject) {
 
 	Tile* clickedTile = dynamic_cast<Tile*>(clickedObject);
 	if (clickedTile) {
+		if (clickedTile->HasBuilding()) {
+			std::cout << "This tile already has a building." << std::endl;
+			return;
+		}
 		Colony* payingColony = currentFocusColony;
 		if (!payingColony) {
 			payingColony = clickedTile->LinkedColony();

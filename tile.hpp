@@ -107,7 +107,7 @@ class Tile : public GFXObject {
 		void AddBuilding(std::shared_ptr<Building> newBldg);
 		void AddBuilding(const BuildingType* type);
 		void RemoveBuilding();
-		bool HasBuilding(const std::string& buildingName) const;
+		bool HasBuilding(const std::string& buildingName = "") const;
 
 		bool AddOccupant(std::shared_ptr<Unit> newOccupant);
 		bool RemoveOccupant(Unit* removeThis);

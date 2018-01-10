@@ -100,7 +100,7 @@ class Building : public GFXObject {
 	const BuildingType* type;
 	int turnsLeft;
 	bool poweredOn = false;
-	char faction;
+	char faction = 0;
 	//int health = 100;
 	//int upgradeLevel = 1;
 	//std::vector<std::shared_ptr<Unit>> occupants;

@@ -60,13 +60,13 @@ std::vector<Dialogue::Character> Dialogue::ParseCharacters(
 }
 
 std::vector<std::string> Dialogue::ParseLines(
-		const std::vector<std::string>& source){
+		const std::vector<std::string>& source) {
 	//std::cout << "Parsing the following lines of dialogue:" << std::endl;
 	//for(auto& ln : source) std::cout << ln << std::endl;
-	if(source.size() == 0) return std::vector<std::string>();
+	if (source.size() == 0) return std::vector<std::string>();
 	std::vector<std::string> ret;
 	auto it = source.begin();
-	if(it->size() == 0 || it->at(0) != '-'){
+	if (it->size() == 0 || it->at(0) != '-') {
 		std::cerr << "Error: each line of dialogue (including in particular the"
 			<< " first one) should start with a '-'." << std::endl;
 		return ret;
@@ -74,32 +74,32 @@ std::vector<std::string> Dialogue::ParseLines(
 	std::string currentLine = boost::trim_copy(it->substr(1));
 	do{
 		++it;
-		if(it != source.end() && it->length() == 0){
+		if (it != source.end() && it->length() == 0) {
 			std::cerr << "Error: asked to parse a dialogue line with length 0; "
 				<< "it should not be possible to receive an empty line." 
 				<< std::endl;
 			return ret;
 		}
-		if(it == source.end() || it->front() == '-'){
+		if (it == source.end() || it->front() == '-') {
 			ret.push_back(currentLine);
 			if(it != source.end()) currentLine = boost::trim_copy(it->substr(1));
 		} else {
 			currentLine += " " + boost::trim_copy(*it);
 		}
-	}while(it != source.end());
+	} while (it != source.end());
 	//std::cout << "Parsed to produce the following lines:" << std::endl;
 	//for(auto& ln : ret) std::cout << ln << std::endl;
 	return ret;
 }
 
-std::vector<Dialogue::Hook> Dialogue::ExtractHooks(std::vector<std::string>& lines){
+std::vector<Dialogue::Hook> Dialogue::ExtractHooks(std::vector<std::string>& lines) {
 	std::vector<Hook> ret;
 	std::regex extractor("@hook=(.*?)@");
-	for(auto lineNum = 0u; lineNum < lines.size(); ++lineNum){
+	for (auto lineNum = 0u; lineNum < lines.size(); ++lineNum) {
 		auto hook_begin = std::sregex_iterator(lines[lineNum].begin(), 
 				lines[lineNum].end(), extractor);
 		auto hook_end = std::sregex_iterator();
-		for(auto it = hook_begin; it != hook_end; ++it){
+		for (auto it = hook_begin; it != hook_end; ++it) {
 			ret.emplace_back(it->str(1), lineNum);
 			//std::cout << "Found a hook: (" << ret.back().name << "," 
 				//<< ret.back().lineNumber << ")." << std::endl;
@@ -113,14 +113,14 @@ std::vector<Dialogue::Hook> Dialogue::ExtractHooks(std::vector<std::string>& lin
 
 std::vector<Dialogue::DecisionPoint> Dialogue::ParseDecisions(
 		const std::vector<std::string>& source, 
-		const std::vector<Dialogue::Hook>& hooks){
+		const std::vector<Dialogue::Hook>& hooks) {
 	//std::cout << "Parsing decisions from the following lines:" << std::endl;
 	//for(auto& ln : source) std::cout << ln << std::endl;
 	std::vector<DecisionPoint> ret;
 
 	auto startIt = source.begin();
-	while(startIt != source.end()){
-		if(startIt->find('{') != std::string::npos){
+	while (startIt != source.end()) {
+		if (startIt->find('{') != std::string::npos) {
 			std::vector<std::string> options;
 			std::vector<size_t> destinationLines;
 
@@ -128,9 +128,9 @@ std::vector<Dialogue::DecisionPoint> Dialogue::ParseDecisions(
 			boost::trim(decisionName);
 			auto insideIt = startIt + 1;
 			//std::cout << "Parsing a decision called " << decisionName << std::endl;
-			while(insideIt != source.end() && insideIt->at(0) != '}'){
+			while (insideIt != source.end() && insideIt->at(0) != '}') {
 				//std::cout << "Found this line: " << *insideIt << std::endl;
-				if(boost::trim_copy(*insideIt).compare(0, 7, "option:") == 0){
+				if (boost::trim_copy(*insideIt).compare(0, 7, "option:") == 0) {
 					size_t destinationLine = -1u;
 					std::string optionText = FindOptionText(*insideIt);
 					std::string hookName = FindHookName(*insideIt);
@@ -151,7 +151,7 @@ std::vector<Dialogue::DecisionPoint> Dialogue::ParseDecisions(
 				}
 				++insideIt;
 			}
-			ret.emplace_back(decisionName, options, destinationLines);
+			ret.emplace_back (decisionName, options, destinationLines);
 			startIt = insideIt;
 		} else {
 			++startIt;
@@ -160,12 +160,12 @@ std::vector<Dialogue::DecisionPoint> Dialogue::ParseDecisions(
 	return ret;
 }
 
-std::string Dialogue::FindOptionText(const std::string& sourceLine){
+std::string Dialogue::FindOptionText(const std::string& sourceLine) {
 	std::smatch match;
 	std::regex extractor("option:.*\"(.*?)\",");
 	
-	if(std::regex_search(sourceLine, match, extractor)){
-		if(match.size() == 0){
+	if (std::regex_search(sourceLine, match, extractor)) {
+		if (match.size() == 0) {
 			std::cerr << "Error: a FindOptionText search returned true but "
 				<< "somehow failed to fill the match object." << std::endl;
 			return "";
@@ -180,12 +180,12 @@ std::string Dialogue::FindOptionText(const std::string& sourceLine){
 	}
 }
 
-std::string Dialogue::FindHookName(const std::string& sourceLine){
+std::string Dialogue::FindHookName(const std::string& sourceLine) {
 	std::smatch match;
 	std::regex extractor("\",(.*)");
 	
-	if(std::regex_search(sourceLine, match, extractor)){
-		if(match.size() == 0){
+	if (std::regex_search(sourceLine, match, extractor)) {
+		if (match.size() == 0) {
 			std::cerr << "Error: a FindHookName search returned true but "
 				<< "somehow failed to fill the match object." << std::endl;
 			return "";
@@ -200,20 +200,20 @@ std::string Dialogue::FindHookName(const std::string& sourceLine){
 	}
 }
 
-void Dialogue::AddLine(std::string line){
+void Dialogue::AddLine(std::string line) {
 	//if(line.length() > 80) line.insert(80, "\n");
 	lines.push_back(line);
 }
 
-void Dialogue::AddDecisionPoint(DecisionPoint dp){
+void Dialogue::AddDecisionPoint(DecisionPoint dp) {
 	decisionPoints.push_back(dp);
 }
 
-size_t Dialogue::Length() const{
+size_t Dialogue::Length() const {
 	return lines.size();
 }
 
-const std::string& Dialogue::Line(const size_t lineNum) const{
+const std::string& Dialogue::Line(const size_t lineNum) const {
 	return lines[lineNum];
 }
 
@@ -224,9 +224,9 @@ const std::string& Dialogue::Line(const size_t lineNum) const{
 	return nullptr;
 }*/
 
-const Dialogue::DecisionPoint* Dialogue::DecisionNamed(const std::string& name) const{
-	for(auto& decPt : decisionPoints){
-		if(decPt.name == name) return &decPt;
+const Dialogue::DecisionPoint* Dialogue::DecisionNamed(const std::string& name) const {
+	for (auto& decPt : decisionPoints) {
+		if (decPt.name == name) return &decPt;
 	}
 	std::cerr << "Error: dialogue asked to find a decision point named " << name
 		<< " but was not able to." << std::endl;
@@ -242,7 +242,7 @@ void Dialogue::AddCharacter(const Character& toAdd) {
 	characters.push_back(toAdd);
 }*/
 
-const std::vector<Dialogue::Character>& Dialogue::Characters() const{
+const std::vector<Dialogue::Character>& Dialogue::Characters() const {
 	return characters;
 }
 

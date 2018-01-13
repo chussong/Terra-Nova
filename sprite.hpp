@@ -32,11 +32,11 @@ class Sprite {
 		static SDL_Color SDLifyTextColor(const textcolor_t color);
 
 		Sprite() = delete;
-		explicit Sprite(SDL_Renderer* ren, const std::string filename,
+		explicit Sprite(SDL_Renderer* ren, std::string filename,
 				SDL_Rect layout);
-		explicit Sprite(SDL_Renderer* ren, const std::string filename,
+		explicit Sprite(SDL_Renderer* ren, const std::string& filename,
 				const int x, const int y);
-		explicit Sprite(SDL_Renderer* ren, const std::string text,
+		explicit Sprite(SDL_Renderer* ren, const std::string& text,
 				SDL_Rect layout, const SDL_Color color, 
 				TTF_Font* font = defaultFont);
 		~Sprite();

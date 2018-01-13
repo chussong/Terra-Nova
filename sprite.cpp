@@ -58,10 +58,19 @@ SDL_Rect Sprite::PackIntoRect(const int x, const int y){
 	return ret;
 }
 
-Sprite::Sprite(SDL_Renderer* ren, const std::string filename,
-		SDL_Rect layout){
+Sprite::Sprite(SDL_Renderer* ren, std::string filename,
+		SDL_Rect layout) {
 	image = IMG_LoadTexture(ren, filename.c_str());
-	if(image == nullptr) LogSDLError(std::cout, "LoadTexture");
+	if (image == nullptr) {
+		LogSDLError(std::cout, "LoadTexture");
+		std::size_t slashPos = filename.rfind("sprites/");
+		filename.replace(slashPos+8, std::string::npos, "sprite_missing.png");
+		image = IMG_LoadTexture(ren, filename.c_str());
+		if (image == nullptr) {
+			std::cerr << "Error: failed to load " << filename << std::endl;
+			throw std::runtime_error("Sprite files not found.");
+		}
+	}
 
 	SDL_QueryTexture(image, NULL, NULL, &layout.w, &layout.h);
 	// these two lines below seem very bad actually
@@ -69,11 +78,11 @@ Sprite::Sprite(SDL_Renderer* ren, const std::string filename,
 	if(layout.h >= SCREEN_HEIGHT) layout.h = SCREEN_HEIGHT - 1;
 }
 
-Sprite::Sprite(SDL_Renderer* ren, const std::string filename, const int x, const int y):
+Sprite::Sprite(SDL_Renderer* ren, const std::string& filename, const int x, const int y):
 		Sprite(ren, filename, PackIntoRect(x,y)) {}
 
-Sprite::Sprite(SDL_Renderer* ren, const std::string text,
-		SDL_Rect layout, const SDL_Color color, TTF_Font* font){
+Sprite::Sprite(SDL_Renderer* ren, const std::string& text,
+		SDL_Rect layout, const SDL_Color color, TTF_Font* font) {
 	if(font == nullptr) font = defaultFont;
 /*	std::cout << "Writing \"" << text << "\" at (" << layout.x << "," <<
 		layout.y << ") using the font at " << font << "." << std::endl;*/

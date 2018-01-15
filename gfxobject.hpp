@@ -38,6 +38,12 @@ class GFXObject : public std::enable_shared_from_this<GFXObject> {
 		virtual void MoveTo(SDL_Rect newLayout);
 		virtual void Resize(int w, int h);
 		virtual void Resize(SDL_Rect newLayout);
+		void FlipHorizontal()   { sprite->FlipHorizontal();   }
+		void UnflipHorizontal() { sprite->UnflipHorizontal(); }
+		void FlipVertical()     { sprite->FlipVertical();     }
+		void UnflipVertical()   { sprite->UnflipVertical();   }
+		void Lighten()			{ sprite->Lighten();          }
+		void Darken()			{ sprite->Darken();           }
 
 		int X() const;
 		int Y() const;

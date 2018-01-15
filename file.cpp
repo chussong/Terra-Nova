@@ -5,14 +5,14 @@ namespace TerraNova {
 namespace File {
 
 namespace {
-	fs::path basePath;
+	Path basePath;
 } // anonymous namespace
 
 void Initialize(){
-	basePath = fs::path(SDL_GetBasePath());
+	basePath = Path(SDL_GetBasePath());
 }
 
-const fs::path& BasePath() {
+const Path& BasePath() {
 	return basePath;
 }
 
@@ -22,14 +22,14 @@ std::string AbsolutePath(const std::string& relativePath) {
 
 std::string JoinPaths(const std::vector<std::string>& paths) {
 	if (paths.size() == 0) return "";
-	fs::path pathForm(paths.front());
+	Path pathForm(paths.front());
 	for (auto it = paths.begin()+1; it != paths.end(); ++it) {
 		pathForm /= *it;
 	}
 	return pathForm.native();
 }
 
-std::vector<std::string> ReadFromFullPath(const fs::path& fullPath){
+std::vector<std::string> ReadFromFullPath(const Path& fullPath){
 	std::vector<std::string> ret;
 
 	std::ifstream in(fullPath.native());
@@ -57,7 +57,7 @@ std::vector<std::string> Read(const std::string& relativePath){
 }
 
 std::vector<std::vector<std::string>> ReadAll(const std::string& relativePath) {
-	fs::path path = basePath / relativePath;
+	Path path = basePath / relativePath;
 	std::vector<std::vector<std::string>> ret;
 
 	for(auto& file : fs::directory_iterator(path)) {

@@ -106,6 +106,9 @@ class InfoPanel : public UIAggregate {
 		virtual bool Update(const GFXObject& source);
 };
 
+// need to rearrange UnitInfoPanel and BuildingInfoPanel into member functions
+// of InfoPanel rather than subclasses
+
 class UnitInfoPanel : public InfoPanel {
 	public:
 		UnitInfoPanel(SDL_Renderer* ren, const Unit& source);

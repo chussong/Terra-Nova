@@ -3,7 +3,7 @@
 commander: Lin
 
 [Lines]
--@hook=first@@active=0@This is a test dialogue.@decision=dec_pt1@
+-@hook=first@@active=Lin@This is a test dialogue.@decision=dec_pt1@
 
 -@hook=second@It contains four lines of varying lengths, intended to test the
 robustness of the dialogue display system.

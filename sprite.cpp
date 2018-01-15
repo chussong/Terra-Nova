@@ -58,16 +58,15 @@ SDL_Rect Sprite::PackIntoRect(const int x, const int y){
 	return ret;
 }
 
-Sprite::Sprite(SDL_Renderer* ren, std::string filename,
+Sprite::Sprite(SDL_Renderer* ren, File::Path filePath,
 		SDL_Rect layout) {
-	image = IMG_LoadTexture(ren, filename.c_str());
+	image = IMG_LoadTexture(ren, filePath.c_str());
 	if (image == nullptr) {
 		LogSDLError(std::cout, "LoadTexture");
-		std::size_t slashPos = filename.rfind("sprites/");
-		filename.replace(slashPos+8, std::string::npos, "sprite_missing.png");
-		image = IMG_LoadTexture(ren, filename.c_str());
+		File::Path smPath = File::BasePath() / "sprites" / "sprite_missing.png";
+		image = IMG_LoadTexture(ren, smPath.c_str());
 		if (image == nullptr) {
-			std::cerr << "Error: failed to load " << filename << std::endl;
+			std::cerr << "Error: failed to load " << smPath.c_str() <<std::endl;
 			throw std::runtime_error("Sprite files not found.");
 		}
 	}
@@ -78,8 +77,9 @@ Sprite::Sprite(SDL_Renderer* ren, std::string filename,
 	if(layout.h >= SCREEN_HEIGHT) layout.h = SCREEN_HEIGHT - 1;
 }
 
-Sprite::Sprite(SDL_Renderer* ren, const std::string& filename, const int x, const int y):
-		Sprite(ren, filename, PackIntoRect(x,y)) {}
+Sprite::Sprite(SDL_Renderer* ren, const File::Path& filePath, const int x, 
+		const int y):
+		Sprite(ren, filePath, PackIntoRect(x,y)) {}
 
 Sprite::Sprite(SDL_Renderer* ren, const std::string& text,
 		SDL_Rect layout, const SDL_Color color, TTF_Font* font) {
@@ -115,26 +115,95 @@ Sprite::~Sprite(){
 	SDL_Cleanup(image);
 }
 
-void Sprite::RenderTo(SDL_Renderer* ren, const SDL_Rect& layout) const{
-	if(SDL_RenderCopy(ren, image, nullptr, &layout))
-		LogSDLError(std::cout, "RenderCopy");
+void Sprite::RenderTo(SDL_Renderer* ren, const SDL_Rect& layout) const {
+	int errorCode = SDL_RenderCopyEx(ren, image, nullptr, &layout, 0, nullptr,
+			orientation);
+	if (errorCode != 0) LogSDLError(std::cout, "RenderCopyEx");
 /*std::cout << "Rendered the image at " << image <<
 		" to the renderer at " << ren << " in position (" <<
 		layout.x << "," << layout.y << "), (" << layout.w << "," << layout.h
 		<< ")." << std::endl;*/
 }
 
-void Sprite::RenderTo(const SDL_Rect& layout) const{
-	if(SDL_RenderCopy(GFXManager::Ren(), image, nullptr, &layout))
-		LogSDLError(std::cout, "RenderCopy");
-/*std::cout << "Rendered the image at " << image <<
-		" to the renderer at " << ren << " in position (" <<
-		layout.x << "," << layout.y << "), (" << layout.w << "," << layout.h
-		<< ")." << std::endl;*/
+void Sprite::RenderTo(const SDL_Rect& layout) const {
+	RenderTo(GFXManager::Ren(), layout);
 }
 
 void Sprite::MakeDefaultSize(SDL_Rect& layout) const{
 	SDL_QueryTexture(image, NULL, NULL, &layout.w, &layout.h);
+}
+
+void Sprite::FlipHorizontal() {
+	orientation = static_cast<SDL_RendererFlip>(
+			orientation | SDL_FLIP_HORIZONTAL );
+}
+
+void Sprite::UnflipHorizontal() {
+	orientation = static_cast<SDL_RendererFlip>(
+			orientation & ~SDL_FLIP_HORIZONTAL );
+}
+
+void Sprite::FlipVertical() {
+	orientation = static_cast<SDL_RendererFlip>(
+			orientation | SDL_FLIP_VERTICAL );
+}
+
+void Sprite::UnflipVertical() {
+	orientation = static_cast<SDL_RendererFlip>(
+			orientation & ~SDL_FLIP_VERTICAL );
+}
+
+void Sprite::Darken() {
+	unsigned char* oldR = nullptr;
+	unsigned char* oldG = nullptr;
+	unsigned char* oldB = nullptr;
+	int errorCode = SDL_GetTextureColorMod(image, oldR, oldG, oldB);
+	if (errorCode != 0) LogSDLError(std::cout, "GetTextureColorMod");
+	unsigned char r, g, b;
+	if (oldR == nullptr) {
+		r = 255 * 0.5;
+	} else {
+		r = *oldR * 0.5;
+	}
+	if (oldG == nullptr) {
+		g = 255 * 0.5;
+	} else {
+		g = *oldG * 0.5;
+	}
+	if (oldB == nullptr) {
+		b = 255 * 0.5;
+	} else {
+		b = *oldB * 0.5;
+	}
+	SDL_SetTextureColorMod(image, r, g, b);
+}
+
+void Sprite::Lighten() {
+	unsigned char* oldR = nullptr;
+	unsigned char* oldG = nullptr;
+	unsigned char* oldB = nullptr;
+	int errorCode = SDL_GetTextureColorMod(image, oldR, oldG, oldB);
+	if (errorCode != 0) LogSDLError(std::cout, "GetTextureColorMod");
+	unsigned char r, g, b;
+	if (oldR == nullptr) {
+		r = 255;
+	} else {
+		r = *oldR * 2;
+		if (r < *oldR) r = 255;
+	}
+	if (oldG == nullptr) {
+		g = 255;
+	} else {
+		g = *oldG * 2;
+		if (g < *oldG) g = 255;
+	}
+	if (oldB == nullptr) {
+		b = 255;
+	} else {
+		b = *oldB * 2;
+		if (b < *oldB) b = 255;
+	}
+	SDL_SetTextureColorMod(image, r, g, b);
 }
 
 void GFXManager::Initialize(SDL_Renderer* newRen){

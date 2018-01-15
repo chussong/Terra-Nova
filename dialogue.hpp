@@ -143,7 +143,7 @@ class DialogueBox : public UIElement {
 	private:
 		std::vector<std::unique_ptr<DialoguePortrait>> portraits;
 		std::vector<std::unique_ptr<DialoguePortrait>> portraitsForLater;
-		size_t currentSpeaker = 0;
+		size_t currentSpeaker = -1; // -1 for none active, else speaker's index
 		std::unique_ptr<UIElement> speakerName = nullptr;
 
 		Dialogue* dialogue = nullptr;
@@ -181,6 +181,7 @@ class DialogueBox : public UIElement {
 
 		void ShowCharacter(const std::string& characterName);
 		void ActivateSpeaker(const std::string& speakerName);
+		void DeactivateSpeaker();
 
 		void Render() const;
 

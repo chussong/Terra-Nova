@@ -257,20 +257,21 @@ DialogueBox::DialogueBox(SDL_Renderer* ren, Dialogue* dialogue):
 			DIALOGUE_BOX_Y + 7*DIALOGUE_BOX_HEIGHT/10),
 	closeBox(ren, "dialogue_box_close",
 			DIALOGUE_BOX_X + 9*DIALOGUE_BOX_WIDTH/10,
-			DIALOGUE_BOX_Y + 7*DIALOGUE_BOX_HEIGHT/10){
+			DIALOGUE_BOX_Y + 7*DIALOGUE_BOX_HEIGHT/10) {
 	SetDialogue(dialogue);
 }
 
-void DialogueBox::SetDialogue(Dialogue* newDialogue){
-	if(!newDialogue){
+void DialogueBox::SetDialogue(Dialogue* newDialogue) {
+	if (!newDialogue) {
 		std::cerr << "Error: tried to set DialogueBox's dialogue to a nullptr."
 			<< std::endl;
 		return;
 	}
+	DeactivateSpeaker();
 	dialogue = newDialogue;
 	portraits.clear();
 	int position = 0;
-	for(auto& character : dialogue->Characters()){
+	for (auto& character : dialogue->Characters()) {
 		if (character.showAtStart) {
 			portraits.push_back(std::make_unique<DialoguePortrait>(ren, 
 						character.spriteName, character.displayName, position));
@@ -278,7 +279,7 @@ void DialogueBox::SetDialogue(Dialogue* newDialogue){
 			portraitsForLater.push_back(std::make_unique<DialoguePortrait>(ren, 
 						character.spriteName, character.displayName, position));
 		}
-		switch(position){
+		switch (position) {
 			case 0: position = 3;
 					break;
 			case 1: position = 2;
@@ -294,16 +295,16 @@ void DialogueBox::SetDialogue(Dialogue* newDialogue){
 }
 
 // return true if the dialogue is over so the box should be closed
-bool DialogueBox::Advance(){
-	if(currentDecision){
+bool DialogueBox::Advance() {
+	if (currentDecision) {
 		DisplayDecision();
 		return false;
 	}
 	//std::cout << "Advance: " << currentLineNumber << "->";
-	if(endAfterCurrentLine) return true;
-	if(!CanAdvance()) return false;
+	if (endAfterCurrentLine) return true;
+	if (!CanAdvance()) return false;
 	currentLineNumber = (currentLineNumber + 1);
-	if(currentLineNumber == dialogue->Length()) return true;
+	if (currentLineNumber == dialogue->Length()) return true;
 	currentLine = LoadLine();
 	//currentDecision = dialogue->DecisionAt(currentLineNumber);
 	//std::cout << "Current line: " << currentLineNumber << "\nAddress of current "
@@ -320,9 +321,9 @@ void DialogueBox::Backstep() {
 	DisplayLine();
 }
 
-void DialogueBox::DisplayLine(){
+void DialogueBox::DisplayLine() {
 	//std::cout << currentLineNumber << " of " << dialogue->Length() << std::endl;
-	if(currentLineNumber >= dialogue->Length()){
+	if (currentLineNumber >= dialogue->Length()) {
 		std::cerr << "Error: asked to display line " << currentLineNumber << " which "
 			<< "is higher than the dialogue length " << dialogue->Length()
 			<< "." << std::endl;
@@ -334,7 +335,7 @@ void DialogueBox::DisplayLine(){
 	boundingBox.w = DIALOGUE_BOX_WIDTH*9/10;
 	boundingBox.h = DIALOGUE_BOX_HEIGHT*9/10;
 	std::string displayLine = CurrentLine();
-	if(displayLine.length() == 0){
+	if (displayLine.length() == 0) {
 		displayLine = "Error: asked to display an empty dialogue line.";
 	}
 	//std::cout << "Displaying the following line: " << displayLine << std::endl;
@@ -345,6 +346,11 @@ void DialogueBox::ShowCharacter(const std::string& characterName) {
 	for (auto it = portraitsForLater.begin(); it != portraitsForLater.end();
 			++it) {
 		if ((*it)->Name() == characterName) {
+			if (portraits.size() % 2 == 1) {
+				(*it)->FlipHorizontal();
+			} else {
+				(*it)->UnflipHorizontal();
+			}
 			portraits.push_back(std::move(*it));
 			portraitsForLater.erase(it);
 			return;
@@ -355,10 +361,15 @@ void DialogueBox::ShowCharacter(const std::string& characterName) {
 	for (auto& p : portraitsForLater) std::cerr << p->Name() << std::endl;
 }
 
-void DialogueBox::ActivateSpeaker(const std::string& speakerName){
+void DialogueBox::ActivateSpeaker(const std::string& speakerName) {
+	// deactivate first to fade out the previous speaker
+	DeactivateSpeaker();
+
+	// if the speaker is not found, we presume they're off screen
 	for (auto i = 0u; i < portraits.size(); ++i) {
 		if (portraits[i]->Name() == speakerName) {
 			currentSpeaker = i;
+			portraits[currentSpeaker]->Lighten();
 			break;
 		}
 	}
@@ -370,18 +381,30 @@ void DialogueBox::ActivateSpeaker(const std::string& speakerName){
 	boundingBox.y = layout.h/10;
 	boundingBox.w = layout.w/5;
 	boundingBox.h = layout.w/5;
-	this->speakerName->AddText(portraits[currentSpeaker]->Name(), boundingBox,
-			dialogueFont);
+	if (currentSpeaker == -1ul) {
+		this->speakerName->AddText(speakerName, boundingBox, dialogueFont);
+	} else {
+		this->speakerName->AddText(portraits[currentSpeaker]->Name(), 
+				boundingBox, dialogueFont);
+	}
 }
 
-std::string DialogueBox::LoadLine(){
+void DialogueBox::DeactivateSpeaker() {
+	if (currentSpeaker < portraits.size()) {
+		portraits[currentSpeaker]->Darken();
+	}
+	currentSpeaker = -1;
+	this->speakerName = nullptr;
+}
+
+std::string DialogueBox::LoadLine() {
 	std::string line = dialogue->Line(currentLineNumber);
 	//std::cout << "Loading line #" << lineNumber << ":" << line << std::endl;
 	std::regex extractor("@(.*?)@");
 	auto command_begin = std::sregex_iterator(line.begin(), line.end(), 
 			extractor);
 	auto command_end = std::sregex_iterator();
-	for(std::sregex_iterator it = command_begin; it != command_end; ++it){
+	for (std::sregex_iterator it = command_begin; it != command_end; ++it) {
 		std::string command = it->str();
 		//std::cout << "Found a command in the dialogue: " << command << std::endl;
 		ParseCommand(command);
@@ -391,17 +414,22 @@ std::string DialogueBox::LoadLine(){
 	return std::regex_replace(line, extractor, "");
 }
 
-void DialogueBox::ParseCommand(const std::string& command){
-	if(command.compare(0, 8, "@active=") == 0){
-		ActivateSpeaker(command.substr(8, command.length()-9));
+void DialogueBox::ParseCommand(const std::string& command) {
+	if (command.compare(0, 8, "@active=") == 0) {
+		std::string newSpeaker = command.substr(8, command.length()-9);
+		if (newSpeaker == "x") {
+			DeactivateSpeaker();
+		} else {
+			ActivateSpeaker(newSpeaker);
+		}
 		return;
 	}
-	if(command.compare(0, 10, "@decision=") == 0){
+	if (command.compare(0, 10, "@decision=") == 0) {
 		currentDecision = dialogue->DecisionNamed(
 				command.substr(10, command.length()-11));
 		return;
 	}
-	if(command.compare(0, 5, "@end@") == 0){
+	if (command.compare(0, 5, "@end@") == 0) {
 		endAfterCurrentLine = true;
 		return;
 	}
@@ -419,7 +447,7 @@ void DialogueBox::ParseCommand(const std::string& command){
 	}
 }
 
-const std::string& DialogueBox::CurrentLine() const{
+const std::string& DialogueBox::CurrentLine() const {
 	return currentLine;
 }
 
@@ -431,16 +459,16 @@ bool DialogueBox::CanBackstep() const {
 	return currentLineNumber != backstopLineNumber;
 }
 
-void DialogueBox::DisplayDecision(){
-	if(!currentDecision){
+void DialogueBox::DisplayDecision() {
+	if (!currentDecision) {
 		std::cerr << "Error: asked to display a non-existent decision." << std::endl;
 		return;
 	}
 	std::string decText = "";
-	for(auto i = 0u; i < currentDecision->options.size(); ++i){
+	for (auto i = 0u; i < currentDecision->options.size(); ++i) {
 		decText += std::to_string(i+1) + ". " + currentDecision->options[i] + "\n";
 	}
-	if(decText.length() == 0){
+	if (decText.length() == 0) {
 		std::cerr << "Error: all options of the requested decision were blank."
 			<< std::endl;
 		decText = "Display error: all decisions options are blank.";
@@ -455,11 +483,11 @@ void DialogueBox::DisplayDecision(){
 }
 
 // return true if a decision was completed or there was never a decision to do
-bool DialogueBox::MakeDecision(const unsigned int n){
-	if(!makingDecision) return true;
-	if(n-1 >= currentDecision->options.size()) return false;
+bool DialogueBox::MakeDecision(const unsigned int n) {
+	if (!makingDecision) return true;
+	if (n-1 >= currentDecision->options.size()) return false;
 	currentLineNumber = currentDecision->jumpTo[n-1];
-	if(currentLineNumber >= dialogue->Length()){
+	if (currentLineNumber >= dialogue->Length()){
 		std::cerr << "Error: decision point jumped a dialogue to an invalid "
 			<< "address: " << currentLineNumber << " out of " << dialogue->Length()
 			<< "." << std::endl;
@@ -472,13 +500,13 @@ bool DialogueBox::MakeDecision(const unsigned int n){
 	return true;
 }
 
-void DialogueBox::Render() const{
-	for(auto& portrait : portraits) portrait->Render();
+void DialogueBox::Render() const {
+	for (auto p = portraits.rbegin(); p != portraits.rend(); ++p) (*p)->Render();
 	UIElement::Render();
-	if(speakerName) speakerName->Render();
-	if(CanAdvance()) advanceArrow.Render();
-	if(CanBackstep()) backstepArrow.Render();
-	if(endAfterCurrentLine) closeBox.Render();
+	if (speakerName) speakerName->Render();
+	if (CanAdvance()) advanceArrow.Render();
+	if (CanBackstep()) backstepArrow.Render();
+	if (endAfterCurrentLine) closeBox.Render();
 }
 
 } // namespace TerraNova

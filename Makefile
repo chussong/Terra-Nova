@@ -41,7 +41,7 @@ gamescreen.o: gamescreen.cpp gamescreen.hpp gfxobject.hpp ui.hpp unit.hpp \
 		building.hpp tile.hpp colony.hpp map.hpp gamevars.hpp dialogue.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-sprite.o: sprite.cpp sprite.hpp templates.hpp gamevars.hpp
+sprite.o: sprite.cpp sprite.hpp templates.hpp gamevars.hpp file.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 gfxobject.o: gfxobject.cpp gfxobject.hpp sprite.hpp gamescreen.hpp gamevars.hpp

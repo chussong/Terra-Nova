@@ -15,6 +15,7 @@
 
 #include "templates.hpp"
 #include "gamevars.hpp"
+#include "file.hpp"
 
 namespace TerraNova {
 
@@ -25,6 +26,7 @@ SDL_Rect MakeSDLRect(const int x, const int y, const unsigned int w,
 class Sprite {
 	SDL_Texture* image;
 //	SDL_Rect spritebox;
+	SDL_RendererFlip orientation = SDL_FLIP_NONE;
 
 	static SDL_Rect PackIntoRect(const int x, const int y);
 	public:
@@ -32,11 +34,11 @@ class Sprite {
 		static SDL_Color SDLifyTextColor(const textcolor_t color);
 
 		Sprite() = delete;
-		explicit Sprite(SDL_Renderer* ren, std::string filename,
+		Sprite(SDL_Renderer* ren, File::Path filePath,
 				SDL_Rect layout);
-		explicit Sprite(SDL_Renderer* ren, const std::string& filename,
+		Sprite(SDL_Renderer* ren, const File::Path& filePath,
 				const int x, const int y);
-		explicit Sprite(SDL_Renderer* ren, const std::string& text,
+		Sprite(SDL_Renderer* ren, const std::string& text,
 				SDL_Rect layout, const SDL_Color color, 
 				TTF_Font* font = defaultFont);
 		~Sprite();
@@ -48,6 +50,14 @@ class Sprite {
 		void RenderTo(SDL_Renderer* ren, const SDL_Rect& layout) const; // deprecated
 		void RenderTo(const SDL_Rect& layout) const;
 		void MakeDefaultSize(SDL_Rect& layout) const;
+
+		void FlipHorizontal();
+		void UnflipHorizontal();
+		void FlipVertical();
+		void UnflipVertical();
+
+		void Darken();
+		void Lighten();
 };
 
 class GFXManager {

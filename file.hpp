@@ -23,12 +23,14 @@ namespace File {
 namespace fs = boost::filesystem;
 //namespace fs = std::filesystem;
 
+typedef fs::path Path;
+
 void Initialize();
 
-const fs::path& BasePath();
+const Path& BasePath();
 std::string AbsolutePath(const std::string& relativePath);
 std::string JoinPaths(const std::vector<std::string>& paths);
-std::vector<std::string> ReadFromFullPath(const fs::path& fullPath);
+std::vector<std::string> ReadFromFullPath(const Path& fullPath);
 std::vector<std::string> Read(const std::string& relativePath);
 std::vector<std::vector<std::string>> ReadAll(const std::string& relativePath);
 
@@ -40,8 +42,8 @@ std::vector<std::string> GetField(const std::vector<std::string>& source,
 Entry GetEntry(const std::string& line);
 
 template<typename Result>
-std::vector<Result> ForEachFile(const fs::path& location, 
-		Result (*function)(const fs::path&)) {
+std::vector<Result> ForEachFile(const Path& location, 
+		Result (*function)(const Path&)) {
 	std::vector<Result> ret;
 	for(auto& file : fs::directory_iterator(location)) {
 		ret.push_back(function(file.path()));

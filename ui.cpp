@@ -231,8 +231,9 @@ bool UnitInfoPanel::Update(const GFXObject& source) {
 void UnitInfoPanel::UpdateFromUnit(const Unit& source) {
 	int panelX = SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH;
 	int panelY = SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT;
-	portrait = std::make_unique<UIElement>(ren,
-			"units/" + source.Spec()->Name() + "/portrait",
+	File::Path portraitPath("units");
+	portraitPath = portraitPath / source.Spec()->PathName() / "portrait";
+	portrait = std::make_unique<UIElement>(ren, portraitPath.string(),
 			panelX + PORTRAIT_X, panelY + PORTRAIT_Y);
 	factionIcon = std::make_unique<UIElement>(ren,
 			"factioncolor_p" + std::to_string(source.Faction()),
@@ -300,7 +301,7 @@ BuildingInfoPanel::BuildingInfoPanel(SDL_Renderer* ren, const Building& source):
 	std::array<int,2> panelCoords = {{SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH,
 		SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT}};
 	background = MakeBackground(ren, panelCoords);
-	portrait = MakePortrait(ren, source.Name(), panelCoords);
+	portrait = MakePortrait(ren, source.PathName(), panelCoords);
 	factionIcon = MakeFactionIcon(ren, source.Faction(), panelCoords);
 	powerIcon = MakePowerIcon(ren, source, panelCoords);
 	costIcons = MakeCostIcons(ren, source.Cost(), panelCoords);
@@ -314,7 +315,7 @@ BuildingInfoPanel::BuildingInfoPanel(SDL_Renderer* ren,
 	std::array<int,2> panelCoords = {{SCREEN_WIDTH - UNIT_INFO_PANEL_WIDTH,
 		SCREEN_HEIGHT - UNIT_INFO_PANEL_HEIGHT}};
 	background = MakeBackground(ren, panelCoords);
-	portrait = MakePortrait(ren, source.Name(), panelCoords);
+	portrait = MakePortrait(ren, source.PathName(), panelCoords);
 	factionIcon = MakeFactionIcon(ren, NO_FACTION, panelCoords);
 	powerIcon = MakePowerIcon(ren, source, panelCoords);
 	costIcons = MakeCostIcons(ren, source.Cost(), panelCoords);
@@ -331,7 +332,9 @@ std::unique_ptr<UIElement> BuildingInfoPanel::MakePortrait(SDL_Renderer* ren,
 	std::unique_ptr<UIElement> ret;
 	int xOffset = 5;
 	int yOffset = 5;
-	ret = std::make_unique<UIElement>(ren, "buildings/" + name + "/portrait",
+	File::Path portraitPath("buildings");
+	portraitPath = portraitPath / name / "portrait";
+	ret = std::make_unique<UIElement>(ren, portraitPath.string(),
 			panelCoords[0] + xOffset, panelCoords[1] + yOffset);
 	// add name as text to the portrait with some offset
 	SDL_Rect textBox = MakeSDLRect(BUILDING_INFO_PORTRAIT_WIDTH + 
@@ -368,7 +371,9 @@ std::unique_ptr<UIElement> BuildingInfoPanel::MakePowerIcon(SDL_Renderer* ren,
 		}
 		iconName = "power_on";
 	}
-	ret = std::make_unique<UIElement>(ren, "buildings/" + iconName,
+	File::Path iconPath("buildings");
+	iconPath /= iconName;
+	ret = std::make_unique<UIElement>(ren, iconPath.string(),
 			panelCoords[0] + xOffset, panelCoords[1] + yOffset);
 	// add text showing { poweredOn ? powerConsumption : 0 } & maybe avail. pwr?
 	SDL_Rect textBox = MakeSDLRect(3*BUILDING_INFO_ICON_WIDTH/2,
@@ -383,7 +388,9 @@ std::unique_ptr<UIElement> BuildingInfoPanel::MakePowerIcon(SDL_Renderer* ren,
 	int xOffset = 5 + BUILDING_INFO_PORTRAIT_WIDTH + 2*BUILDING_INFO_ICON_WIDTH/2;
 	int yOffset = 5 + 2*BUILDING_INFO_ROW_HEIGHT/2;
 	std::unique_ptr<UIElement> ret;
-	ret = std::make_unique<UIElement>(ren, "buildings/power_on",
+	File::Path iconPath("buildings");
+	iconPath /= "power_on";
+	ret = std::make_unique<UIElement>(ren, iconPath.string(),
 			panelCoords[0] + xOffset, panelCoords[1] + yOffset);
 	// add text showing power consumption and available power
 	SDL_Rect textBox = MakeSDLRect(3*BUILDING_INFO_ICON_WIDTH/2,
@@ -445,8 +452,9 @@ bool BuildingInfoPanel::Update(const GFXObject& source) {
 	return false;
 }
 
-UnitOrderPanel::UnitOrderPanel(SDL_Renderer* ren, Unit* source):
-	GFXObject(ren, "unit_order_panel", 0, SCREEN_HEIGHT - ORDER_PANEL_HEIGHT){
+UnitOrderPanel::UnitOrderPanel(SDL_Renderer* ren, Unit* source): GFXObject(ren,
+		File::SpritePath() / "unit_order_panel", 
+		0, SCREEN_HEIGHT - ORDER_PANEL_HEIGHT) {
 	Update(*source);
 	activeButton = -1u;
 }

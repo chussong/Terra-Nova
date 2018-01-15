@@ -34,8 +34,9 @@ Menu::~Menu() {
 
 void Menu::SetBackground(const std::string& filename) {
 	background.clear();
-	background.push_back(std::make_unique<UIElement>(ren, 
-				"backgrounds/" + filename, 0, 0));
+	File::Path filePath = File::Path("backgrounds") / filename;
+	background.push_back(std::make_unique<UIElement>(ren, filePath.string(),
+				0, 0));
 	//std::cout << "Menu screen background set." << std::endl;
 }
 

@@ -93,9 +93,9 @@ class GameScreen : public Screen {
 		std::unique_ptr<DialogueBox> dialogueBox;
 		std::unique_ptr<UIElement> hoverTextBox;
 
-		void ClickObject(GFXObject* toClick);
-		void ClickTile(Tile* clickedTile);
-		void ClickUnit(Unit* clickedUnit);
+		bool ClickObject(GFXObject* toClick);
+		bool ClickTile(Tile* clickedTile);
+		bool ClickUnit(Unit* clickedUnit);
 
 	public:
 		explicit GameScreen(SDL_Renderer* ren);

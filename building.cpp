@@ -2,15 +2,21 @@
 
 namespace TerraNova {
 
-int BuildingType::ID() const{
+int BuildingType::ID() const {
 	return id;
 }
 
-std::string BuildingType::Name() const{
+const std::string& BuildingType::Name() const {
 	return name;
 }
 
-std::array<int, LAST_RESOURCE> BuildingType::Cost() const{
+std::string BuildingType::PathName() const {
+	std::string output = boost::to_lower_copy(name);
+	boost::replace_all(output, " ", "_");
+	return output;
+}
+
+std::array<int, LAST_RESOURCE> BuildingType::Cost() const {
 	return cost;
 }
 
@@ -22,7 +28,7 @@ bool BuildingType::CanBuyWith(std::array<int, LAST_RESOURCE> availableResources)
 	return true;
 }
 
-int BuildingType::BuildTime() const{
+int BuildingType::BuildTime() const {
 	return buildTime;
 }
 
@@ -43,27 +49,27 @@ std::vector<std::shared_ptr<TileType>> BuildingType::AllowedTerrain() const{
 	return strongTerrain;
 }*/
 
-void BuildingType::SetCanHarvest(const bool val){
+void BuildingType::SetCanHarvest(const bool val) {
 	canHarvest = val;
 }
 
-bool BuildingType::CanHarvest() const{
+bool BuildingType::CanHarvest() const {
 	return canHarvest;
 }
 
-void BuildingType::SetAutomatic(const bool val){
+void BuildingType::SetAutomatic(const bool val) {
 	automatic = val;
 }
 
-bool BuildingType::Automatic() const{
+bool BuildingType::Automatic() const {
 	return automatic;
 }
 
-void BuildingType::SetMaxOccupants(const int val){
+void BuildingType::SetMaxOccupants(const int val) {
 	maxOccupants = val;
 }
 
-unsigned int BuildingType::MaxOccupants() const{
+unsigned int BuildingType::MaxOccupants() const {
 	return maxOccupants;
 }
 
@@ -95,20 +101,24 @@ void BuildingType::SetCanTrain(const std::vector<std::shared_ptr<UnitType>>& val
 	canTrain = val;
 }
 
-void BuildingType::SetCanTrain(const std::shared_ptr<UnitType> val){
+void BuildingType::SetCanTrain(const std::shared_ptr<UnitType> val) {
 	canTrain.clear();
 	canTrain.push_back(val);
 }
 
-std::vector<std::shared_ptr<UnitType>> BuildingType::CanTrain() const{
+std::vector<std::shared_ptr<UnitType>> BuildingType::CanTrain() const {
 	return canTrain;
 }
 
-std::string BuildingPrototype::Name() const{
+const std::string& BuildingPrototype::Name() const {
 	return type->Name();
 }
 
-std::array<int, LAST_RESOURCE> BuildingPrototype::Cost() const{
+std::string BuildingPrototype::PathName() const {
+	return type->PathName();
+}
+
+std::array<int, LAST_RESOURCE> BuildingPrototype::Cost() const {
 	return type->Cost();
 }
 
@@ -125,19 +135,23 @@ int BuildingPrototype::PowerConsumption() const {
 	return type->PowerConsumption();
 }
 
-int BuildingPrototype::BuildTime() const{
+int BuildingPrototype::BuildTime() const {
 	return type->BuildTime();
 }
 
-const BuildingType* BuildingPrototype::Type() const{
+const BuildingType* BuildingPrototype::Type() const {
 	return type;
 }
 
-std::string Building::Name() const{
+const std::string& Building::Name() const {
 	return type->Name();
 }
 
-std::array<int, LAST_RESOURCE> Building::Cost() const{
+std::string Building::PathName() const {
+	return type->PathName();
+}
+
+std::array<int, LAST_RESOURCE> Building::Cost() const {
 	return type->Cost();
 }
 
@@ -146,31 +160,31 @@ bool Building::CanBuyWith(
 	return type->CanBuyWith(availableResources);
 }
 
-int Building::BuildTime() const{
+int Building::BuildTime() const {
 	return type->BuildTime();
 }
 
-void Building::StartConstruction(){
+void Building::StartConstruction() {
 	turnsLeft = BuildTime();
 }
 
-int Building::TurnsLeft() const{
+int Building::TurnsLeft() const {
 	return turnsLeft;
 }
 
-void Building::BuildTurn(){
+void Building::BuildTurn() {
 	turnsLeft--;
 	//std::cout << Name() << " build timer decremented, now " << turnsLeft << "."
 		//<< std::endl;
 }
 
-bool Building::Finished() const{
+bool Building::Finished() const {
 	//std::cout << "Building " << Name() << " has " << turnsLeft << " turns left."
 		//<< std::endl;
 	return turnsLeft == 0;
 }
 
-bool Building::CanHarvest() const{
+bool Building::CanHarvest() const {
 	//std::cout << "Checking if " << Name() << " can harvest." << std::endl;
 	return turnsLeft == 0 && (type->CanHarvest() || type->Automatic());
 }
@@ -199,26 +213,26 @@ void Building::PowerOff() {
 	poweredOn = false;
 }
 
-bool Building::Automatic() const{
+bool Building::Automatic() const {
 	//std::cout << "Building " << Name() << " is ";
 	//if (!type->Automatic()) std::cout << "not ";
 	//std::cout << "automatic." << std::endl;
 	return type->Automatic();
 }
 
-unsigned int Building::MaxOccupants() const{
+unsigned int Building::MaxOccupants() const {
 	return type->MaxOccupants();
 }
 
-std::array<int, LAST_RESOURCE> Building::BonusResources() const{
+std::array<int, LAST_RESOURCE> Building::BonusResources() const {
 	return type->BonusResources();
 }
 
-std::vector<std::shared_ptr<UnitType>> Building::CanTrain() const{
+std::vector<std::shared_ptr<UnitType>> Building::CanTrain() const {
 	return type->CanTrain();
 }
 
-void Building::StartTraining(std::shared_ptr<UnitType> newSpec){
+void Building::StartTraining(std::shared_ptr<UnitType> newSpec) {
 	if(!newSpec){
 		std::cerr << "Error: a Building was assigned to respec a Unit to a "
 			<< "blank specialization." << std::endl;
@@ -228,19 +242,19 @@ void Building::StartTraining(std::shared_ptr<UnitType> newSpec){
 	turnsToTrain = newSpec->TrainingTime();
 }
 
-int Building::TurnsToTrain() const{
+int Building::TurnsToTrain() const {
 	return turnsToTrain;
 }
 
-std::shared_ptr<UnitType> Building::NowTraining() const{
+std::shared_ptr<UnitType> Building::NowTraining() const {
 	return nowTraining;
 }
 
-void Building::TrainingTurn(){
+void Building::TrainingTurn() {
 	turnsToTrain--;
 }
 
-void Building::FinishTraining(){
+void Building::FinishTraining() {
 	nowTraining.reset();
 }
 

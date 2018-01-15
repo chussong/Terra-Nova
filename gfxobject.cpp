@@ -2,21 +2,21 @@
 
 namespace TerraNova {
 
-GFXObject::GFXObject(SDL_Renderer* ren, const std::string& spriteFile,
+GFXObject::GFXObject(SDL_Renderer* ren, const File::Path& spritePath,
 		const int x, const int y, const bool selectable): ren(ren),
 		selectable(selectable) {
 	layout.x = x;
 	layout.y = y;
-	ChangeSprite(spriteFile);
+	ChangeSprite(spritePath);
 }
 
-void GFXObject::ChangeSprite(const std::string& spriteName){
-	sprite = GFXManager::RequestSprite(spriteName);
+void GFXObject::ChangeSprite(File::Path spritePath){
+	sprite = GFXManager::RequestSprite(spritePath);
 	sprite->MakeDefaultSize(layout);
 	if (selectable) {
-		auto firstSlash = spriteName.find_first_of("/");
-		selectedSprite = GFXManager::RequestSprite(
-				spriteName.substr(0, firstSlash) + "/selected" );
+		spritePath.remove_filename();
+		spritePath /= "sprite_selected";
+		selectedSprite = GFXManager::RequestSprite(spritePath);
 	}
 }
 

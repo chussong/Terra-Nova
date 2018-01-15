@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "templates.hpp"
+#include "file.hpp"
 #include "sprite.hpp"
 
 namespace TerraNova {

@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "gamevars.hpp"
+#include "file.hpp"
 #include "gfxobject.hpp"
 #include "unit.hpp"
 
@@ -36,7 +37,8 @@ class BuildingType{
 					:id(id), name(name), cost(cost), buildTime(buildTime) {}
 
 		int								ID()		const;
-		std::string						Name()		const;
+		const std::string&				Name()		const;
+		std::string						PathName()	const;
 		std::array<int, LAST_RESOURCE>	Cost()		const;
 		bool CanBuyWith(std::array<int,LAST_RESOURCE> availableResources) const;
 		int								BuildTime() const;
@@ -74,11 +76,15 @@ class BuildingPrototype : public GFXObject {
 		BuildingPrototype() = delete;
 		BuildingPrototype(SDL_Renderer* ren, const int x, const int y, 
 				const BuildingType* type) : 
-			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y, true), 
+			GFXObject(ren, 
+					File::SpritePath() / "buildings" / type->PathName() / "sprite", 
+					x, y, true), 
 			type(type) {}
 		BuildingPrototype(SDL_Renderer* ren, const int x, const int y,
 				const std::shared_ptr<BuildingType> type) : 
-			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y, true), 
+			GFXObject(ren, 
+					File::SpritePath() / "buildings" / type->PathName() / "sprite", 
+					x, y, true), 
 			type(type.get()) {}
 		BuildingPrototype(const BuildingPrototype& other) = delete;
 		BuildingPrototype(BuildingPrototype&& other) noexcept : 
@@ -87,7 +93,8 @@ class BuildingPrototype : public GFXObject {
 
 		bool IsBuildingPrototype() const { return true; }
 
-		std::string Name() const;
+		const std::string&  Name() 		const;
+		std::string 		PathName()  const;
 		std::array<int, LAST_RESOURCE>	Cost() const;
 		bool CanBuyWith(std::array<int,LAST_RESOURCE> availableResources) const;
 		int PowerProduction() const;
@@ -112,11 +119,15 @@ class Building : public GFXObject {
 		Building() = delete;
 		Building(SDL_Renderer* ren, const int x, const int y, 
 				const BuildingType* type) : 
-			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y, true), 
+			GFXObject(ren, 
+					File::SpritePath() / "buildings" / type->PathName() / "sprite", 
+					x, y, true), 
 			type(type), turnsLeft(type->BuildTime()) {}
 		Building(SDL_Renderer* ren, const int x, const int y,
 				const std::shared_ptr<BuildingType> type) : 
-			GFXObject(ren, "buildings/" + type->Name() + "/sprite", x, y, true), 
+			GFXObject(ren, 
+					File::SpritePath() / "buildings" / type->PathName() / "sprite", 
+					x, y, true), 
 			type(type.get()), turnsLeft(type->BuildTime()) {}
 		Building(const Building& other) = delete;
 		Building(Building&& other) noexcept : 
@@ -126,7 +137,8 @@ class Building : public GFXObject {
 
 		bool IsBuilding() const { return true; }
 
-		std::string Name() const;
+		const std::string& Name() const;
+		std::string PathName() const;
 		std::array<int, LAST_RESOURCE>	Cost() const;
 		bool CanBuyWith(std::array<int,LAST_RESOURCE> availableResources) const;
 		int BuildTime() const;

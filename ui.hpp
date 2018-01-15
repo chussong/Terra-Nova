@@ -29,7 +29,7 @@ class UIElement : public GFXObject {
 	public:
 		UIElement(SDL_Renderer* ren, const std::string spriteFile,
 				const int x, const int y) : 
-			GFXObject(ren, spriteFile, x, y) {}
+			GFXObject(ren, File::SpritePath() / spriteFile, x, y) {}
 		UIElement(const UIElement& other) = delete;
 		/*UIElement(UIElement&& other) noexcept : 
 			GFXObject(std::move(other)), textSprite(std::move(other.textSprite)),

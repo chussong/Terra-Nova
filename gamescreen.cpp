@@ -19,8 +19,8 @@ void GameScreen::Render(){
 	}
 	if(newFocusColony && newFocusColony != currentFocusColony) FocusOnColony();
 	ClearOutOfBounds();
-	if(selected && selected->IsUnit()){
-		if(dynamic_cast<Unit*>(selected)->Dead()){
+	if (selected && selected->IsUnit()) {
+		if (dynamic_cast<Unit*>(selected)->Dead()) {
 			ClearSelected();
 		}
 	}
@@ -67,17 +67,24 @@ GFXObject* GameScreen::ClickedObject(const int x, const int y){
 	return nullptr;
 }
 
-void GameScreen::ClickObject(GFXObject* toClick){
-	if(!toClick){
+// return true if selection should be cleared due to this click
+bool GameScreen::ClickObject(GFXObject* toClick){
+	if (!toClick) {
 		std::cerr << "Error: somehow asked to ClickObject a nullptr." << std::endl;
-		return;
+		return false;
 	}
 	//std::cout << "Clicked an object." << std::endl;
-	if(dynamic_cast<Tile*>(toClick)) ClickTile(dynamic_cast<Tile*>(toClick));
-	if(dynamic_cast<Unit*>(toClick)) ClickUnit(dynamic_cast<Unit*>(toClick));
+	if (dynamic_cast<Tile*>(toClick)) {
+		return ClickTile(dynamic_cast<Tile*>(toClick));
+	}
+	if (dynamic_cast<Unit*>(toClick)) {
+		return ClickUnit(dynamic_cast<Unit*>(toClick));
+	}
+	return false;
 }
 
-void GameScreen::ClickTile(Tile* clickedTile){
+// return true if selection should be cleared due to this click
+bool GameScreen::ClickTile(Tile* clickedTile){
 	//std::cout << "Clicked a tile at (" << clickedTile->Row() << ","
 		//<< clickedTile->Colm() << ")." << std::endl;
 	viewCenterRow = clickedTile->Row();
@@ -85,21 +92,28 @@ void GameScreen::ClickTile(Tile* clickedTile){
 	//std::cout << "viewCenter now (" << viewCenterRow << "," << viewCenterCol
 		//<< ")." << std::endl;
 	//theMap->CenterViewOn(viewCenterRow, viewCenterCol);
-	if(clickedTile->HasColony()){
+	if (clickedTile->HasColony()) {
 		//std::cout << "Clicked on a colony, setting newFocusColony to "
 			//<< clickedTile->LinkedColony() << "." << std::endl;
-		if(currentFocusColony != clickedTile->LinkedColony()){
+		if (currentFocusColony != clickedTile->LinkedColony()) {
 			newFocusColony = clickedTile->LinkedColony();
 		} else {
 			newFocusColony = nullptr;
 		}
+		// colony screen change happening, clear selection to prevent segfault
+		return true;
 	}
+	return false;
 }
 
-void GameScreen::ClickUnit(Unit*){
+// return true if selection should be cleared due to this click
+bool GameScreen::ClickUnit(Unit*) {
+	return false;
 }
 
 // this iterates through stuff backwards so that the most recent thing is on top
+//
+// return what should be selected afterward
 GFXObject* GameScreen::SelectedObject(const int x, const int y){
 	// if there's a subwindow we only interact with that
 	if (subwindow) {
@@ -121,8 +135,11 @@ GFXObject* GameScreen::SelectedObject(const int x, const int y){
 	for(unsigned int i = clickables.size()-1; i < clickables.size(); --i){
 		if(clickables[i]->InsideQ(x, y)){
 			if(clickables[i]->Click()){
-				ClickObject(clickables[i]);
-				return selected;
+				if (ClickObject(clickables[i])) {
+					return nullptr;
+				} else {
+					return selected;
+				}
 			}
 			return clickables[i]->SelectAt(x, y);
 		}
@@ -132,8 +149,11 @@ GFXObject* GameScreen::SelectedObject(const int x, const int y){
 	for(unsigned int i = objects.size()-1; i < objects.size(); --i){
 		if(objects[i]->InsideQ(x, y)){
 			if(objects[i]->Click()){
-				ClickObject(objects[i]);
-				return selected;
+				if (ClickObject(objects[i])) {
+					return nullptr;
+				} else {
+					return selected;
+				}
 			}
 			return objects[i]->SelectAt(x, y);
 		}

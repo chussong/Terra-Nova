@@ -7,6 +7,7 @@
 #include <iostream>
 #include <memory>
 #include <algorithm>
+#include <unordered_map>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <SDL.h>
@@ -62,16 +63,15 @@ class Sprite {
 
 class GFXManager {
 	static SDL_Renderer* ren; // despite appearances, GFXManager owns this
-	static std::vector<std::string> loadedSpriteNames;
-	static std::vector<std::shared_ptr<Sprite>> loadedSprites;
+	static std::unordered_map<std::string, std::shared_ptr<Sprite>> loadedSprites;
 
-	static std::string GetSpritePath(const std::string& subDir = "");
-	static std::shared_ptr<Sprite> LoadSprite(std::string name);
+	static File::Path GetSpritePath(const std::string& subDir = "");
+	static void LoadSprite(File::Path spritePath);
 
 	public:
 		GFXManager() = delete;
 		static void Initialize(SDL_Renderer* newRen);
-		static std::shared_ptr<Sprite> RequestSprite(std::string name);
+		static std::shared_ptr<Sprite> RequestSprite(File::Path spritePath);
 
 		static SDL_Renderer* Ren() { return ren; }
 };

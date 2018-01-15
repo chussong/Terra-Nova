@@ -8,6 +8,7 @@
 #include <boost/algorithm/string/trim.hpp>
 
 #include "gamevars.hpp"
+#include "file.hpp"
 #include "gfxobject.hpp"
 #include "building.hpp"
 #include "unit.hpp"
@@ -29,7 +30,7 @@ class TileType {
 			name(name), yield(yield) {}
 
 		std::string Name() const 							{ return name; }
-		std::string Path() const				{return "terrain/" + Name();}
+		File::Path Path() const		{return File::Path("terrain") / Name();}
 		std::array<int, LAST_RESOURCE> Yield() const 		{ return yield; }
 		
 		bool AllowedToBuild(const std::string name) const	{ return !name.empty(); }

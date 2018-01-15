@@ -2,42 +2,47 @@
 
 namespace TerraNova {
 
-void Path::SpritifyPath(){
-	/*std::cout << "Path:";
-	for(auto& step : steps) std::cout << "(" << step[0] << "," << step[1] << "), ";
-	std::cout << "\b\b " << std::endl;*/
+void Path::SpritifyPath() {
+	// std::cout << "Path:";
+	// for(auto& step : steps) std::cout << "(" << step[0] << "," << step[1] << "), ";
+	// std::cout << "\b\b " << std::endl;
 	sprites.resize(steps.size()-1);
-	for(auto i = 0u; i < steps.size()-2; ++i){
+	for (auto i = 0u; i < sprites.size()-1; ++i) {
 		sprites[i] = FetchPathSegment(steps[i], steps[i+1], false);
+		// std::cout << "sprites[" << i << "] = " << sprites[i] << std::endl;
 	}
 	sprites[sprites.size()-1] = FetchPathSegment(steps[steps.size()-2],
 			steps[steps.size()-1], true);
+	// std::cout << "sprites[end] = " << sprites[sprites.size()-1] << std::endl;
 }
 
 // this should properly use a spritesheet system instead of all these names
 Sprite* Path::FetchPathSegment(const std::array<unsigned int, 2>& start,
-		const std::array<unsigned int, 2>& end, const bool endOfPath){
-	std::string name = "path_";
-	if(endOfPath){
-		name += "arrow_";
+		const std::array<unsigned int, 2>& end, const bool endOfPath) {
+	File::Path filePath = "path_";
+	if (endOfPath) {
+		filePath += "arrow_";
 	} else {
-		name += "segment_";
+		filePath += "segment_";
 	}
-	if(end[1] > start[1]){
-		if(end[0] < start[0]) name += "upright";
-		if(end[0] == start[0]) name += "right";
-		if(end[0] > start[0]) name += "downright";
+	if (end[1] > start[1]) {
+		if(end[0] < start[0]) filePath += "upright";
+		if(end[0] == start[0]) filePath += "right";
+		if(end[0] > start[0]) filePath += "downright";
 	} else {
-		if(end[0] < start[0]) name += "upleft";
-		if(end[0] == start[0]) name += "left";
-		if(end[0] > start[0]) name += "downleft";
+		if(end[0] < start[0]) filePath += "upleft";
+		if(end[0] == start[0]) filePath += "left";
+		if(end[0] > start[0]) filePath += "downleft";
 	}
-	return GFXManager::RequestSprite(name).get();
+	// std::cout << "Requesting " << filePath << ": it's " <<
+		// GFXManager::RequestSprite(File::SpritePath() / filePath).get()
+		// << std::endl;
+	return GFXManager::RequestSprite(File::SpritePath() / filePath).get();
 }
 
 void Path::RenderStartingFrom(const int spriteX, const int spriteY){
-	if(steps.size() == 0) return;
-	if(sprites.size() != steps.size()-1) SpritifyPath();
+	if (steps.size() == 0) return;
+	if (sprites.size() != steps.size()-1) SpritifyPath();
 	/*SDL_Rect spriteLayout(StartingSpriteLayout(spriteX, spriteY));
 	sprites[0]->RenderTo(spriteLayout);
 	spriteLayout.x = spriteX;
@@ -53,7 +58,7 @@ void Path::RenderStartingFrom(const int spriteX, const int spriteY){
 	layout.w = TILE_WIDTH;
 	layout.h = TILE_HEIGHT;
 	int startX, startY;
-	for(auto i = 0u; i < sprites.size(); ++i){
+	for (auto i = 0u; i < sprites.size(); ++i) {
 		startX = spriteX + ((int)steps[i][1]-(int)steps[0][1])*TILE_WIDTH/2;
 		startY = spriteY + ((int)steps[i][0]-(int)steps[0][0])*TILE_HEIGHT;
 		PathSpriteFromTo(layout, startX, startY, steps[i][0], steps[i][1],

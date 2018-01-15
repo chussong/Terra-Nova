@@ -23,7 +23,7 @@ $(EXECUTABLE): $(OBJECTS)
 main.o: main.cpp game.hpp gamevars.hpp window.hpp random.hpp file.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-unit.o: unit.cpp unit.hpp gfxobject.hpp gamevars.hpp path.hpp
+unit.o: unit.cpp unit.hpp gfxobject.hpp gamevars.hpp path.hpp file.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 colony.o: colony.cpp colony.hpp templates.hpp gamevars.hpp faction.hpp \
@@ -47,18 +47,18 @@ sprite.o: sprite.cpp sprite.hpp templates.hpp gamevars.hpp file.hpp
 gfxobject.o: gfxobject.cpp gfxobject.hpp sprite.hpp gamescreen.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-ui.o: ui.cpp ui.hpp gfxobject.hpp gamevars.hpp unit.hpp sprite.hpp
+ui.o: ui.cpp ui.hpp gfxobject.hpp gamevars.hpp unit.hpp sprite.hpp file.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 tile.o: tile.cpp tile.hpp gfxobject.hpp unit.hpp building.hpp gamevars.hpp \
-		colony.hpp
+		colony.hpp file.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 building.o: building.cpp building.hpp unit.hpp tile.hpp gfxobject.hpp \
-		gamevars.hpp
+		gamevars.hpp file.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-path.o: path.cpp path.hpp map.hpp templates.hpp sprite.hpp
+path.o: path.cpp path.hpp map.hpp templates.hpp sprite.hpp file.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 dialogue.o: dialogue.cpp dialogue.hpp ui.hpp unit.hpp file.hpp

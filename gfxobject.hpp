@@ -3,6 +3,7 @@
 
 #include <memory>
 #include "sprite.hpp"
+#include "file.hpp"
 
 namespace TerraNova {
 
@@ -14,7 +15,7 @@ class GFXObject : public std::enable_shared_from_this<GFXObject> {
 		}
 
 		GFXObject() = delete;
-		GFXObject(SDL_Renderer* ren, const std::string& spriteFile, const int x,
+		GFXObject(SDL_Renderer* ren, const File::Path& spritePath, const int x,
 				const int y, const bool selectable = false);
 		GFXObject(const GFXObject& other) = delete;
 		GFXObject(GFXObject&& other) noexcept = default;
@@ -25,7 +26,7 @@ class GFXObject : public std::enable_shared_from_this<GFXObject> {
 		// does not result in the selection of the object; if Click() returns
 		// true, then no selection is attempted.
 		SDL_Renderer* Renderer() const { return ren; }
-		virtual void ChangeSprite(const std::string& spriteName);
+		virtual void ChangeSprite(File::Path spritePath);
 		virtual void Render() const;
 		virtual int Select();
 		virtual void Deselect();

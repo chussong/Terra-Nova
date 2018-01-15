@@ -28,6 +28,7 @@ typedef fs::path Path;
 void Initialize();
 
 const Path& BasePath();
+const Path& SpritePath();
 std::string AbsolutePath(const std::string& relativePath);
 std::string JoinPaths(const std::vector<std::string>& paths);
 std::vector<std::string> ReadFromFullPath(const Path& fullPath);

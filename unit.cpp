@@ -12,8 +12,9 @@ std::string Unit::GenerateSurname(){
 
 Unit::Unit(SDL_Renderer* ren, 
 		const std::shared_ptr<UnitType> spec, const char faction): 
-		GFXObject(ren, "units/" + spec->Name() + "/sprite", 0, 0, true),
-		spec(spec), faction(faction), location({{-1u,-1u}}) {
+		GFXObject(ren, 
+				File::SpritePath() / "units" / spec->PathName() / "sprite", 0, 
+				0, true), spec(spec), faction(faction), location({{-1u,-1u}}) {
 	givenName = GenerateGivenName();
 	surname = GenerateSurname();
 	srand(time(NULL));
@@ -21,8 +22,10 @@ Unit::Unit(SDL_Renderer* ren,
 	health = MaxHealth();
 	movesLeft = MoveSpeed()+1;
 
-	healthBackground = GFXManager::RequestSprite("healthbar_background");
-	healthBar = GFXManager::RequestSprite("healthbar_p" + std::to_string(faction));
+	healthBackground = GFXManager::RequestSprite(
+			File::SpritePath() / "healthbar_background" );
+	healthBar = GFXManager::RequestSprite(
+			File::SpritePath() / ("healthbar_p" + std::to_string(faction)) );
 
 	SetOrders(ORDER_PATROL);
 }
@@ -44,7 +47,7 @@ void Unit::ChangeGender(const std::string gender){
 
 void Unit::ChangeSpec(const std::shared_ptr<UnitType> spec){
 	this->spec = spec;
-	sprite = GFXManager::RequestSprite(spec->Name());
+	sprite = GFXManager::RequestSprite(File::SpritePath() / spec->PathName());
 	//selectedSprite = GFXManager::RequestSprite(
 			//"units/" + spec->Name() + "/sprite_selected");
 }
@@ -248,7 +251,7 @@ void Unit::SetOrders(const order_t newOrders){
 			orderName += "harvest";
 			break;
 	}
-	orderIcon = GFXManager::RequestSprite(orderName);
+	orderIcon = GFXManager::RequestSprite(File::SpritePath() / orderName);
 }
 
 void Unit::OrderMove(std::unique_ptr<Path> newPath){

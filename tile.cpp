@@ -3,7 +3,8 @@
 namespace TerraNova {
 
 Tile::Tile(TileType* type, SDL_Renderer* ren,
-		const int row, const int colm): GFXObject(ren, type->Path(), 0, 0),
+		const int row, const int colm): GFXObject(ren, 
+			File::SpritePath() / type->Path(), 0, 0),
 		type(type), row(row), colm(colm) {}
 
 void Tile::Render() const{
@@ -107,7 +108,7 @@ TileType* Tile::Type() const{
 }
 
 void Tile::SetTileType(TileType* newType){
-	ChangeSprite(newType->Path());
+	ChangeSprite(File::SpritePath() / newType->Path());
 	type = newType;
 }
 
@@ -144,13 +145,14 @@ void Tile::SetColony(Colony* newColony){
 	if(newColony){
 		RemoveBuilding();
 		//selectable = true;
-		ChangeSprite("terrain/colony_p" + std::to_string(newColony->Faction()));
+		ChangeSprite(File::SpritePath() / 
+				("terrain/colony_p" + std::to_string(newColony->Faction())) );
 		newColony->SetRow(this->Row());
 		newColony->SetColumn(this->Colm());
 		LinkColony(newColony);
 		hasColony = true;
 	} else {
-		ChangeSprite(type->Path());
+		ChangeSprite(File::SpritePath() / type->Path());
 		LinkColony(nullptr);
 		hasColony = false;
 	}

@@ -61,7 +61,7 @@ Mix_Music* LoadMusic(const std::string& filename) {
 				"music/" + filename + ".ogg").c_str());
 
 	if (loadedMusic == nullptr) {
-		std::cerr << "Error: failed to loud music file at " << filename
+		std::cerr << "Error: failed to load music file at " << filename
 			<< ", getting error " << Mix_GetError() << std::endl;
 		return nullptr;
 	}
@@ -127,7 +127,7 @@ Mix_Chunk* LoadSound(const std::string& filename) {
 	Mix_Chunk* loadedSound = Mix_LoadWAV(File::AbsolutePath(filename).c_str());
 
 	if (loadedSound == nullptr) {
-		std::cerr << "Error: failed to loud audio file at " << filename
+		std::cerr << "Error: failed to load audio file at " << filename
 			<< ", getting error " << Mix_GetError() << std::endl;
 		return nullptr;
 	}

@@ -9,6 +9,7 @@
 #include <random>
 #include <functional>
 #include "gamevars.hpp"
+#include "file.hpp"
 #include "gfxobject.hpp"
 #include "path.hpp"
 
@@ -63,7 +64,8 @@ class UnitType {
 			name(name), maxHealth(maxHealth), moveSpeed(moveSpeed), 
 			attacks(attacks), trainingTime(trainingTime) {}
 
-		std::string Name()	const			{return name;}
+		const std::string& Name() const			{return name;}
+		std::string PathName() const 		{return boost::to_lower_copy(name);}
 		int MaxHealth()		const			{return maxHealth;}
 		int MoveSpeed()		const			{return moveSpeed;}
 		MoveCostTable MoveCosts() const		{return moveCosts;}

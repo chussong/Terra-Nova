@@ -6,14 +6,20 @@ namespace File {
 
 namespace {
 	Path basePath;
+	Path spritePath;
 } // anonymous namespace
 
 void Initialize(){
 	basePath = Path(SDL_GetBasePath());
+	spritePath = basePath / "sprites";
 }
 
 const Path& BasePath() {
 	return basePath;
+}
+
+const Path& SpritePath() {
+	return spritePath;
 }
 
 std::string AbsolutePath(const std::string& relativePath) {

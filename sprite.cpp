@@ -4,8 +4,7 @@ namespace TerraNova {
 
 //TTF_Font* Sprite::defaultFont;
 SDL_Renderer* GFXManager::ren;
-std::vector<std::string> GFXManager::loadedSpriteNames;
-std::vector<std::shared_ptr<Sprite>> GFXManager::loadedSprites;
+std::unordered_map<std::string, std::shared_ptr<Sprite>> GFXManager::loadedSprites;
 
 SDL_Rect MakeSDLRect(const int x, const int y, const unsigned int w,
 		const unsigned int h) {
@@ -206,69 +205,38 @@ void Sprite::Lighten() {
 	SDL_SetTextureColorMod(image, r, g, b);
 }
 
-void GFXManager::Initialize(SDL_Renderer* newRen){
+void GFXManager::Initialize(SDL_Renderer* newRen) {
 	GFXManager::ren = newRen;
 	//std::cout << "GFXManager initialized." << std::endl;
 }
 
-std::string GFXManager::GetSpritePath(const std::string& subDir){
-#ifdef _WIN32
-	const char PATH_SEP = '\\';
-#else
-	const char PATH_SEP = '/';
-#endif
-
-	static std::string baseSpriteDir;
-	if(baseSpriteDir.empty()){
-		char* basePath = SDL_GetBasePath();
-		if(basePath){
-			baseSpriteDir = basePath;
-			baseSpriteDir += std::string("sprites") + PATH_SEP;
-			SDL_free(basePath);
-		} else {
-			std::cerr << "Error getting resource Path: " << SDL_GetError()
-				<< std::endl;
-			return "";
-		}
-		size_t pos = baseSpriteDir.rfind("bin");
-		baseSpriteDir = baseSpriteDir.substr(0, pos);
-	}
-
-	return subDir.empty() ? baseSpriteDir : baseSpriteDir + subDir + PATH_SEP;
+File::Path GFXManager::GetSpritePath(const std::string& subDir) {
+	return File::BasePath() / "sprites" / subDir;
 }
 
-std::shared_ptr<Sprite> GFXManager::LoadSprite(std::string name){
-	if (name.empty()) {
-		std::cerr << "Error: asked to load a sprite with an empty name."
-			<< std::endl;
-		return nullptr;
-	}
-	boost::replace_all(name, " ", "_");
-	boost::to_lower(name);
-
-	SDL_Rect layout;
+void GFXManager::LoadSprite(File::Path spritePath) {
 	std::shared_ptr<Sprite> sprite = std::make_shared<Sprite>(ren, 
-			GetSpritePath() + name + ".png", layout);
-	loadedSprites.push_back(sprite);
-	loadedSpriteNames.push_back(name);
+			spritePath, SDL_Rect());
+	loadedSprites.insert({spritePath.string(), sprite});
 	/*std::cout << "Loaded the sprite \"" << name << "\" at position "
 		<< loadedSprites.size()-1 << "=" << loadedSpriteNames.size()-1 << "."
 		<< std::endl;*/
-	return sprite;
 }
 
-/* If this ever gets slow, try swapping each sprite forward by 1 every time
- * it's found, causing more frequently requested sprites to be easier to get.*/
-std::shared_ptr<Sprite> GFXManager::RequestSprite(std::string name){
-	std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-	for(unsigned int i = 0; i < loadedSpriteNames.size(); ++i){
-		if(loadedSpriteNames[i] == name){
-			/*std::cout << "Found the requested sprite, \"" << name << "\", at "
-				<< "position " << i << "." << std::endl;*/
-			return loadedSprites[i];
-		}
+std::shared_ptr<Sprite> GFXManager::RequestSprite(File::Path spritePath) {
+	std::string name = spritePath.filename().string() + ".png";
+	boost::replace_all(name, " ", "_");
+	boost::to_lower(name);
+	// std::cout << "Replacing " << spritePath.filename() << " -> " << name 
+		// << std::endl;
+	spritePath.remove_filename();
+	spritePath /= name;
+
+	if (loadedSprites.count(spritePath.string()) == 0) {
+		LoadSprite(spritePath);
 	}
-	return LoadSprite(name);
+
+	return loadedSprites[spritePath.string()];
 }
 
 } // namespace TerraNova

@@ -47,6 +47,7 @@ class AttackType {
 			accuracy(accuracy), attackRate(attackRate), damage(damage) {}
 
 		std::string Name() const		{return name;}
+		std::string PathName() const 	{return File::PathifyString(name);}
 		float Accuracy() const			{return accuracy;}
 		int AttackRate() const			{return attackRate;}
 		int Damage() const				{return damage;}
@@ -64,8 +65,8 @@ class UnitType {
 			name(name), maxHealth(maxHealth), moveSpeed(moveSpeed), 
 			attacks(attacks), trainingTime(trainingTime) {}
 
-		const std::string& Name() const			{return name;}
-		std::string PathName() const 		{return boost::to_lower_copy(name);}
+		const std::string& Name() const		{return name;}
+		std::string PathName() const 		{return File::PathifyString(name);}
 		int MaxHealth()		const			{return maxHealth;}
 		int MoveSpeed()		const			{return moveSpeed;}
 		MoveCostTable MoveCosts() const		{return moveCosts;}

@@ -85,8 +85,10 @@ constexpr int PERSON_HEIGHT = 42;
 constexpr int HEALTH_BAR_WIDTH = 40;
 constexpr int HEALTH_BAR_HEIGHT = 10;
 
-constexpr int UNIT_INFO_PANEL_WIDTH = 410;
-constexpr int UNIT_INFO_PANEL_HEIGHT = 160;
+constexpr int INFO_PANEL_WIDTH = 410;
+constexpr int INFO_PANEL_HEIGHT = 160;
+constexpr int INFO_PANEL_X = SCREEN_WIDTH - INFO_PANEL_WIDTH;
+constexpr int INFO_PANEL_Y = SCREEN_HEIGHT - INFO_PANEL_HEIGHT;
 constexpr int PORTRAIT_X = 5;
 constexpr int PORTRAIT_Y = 5;
 constexpr int FACTIONCOLOR_X = 156;

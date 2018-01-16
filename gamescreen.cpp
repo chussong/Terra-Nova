@@ -32,6 +32,7 @@ void GameScreen::Render(){
 	for(auto& thing : clickables) thing->Render();
 	for(auto& thing : UI        ) thing->Render();
 	for(auto& thing : topLevelUI) thing->Render();
+	if (infoPanel) infoPanel->Render();
 	if (endTurnButton) endTurnButton->Render();
 	if (dialogueBox) dialogueBox->Render();
 	if (hoverTextBox) hoverTextBox->Render();
@@ -283,7 +284,7 @@ signal_t GameScreen::HandleKeyPress(SDL_Keycode key){
 }
 
 void GameScreen::StartTurn(){
-	if(selected) UpdateInfoPanel(selected);
+	if(selected) UpdateInfoPanel(*selected);
 	clickables = CheckAndLock(weakClickables);
 	objects = CheckAndLock(weakObjects);
 }
@@ -424,18 +425,16 @@ void GameScreen::SelectNew(const int clickX, const int clickY){
 		RemoveInfoPanel();
 		RemoveOrderPanel();
 	} else if (selected != newSelected) {
+		// note: newSelected can't be null if this triggers
 		if(selected) selected->Deselect();
 		newSelected->Select();
-		//if (newSelected->IsUnit()) {
-			// below condition should be "if panels are up"
-			if(selected && selected->IsUnit() && !dynamic_cast<Unit*>(selected)->Dead()){
-				SwapInfoPanel(newSelected);
-				SwapOrderPanel(newSelected);
-			} else {
-				MakeInfoPanel(newSelected);
-				MakeOrderPanel(newSelected);
-			}
-		//}
+		if (infoPanel) {
+			UpdateInfoPanel(*newSelected);
+			SwapOrderPanel(newSelected);
+		} else {
+			MakeInfoPanel(*newSelected);
+			MakeOrderPanel(newSelected);
+		}
 	}
 	selected = newSelected;
 }
@@ -572,7 +571,8 @@ void GameScreen::RightClick_BuildingPrototype(GFXObject* clickedObject) {
 		if (payingColony) {
 			if (selectedPrototype->CanBuyWith(payingColony->Resources())) {
 				payingColony->TakeResources(selectedPrototype->Cost());
-				clickedTile->AddBuilding(selectedPrototype->Type());
+				clickedTile->AddBuilding(selectedPrototype->Type(),
+						payingColony->Faction() );
 			} else {
 				std::cout << "Insufficient resources in " 
 					<< payingColony->Name() << " to construct " 
@@ -651,49 +651,24 @@ void GameScreen::AddMapTiles(){
 	}
 }
 
-void GameScreen::MakeInfoPanel(const GFXObject* source){
-	if (!source) return;
-	if (source->IsUnit()) {
-		AddTopLevelUI(std::make_unique<UnitInfoPanel>(ren, 
-					dynamic_cast<const Unit&>(*source)));
-	} else if (source->IsBuilding()) {
-		AddTopLevelUI(std::make_unique<BuildingInfoPanel>(ren, 
-					dynamic_cast<const Building&>(*source)));
-	} else if (source->IsBuildingPrototype()) {
-		AddTopLevelUI(std::make_unique<BuildingInfoPanel>(ren, 
-					dynamic_cast<const BuildingPrototype&>(*source)));
+void GameScreen::MakeInfoPanel(const GFXObject& source){
+	if (source.IsUnit() || source.IsBuilding() || source.IsBuildingPrototype()){
+		infoPanel = std::make_unique<InfoPanel>(ren, source, 
+				INFO_PANEL_X, INFO_PANEL_Y);
 	}
 }
 
-void GameScreen::SwapInfoPanel(const GFXObject* source){
-	if (!source) return;
-	if(!(source && source->IsUnit())) return;
-	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
-		if(topLevelUI[i]->IsInfoPanel()){
-			InfoPanel::UpdateFromSource(dynamic_cast<InfoPanel&>(*topLevelUI[i]),
-					*source);
-			return;
-		}
+void GameScreen::UpdateInfoPanel(const GFXObject& source){
+	if (!infoPanel) {
+		std::cerr << "Error: asked to update info panel but none exists."
+			<< std::endl;
+		return;
 	}
+	infoPanel->UpdateFromSource(source);
 }
 
-void GameScreen::UpdateInfoPanel(const GFXObject* source){
-	if(!(source && source->IsUnit())) return;
-	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
-		if(topLevelUI[i]->IsUnitInfoPanel()){
-			UnitInfoPanel::UpdateHealthFromSource(
-					dynamic_cast<UnitInfoPanel&>(*topLevelUI[i]), 
-					dynamic_cast<const Unit&>(*source));
-		}
-	}
-}
-
-void GameScreen::RemoveInfoPanel(){
-	for(unsigned int i = 0; i < topLevelUI.size(); ++i){
-		if(topLevelUI[i]->IsInfoPanel()){
-			topLevelUI.erase(topLevelUI.begin() + i);
-		}
-	}
+void GameScreen::RemoveInfoPanel() {
+	infoPanel = nullptr;
 }
 
 void GameScreen::MakeOrderPanel(GFXObject* source){

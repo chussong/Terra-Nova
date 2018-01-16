@@ -10,10 +10,12 @@ EXECUTABLE = TerraNova
 SOURCES = main.cpp unit.cpp colony.cpp map.cpp game.cpp gamescreen.cpp \
 		  sprite.cpp gfxobject.cpp ui.cpp tile.cpp building.cpp path.cpp \
 		  dialogue.cpp ai.cpp random.cpp file.cpp event.cpp menu.cpp \
-		  window.cpp audio.cpp cutscene.cpp power.cpp subwindow.cpp
+		  window.cpp audio.cpp cutscene.cpp power.cpp subwindow.cpp \
+		  infopanel.cpp
 OBJECTS = main.o unit.o colony.o map.o game.o gamescreen.o sprite.o \
 		  gfxobject.o ui.o tile.o building.o path.o dialogue.o ai.o random.o \
-		  file.o event.o menu.o window.o audio.o cutscene.o power.o subwindow.o
+		  file.o event.o menu.o window.o audio.o cutscene.o power.o subwindow.o\
+		  infopanel.o
 
 all: $(EXECUTABLE)
 
@@ -38,7 +40,8 @@ game.o: game.cpp game.hpp templates.hpp exceptions.hpp unit.hpp building.hpp \
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 gamescreen.o: gamescreen.cpp gamescreen.hpp gfxobject.hpp ui.hpp unit.hpp \
-		building.hpp tile.hpp colony.hpp map.hpp gamevars.hpp dialogue.hpp
+		building.hpp tile.hpp colony.hpp map.hpp gamevars.hpp dialogue.hpp \
+		infopanel.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 sprite.o: sprite.cpp sprite.hpp templates.hpp gamevars.hpp file.hpp
@@ -48,6 +51,10 @@ gfxobject.o: gfxobject.cpp gfxobject.hpp sprite.hpp gamescreen.hpp gamevars.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 ui.o: ui.cpp ui.hpp gfxobject.hpp gamevars.hpp unit.hpp sprite.hpp file.hpp
+	$(CXX) $(CXXFLAGS) $< -o $@
+
+infopanel.o: infopanel.cpp infopanel.hpp file.hpp gfxobject.hpp ui.hpp \
+		unit.hpp building.hpp
 	$(CXX) $(CXXFLAGS) $< -o $@
 
 tile.o: tile.cpp tile.hpp gfxobject.hpp unit.hpp building.hpp gamevars.hpp \

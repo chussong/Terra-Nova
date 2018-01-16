@@ -27,9 +27,9 @@ class UIElement : public GFXObject {
 		mutable SDL_Rect dynamicTextLayout = SDL_Rect();
 
 	public:
-		UIElement(SDL_Renderer* ren, const std::string spriteFile,
+		UIElement(SDL_Renderer* ren, const std::string& spriteFile,
 				const int x, const int y) : 
-			GFXObject(ren, File::SpritePath() / spriteFile, x, y) {}
+			GFXObject(ren, File::SpritePath() / "ui" / spriteFile, x, y) {}
 		UIElement(const UIElement& other) = delete;
 		/*UIElement(UIElement&& other) noexcept : 
 			GFXObject(std::move(other)), textSprite(std::move(other.textSprite)),
@@ -82,91 +82,6 @@ class UIAggregate {
 		virtual ~UIAggregate() = default;
 
 		virtual void Render() const;
-
-		virtual bool IsInfoPanel() const { return false; }
-		virtual bool IsUnitInfoPanel() const { return false; }
-};
-
-class InfoPanel : public UIAggregate {
-	public:
-		SDL_Renderer* Renderer() const { return ren; }
-
-		InfoPanel(SDL_Renderer* ren, const int x, const int y):
-			UIAggregate(ren, x, y) {}
-		virtual ~InfoPanel() = default; // should be protected or pure virtual?
-
-		virtual void Render() const;
-
-		bool IsInfoPanel() const { return true; }
-
-		static void UpdateFromSource(InfoPanel& toUpdate, 
-				const GFXObject& source);
-
-	protected:
-		virtual bool Update(const GFXObject& source);
-};
-
-// need to rearrange UnitInfoPanel and BuildingInfoPanel into member functions
-// of InfoPanel rather than subclasses
-
-class UnitInfoPanel : public InfoPanel {
-	public:
-		UnitInfoPanel(SDL_Renderer* ren, const Unit& source);
-		~UnitInfoPanel() = default;
-
-		void Render() const;
-		bool Update(const GFXObject& source);
-
-		// should use dynamic text instead of doing UpdateHealth explicitly
-		void UpdateHealth(const Unit& source);
-		static void UpdateHealthFromSource(UnitInfoPanel& toUpdate, 
-				const Unit& source);
-
-		bool IsUnitInfoPanel() const { return true; }
-
-	private:
-		std::unique_ptr<UIElement> background;
-		std::unique_ptr<UIElement> portrait;
-		std::unique_ptr<UIElement> factionIcon;
-		std::unique_ptr<UIElement> healthIcon;
-		std::unique_ptr<UIElement> attackIcon;
-
-		void UpdateFromUnit(const Unit& source);
-};
-
-class BuildingInfoPanel : public InfoPanel {
-	public:
-		BuildingInfoPanel(SDL_Renderer* ren, const Building& source);
-		BuildingInfoPanel(SDL_Renderer* ren, const BuildingPrototype& source);
-		~BuildingInfoPanel() = default;
-
-		void Render() const;
-		bool Update(const GFXObject& source);
-
-	private:
-		std::unique_ptr<UIElement> background;
-		std::unique_ptr<UIElement> portrait;
-		std::unique_ptr<UIElement> factionIcon;
-		std::unique_ptr<UIElement> powerIcon;
-		std::unique_ptr<std::array<UIElement,LAST_RESOURCE>> costIcons;
-
-		void UpdateFromBuilding(const Building& source);
-		void UpdateFromBuildingPrototype(const BuildingPrototype& source);
-
-		static std::unique_ptr<UIElement> MakeBackground(SDL_Renderer* ren, 
-				const std::array<int,2>& panelCoords);
-		static std::unique_ptr<UIElement> MakePortrait(SDL_Renderer* ren, 
-				const std::string& name, const std::array<int,2>& panelCoords);
-		static std::unique_ptr<UIElement> MakeFactionIcon(SDL_Renderer* ren, 
-				char faction, const std::array<int,2>& panelCoords);
-		static std::unique_ptr<UIElement> MakePowerIcon(SDL_Renderer* ren, 
-				const Building& source, const std::array<int,2>& panelCoords);
-		static std::unique_ptr<UIElement> MakePowerIcon(SDL_Renderer* ren, 
-				const BuildingPrototype& source, 
-				const std::array<int,2>& panelCoords);
-		static std::unique_ptr<std::array<UIElement,LAST_RESOURCE>> MakeCostIcons(
-				SDL_Renderer* ren, const std::array<int,LAST_RESOURCE>& costs,
-				const std::array<int,2>& panelCoords);
 };
 
 class UnitOrderPanel : public GFXObject {

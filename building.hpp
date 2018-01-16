@@ -136,6 +136,7 @@ class Building : public GFXObject {
 		Building& operator=(const Building& other) = delete;
 
 		bool IsBuilding() const { return true; }
+		const BuildingType* Type() const { return type; }
 
 		const std::string& Name() const;
 		std::string PathName() const;

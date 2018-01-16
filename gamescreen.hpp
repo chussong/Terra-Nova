@@ -19,6 +19,7 @@
 #include "ui.hpp"
 #include "unit.hpp"
 #include "building.hpp"
+#include "infopanel.hpp"
 #include "tile.hpp"
 #include "colony.hpp"
 #include "map.hpp"
@@ -61,6 +62,7 @@ class GameScreen : public Screen {
 
 		// GameScreen owns the pure UI stuff; the others are pointers to
 		// objects owned by someone else, e.g. Map owns Tiles, Game owns Units
+		std::unique_ptr<InfoPanel> infoPanel = nullptr;
 		std::vector<std::unique_ptr<UIAggregate>> topLevelUI;
 		std::vector<std::unique_ptr<GFXObject>> UI;
 		std::vector<std::weak_ptr<GFXObject>> weakClickables;
@@ -160,9 +162,9 @@ class GameScreen : public Screen {
 		void MapScreenCenteredOn(const int centerRow, const int centerColm);
 		void AddMapTiles();
 		void CenterMapTiles(const int centerRow, const int centerColm);
-		void MakeInfoPanel(const GFXObject* source);
-		void UpdateInfoPanel(const GFXObject* source);
-		void SwapInfoPanel(const GFXObject* source);
+		void MakeInfoPanel(const GFXObject& source);
+		void UpdateInfoPanel(const GFXObject& source);
+		void SwapInfoPanel(const GFXObject& source);
 		void RemoveInfoPanel();
 		void MakeOrderPanel(GFXObject* source);
 		void SwapOrderPanel(GFXObject* source);

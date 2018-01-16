@@ -19,7 +19,8 @@ void Path::SpritifyPath() {
 // this should properly use a spritesheet system instead of all these names
 Sprite* Path::FetchPathSegment(const std::array<unsigned int, 2>& start,
 		const std::array<unsigned int, 2>& end, const bool endOfPath) {
-	File::Path filePath = "path_";
+	File::Path filePath = "ui";
+	filePath /= "path_";
 	if (endOfPath) {
 		filePath += "arrow_";
 	} else {

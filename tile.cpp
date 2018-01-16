@@ -175,7 +175,7 @@ int Tile::Colm() const{
 	return colm;
 }
 
-void Tile::AddBuilding(std::shared_ptr<Building> newBldg){
+void Tile::AddBuilding(std::shared_ptr<Building> newBldg) {
 	bldg = newBldg;
 	SDL_Rect bldgLayout = layout;
 	bldgLayout.x += MAPDISP_ORIGIN_X + (TILE_WIDTH - BUILDING_WIDTH)/2;
@@ -183,8 +183,10 @@ void Tile::AddBuilding(std::shared_ptr<Building> newBldg){
 	bldg->MoveTo(bldgLayout);
 }
 
-void Tile::AddBuilding(const BuildingType* type) {
-	AddBuilding(std::make_shared<Building>(ren, 0, 0, type));
+void Tile::AddBuilding(const BuildingType* type, const char faction) {
+	auto newBuilding = std::make_shared<Building>(ren, 0, 0, type);
+	newBuilding->SetFaction(faction);
+	AddBuilding(newBuilding);
 }
 
 void Tile::RemoveBuilding(){

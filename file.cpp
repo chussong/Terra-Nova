@@ -22,6 +22,12 @@ const Path& SpritePath() {
 	return spritePath;
 }
 
+std::string PathifyString(std::string toPathify) {
+	boost::to_lower(toPathify);
+	boost::replace_all(toPathify, " ", "_");
+	return toPathify;
+}
+
 std::string AbsolutePath(const std::string& relativePath) {
 	return (basePath / relativePath).native();
 }

@@ -108,11 +108,11 @@ std::vector<Event> Event::ReadEventDirectory(const std::string& chapter) {
 			ret.push_back(std::move(event));
 		}
 	}
-	std::cout << "Returning " << ret.size() << " events:" << std::endl;
-	for (auto& e : ret) {
-		std::cout << e.Name() << " with trigger type " << e.TriggerType()
-			<< std::endl;
-	}
+	// std::cout << "Returning " << ret.size() << " events:" << std::endl;
+	// for (auto& e : ret) {
+		// std::cout << e.Name() << " with trigger type " << e.TriggerType()
+			// << std::endl;
+	// }
 	return ret;
 }
 
@@ -178,11 +178,11 @@ std::vector<Event> Event::ReadEvents(const File::fs::path& pathToEventFile) {
 			line += contents.size() + 1;
 		}
 	}
-	std::cout << "Returning " << ret.size() << " events:" << std::endl;
-	for (auto& e : ret) {
-		std::cout << e.Name() << " with trigger type " << e.TriggerType()
-			<< std::endl;
-	}
+	// std::cout << "Returning " << ret.size() << " events:" << std::endl;
+	// for (auto& e : ret) {
+		// std::cout << e.Name() << " with trigger type " << e.TriggerType()
+			// << std::endl;
+	// }
 	return ret;
 }
 

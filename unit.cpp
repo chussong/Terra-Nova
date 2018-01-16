@@ -300,9 +300,9 @@ int Unit::AttackRate(const unsigned int num) const{
 	return 0;
 }
 
-std::string Unit::DamageType(const unsigned int num) const{
+std::string Unit::DamageType(const unsigned int num) const {
 	if(num < Attacks().size()) return Attacks()[num]->DamageType();
-	return 0;
+	return "";
 }
 
 // return true if target was killed

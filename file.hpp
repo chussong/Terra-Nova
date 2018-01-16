@@ -9,7 +9,7 @@
 //#include <filesystem>
 
 #include <SDL.h>
-#include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
 // currently using boost::filesystem to stay on C++14; if switched to 17, can 
@@ -27,6 +27,7 @@ typedef fs::path Path;
 
 void Initialize();
 
+std::string PathifyString(std::string original);
 const Path& BasePath();
 const Path& SpritePath();
 std::string AbsolutePath(const std::string& relativePath);

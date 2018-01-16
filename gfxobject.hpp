@@ -64,6 +64,7 @@ class GFXObject : public std::enable_shared_from_this<GFXObject> {
 		virtual bool IsBuildingPrototype() const { return false; }
 		virtual bool IsBuilding() const { return false; }
 	 	virtual bool IsButton() const { return false; }
+	 	virtual bool IsInfoPanel() const { return false; }
 
 	protected:
 		// sprite is this object's main sprite; selectedSprite is an overlay
